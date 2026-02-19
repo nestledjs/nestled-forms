@@ -1,9 +1,14 @@
 'use client'
 
+import { useMemo } from 'react'
 import { isPossiblePhoneNumber } from 'react-phone-number-input'
 import clsx from 'clsx'
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
-import { useFormTheme } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
+
+function validatePhone(val: string | null | undefined): string | boolean {
+  if (val === undefined || val === null || val === '') return true
+  return isPossiblePhoneNumber(val.toString(), 'US') || 'Please enter a valid phone number'
+}
 
 export function PhoneField({
   form,
@@ -16,10 +21,16 @@ export function PhoneField({
   formReadOnlyStyle?: 'value' | 'disabled'
 }) {
   const theme = useFormTheme()
-  
-  function validatePhone(val: string | null | undefined): string | boolean {
-    return val === undefined || val === null || val === '' || isPossiblePhoneNumber((val ?? '')?.toString(), 'US')
-  }
+
+  const fieldWithPhoneValidation = useMemo(() => {
+    if (field.options.validate) return field
+    return {
+      ...field,
+      options: { ...field.options, validate: validatePhone },
+    }
+  }, [field])
+
+  const validationRules = useFieldValidation(fieldWithPhoneValidation, form)
 
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
@@ -63,10 +74,10 @@ export function PhoneField({
         disabled={field.options.disabled}
         required={field.options.required}
         defaultValue={field.options.defaultValue}
-        {...form.register(field.key, { required: field.options.required, validate: (v) => validatePhone(v) })}
+        {...form.register(field.key, validationRules)}
       />
-      {(field.options as any).helpText && (
-        <div className="text-xs text-gray-500">{(field.options as any).helpText}</div>
+      {field.options.helpText && (
+        <div className="text-xs text-gray-500">{field.options.helpText}</div>
       )}
     </div>
   )

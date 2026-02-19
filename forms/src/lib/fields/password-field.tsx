@@ -1,9 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
-import { useFormTheme } from '@nestledjs/forms-core'
-import { useFieldValidation } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
 
 export function PasswordField({
   form,

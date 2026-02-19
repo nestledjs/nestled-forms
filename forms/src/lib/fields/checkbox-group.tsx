@@ -1,10 +1,8 @@
 'use client'
 
-import React from 'react'
 import { Controller } from 'react-hook-form'
 import clsx from 'clsx'
-import { FormField, FormFieldProps, FormFieldType, CheckboxGroupOption, CheckboxGroupOptions } from '@nestledjs/forms-core'
-import { useFormTheme } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, CheckboxGroupOption, CheckboxGroupOptions, useFormTheme } from '@nestledjs/forms-core'
 
 // Utility functions for value conversion (moved outside component for performance)
 const stringToArray = (value: string | null | undefined, separator: string): string[] => {

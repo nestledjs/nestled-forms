@@ -1,4 +1,3 @@
-import React from 'react'
 import { View, Text } from 'react-native'
 import { Controller } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, SelectOption } from '@nestledjs/forms-core'

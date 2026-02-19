@@ -91,6 +91,75 @@ async function validateField(
   return null
 }
 
+// Helper to add a validator to existing rules
+function addValidatorToRules(
+  rules: RegisterOptions,
+  validator: any,
+  key: string
+): void {
+  if (!rules.validate) {
+    rules.validate = validator
+    return
+  }
+
+  if (typeof rules.validate === 'object') {
+    rules.validate[key] = validator
+    return
+  }
+
+  // rules.validate is a function, combine with new validator
+  rules.validate = combineValidators(rules.validate, validator)
+}
+
+// Helper to run validators from an object
+async function runObjectValidators(
+  validators: Record<string, any>,
+  value: any,
+  formValues: any
+): Promise<true | string> {
+  for (const [, validator] of Object.entries(validators)) {
+    if (typeof validator === 'function') {
+      const result = await validator(value, formValues)
+      if (result !== true) return result
+    }
+  }
+  return true
+}
+
+// Helper to create conditional validation wrapper
+function createConditionalWrapper(
+  originalValidate: any,
+  field: InputFieldOptions,
+  currentValidationGroup?: string
+): (value: any, formValues: any) => Promise<true | string> {
+  return async (value: any, formValues: any) => {
+    // Skip validation if conditions not met
+    const shouldSkipConditional = field.validateWhen && !field.validateWhen(formValues)
+    if (shouldSkipConditional) {
+      return true
+    }
+
+    // Skip validation if not in current group
+    const isInDifferentGroup = currentValidationGroup &&
+      field.validationGroup &&
+      field.validationGroup !== currentValidationGroup
+    if (isInDifferentGroup) {
+      return true
+    }
+
+    // Run the original validation
+    if (typeof originalValidate === 'function') {
+      return originalValidate(value, formValues)
+    }
+
+    if (typeof originalValidate === 'object') {
+      return runObjectValidators(originalValidate, value, formValues)
+    }
+
+    return true
+  }
+}
+
 /**
  * Creates validation rules for a field that combine Zod schema validation
  * with traditional validation functions.
@@ -100,7 +169,7 @@ async function validateField(
  * @returns RegisterOptions for react-hook-form register function
  */
 export function createFieldValidation(
-  field: InputFieldOptions,  // InputFieldOptions extends BaseFieldOptions and has validate
+  field: InputFieldOptions,
   isRequired: boolean,
   currentValidationGroup?: string
 ): RegisterOptions {
@@ -114,71 +183,24 @@ export function createFieldValidation(
   // Add Zod schema validation if present
   if (field.schema) {
     const zodValidate = createZodValidator(field.schema, field.errorMessages)
-
-    if (!rules.validate) {
-      rules.validate = zodValidate
-    } else if (typeof rules.validate === 'object') {
-      rules.validate.schema = zodValidate
-    } else {
-      rules.validate = zodValidate
-    }
+    addValidatorToRules(rules, zodValidate, 'schema')
   }
 
   // Add custom validation function if present
   if (field.validate) {
-    if (!rules.validate) {
-      rules.validate = field.validate
-    } else if (typeof rules.validate === 'object') {
-      rules.validate.custom = field.validate
-    } else {
-      const validator = field.validate
-      rules.validate = combineValidators(rules.validate, (value: any) => validator(value))
-    }
+    const validator = field.validate
+    addValidatorToRules(rules, (value: any) => validator(value), 'custom')
   }
 
   // Add cross-field validation if present
   if (field.validateWithForm) {
-    if (!rules.validate) {
-      rules.validate = field.validateWithForm
-    } else if (typeof rules.validate === 'object') {
-      rules.validate.crossField = field.validateWithForm
-    } else {
-      rules.validate = combineValidators(rules.validate, field.validateWithForm)
-    }
+    addValidatorToRules(rules, field.validateWithForm, 'crossField')
   }
 
   // Wrap validation with conditional and group checks
-  if (rules.validate && (field.validateWhen || field.validationGroup)) {
-    const originalValidate = rules.validate
-
-    // Always preserve the (value, formValues) signature
-    rules.validate = async (value: any, formValues: any) => {
-      // Check if this field should be validated based on conditions
-      if (field.validateWhen && !field.validateWhen(formValues)) {
-        return true // Skip validation
-      }
-
-      // Check if this field belongs to the current validation group
-      if (currentValidationGroup && field.validationGroup && field.validationGroup !== currentValidationGroup) {
-        return true // Skip validation - not in current group
-      }
-
-      // Run the original validation - always pass both parameters
-      if (typeof originalValidate === 'function') {
-        return originalValidate(value, formValues)
-      } else if (typeof originalValidate === 'object') {
-        // Run all validators in the object
-        for (const [, validator] of Object.entries(originalValidate)) {
-          if (typeof validator === 'function') {
-            const result = await validator(value, formValues)
-            if (result !== true) return result
-          }
-        }
-        return true
-      }
-
-      return true
-    }
+  const needsConditionalWrapper = rules.validate && (field.validateWhen || field.validationGroup)
+  if (needsConditionalWrapper) {
+    rules.validate = createConditionalWrapper(rules.validate, field, currentValidationGroup)
   }
 
   return rules

@@ -1,4 +1,3 @@
-import React from 'react'
 import { TextInput, View, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
@@ -42,20 +41,20 @@ export function NumberField({
 
   const handleChangeText = (text: string) => {
     // Filter to allow only numeric input (digits, decimal point, negative sign)
-    const filtered = text.replace(/[^0-9.-]/g, '')
+    const filtered = text.replaceAll(/[^0-9.-]/g, '')
 
     // Parse to number
-    const numValue = filtered === '' || filtered === '-' ? filtered : parseFloat(filtered)
+    const numValue = filtered === '' || filtered === '-' ? filtered : Number.parseFloat(filtered)
 
     // Apply min/max constraints on blur, not during typing
-    form.setValue(field.key, numValue === '' || isNaN(numValue as number) ? '' : numValue, { shouldValidate: true })
+    form.setValue(field.key, numValue === '' || Number.isNaN(numValue as number) ? '' : numValue, { shouldValidate: true })
   }
 
   const handleBlur = () => {
     const currentValue = form.getValues(field.key)
     if (currentValue !== '' && currentValue !== undefined) {
-      let numValue = typeof currentValue === 'string' ? parseFloat(currentValue) : currentValue
-      if (!isNaN(numValue)) {
+      let numValue = typeof currentValue === 'string' ? Number.parseFloat(currentValue) : currentValue
+      if (!Number.isNaN(numValue)) {
         if (field.options.min !== undefined && numValue < field.options.min) {
           numValue = field.options.min
         }

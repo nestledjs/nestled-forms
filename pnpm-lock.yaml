@@ -220,6 +220,72 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.24)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@26.1.0)(less@4.4.2)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)
 
+  forms:
+    dependencies:
+      '@hookform/resolvers':
+        specifier: ^3.0.0
+        version: 3.10.0(react-hook-form@7.66.0(react@19.1.0))
+      '@mdxeditor/editor':
+        specifier: ^3.39.1
+        version: 3.48.0(@codemirror/language@6.11.3)(@lezer/highlight@1.2.3)(@types/react-dom@19.1.0(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(yjs@13.6.27)
+      '@nestledjs/forms-core':
+        specifier: 0.1.0
+        version: 0.1.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.18.0))(graphql@16.12.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(react@19.1.0)
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      react:
+        specifier: '>=18.0.0'
+        version: 19.1.0
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 19.1.0(react@19.1.0)
+      react-hook-form:
+        specifier: ^7.58.1
+        version: 7.66.0(react@19.1.0)
+      react-phone-number-input:
+        specifier: ^3.4.12
+        version: 3.4.13(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      zod:
+        specifier: ^3.0.0
+        version: 3.25.76
+
+  forms-core:
+    dependencies:
+      '@hookform/resolvers':
+        specifier: ^3.0.0
+        version: 3.10.0(react-hook-form@7.66.0(react@19.1.0))
+      dayjs:
+        specifier: ^1.11.0
+        version: 1.11.19
+      react:
+        specifier: '>=18.0.0'
+        version: 19.1.0
+      react-hook-form:
+        specifier: ^7.58.1
+        version: 7.66.0(react@19.1.0)
+      zod:
+        specifier: ^3.0.0
+        version: 3.25.76
+
+  forms-native:
+    dependencies:
+      '@nestledjs/forms-core':
+        specifier: 0.1.0
+        version: 0.1.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.18.0))(graphql@16.12.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(react@19.1.0)
+      expo-checkbox:
+        specifier: '>=3.0.0'
+        version: 5.0.8(react-native@0.84.0(@babel/core@7.28.5)(@types/react@19.1.0)(react@19.1.0))(react@19.1.0)
+      react:
+        specifier: '>=18.0.0'
+        version: 19.1.0
+      react-hook-form:
+        specifier: ^7.58.1
+        version: 7.66.0(react@19.1.0)
+      react-native:
+        specifier: '>=0.72.0'
+        version: 0.84.0(@babel/core@7.28.5)(@types/react@19.1.0)(react@19.1.0)
+
 packages:
 
   '@adobe/css-tools@4.4.4':
@@ -1443,6 +1509,11 @@ packages:
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  '@hookform/resolvers@3.10.0':
+    resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
+    peerDependencies:
+      react-hook-form: ^7.0.0
+
   '@hookform/resolvers@5.2.2':
     resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
     peerDependencies:
@@ -2016,6 +2087,15 @@ packages:
 
   '@napi-rs/wasm-runtime@1.0.7':
     resolution: {integrity: sha512-SeDnOO0Tk7Okiq6DbXmmBODgOAb9dp9gjlphokTUxmt8U3liIP1ZsozBahH69j/RJv+Rfs6IwUKHTgQYJ/HBAw==}
+
+  '@nestledjs/forms-core@0.1.0':
+    resolution: {integrity: sha512-I7UO/Ykw9O5uLFfTaBCeZUFja7RvrS6jP3AcctknqmDEhKb/suFA9dF+UPZq1+2RBF1i9PPkYEaZpC6cic+r+w==}
+    peerDependencies:
+      '@apollo/client': '*'
+      react: '>=18.0.0'
+    peerDependenciesMeta:
+      '@apollo/client':
+        optional: true
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -5403,6 +5483,16 @@ packages:
   expect-type@1.2.2:
     resolution: {integrity: sha512-JhFGDVJ7tmDJItKhYgJCGLOWjuK9vPxiXoUFLwLDc99NlmklilbiQJwoctZtt13+xMw91MCk/REan6MWHqDjyA==}
     engines: {node: '>=12.0.0'}
+
+  expo-checkbox@5.0.8:
+    resolution: {integrity: sha512-QDMxNXZu5WBTwRM9oPd2EnTiF9iLvwff3t0q6mQr955BR2N9mn1py7xnuYiRHKBzmYySqZH7/S4QQqWOWX4LTw==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+      react-native-web: '*'
+    peerDependenciesMeta:
+      react-native-web:
+        optional: true
 
   exponential-backoff@3.1.3:
     resolution: {integrity: sha512-ZgEeZXj30q+I0EN+CbSSpIyPaJ5HVQD18Z1m+u1FXbAeT94mr1zw50q4q6jiiC447Nl/YTcIYSAftiGqetwXCA==}
@@ -10821,6 +10911,10 @@ snapshots:
     dependencies:
       graphql: 16.12.0
 
+  '@hookform/resolvers@3.10.0(react-hook-form@7.66.0(react@19.1.0))':
+    dependencies:
+      react-hook-form: 7.66.0(react@19.1.0)
+
   '@hookform/resolvers@5.2.2(react-hook-form@7.66.0(react@19.1.0))':
     dependencies:
       '@standard-schema/utils': 0.3.0
@@ -11752,6 +11846,16 @@ snapshots:
       '@emnapi/runtime': 1.7.0
       '@tybys/wasm-util': 0.10.1
     optional: true
+
+  '@nestledjs/forms-core@0.1.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.18.0))(graphql@16.12.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(react@19.1.0)':
+    dependencies:
+      '@hookform/resolvers': 3.10.0(react-hook-form@7.66.0(react@19.1.0))
+      dayjs: 1.11.19
+      react: 19.1.0
+      react-hook-form: 7.66.0(react@19.1.0)
+      zod: 3.25.76
+    optionalDependencies:
+      '@apollo/client': 4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.18.0))(graphql@16.12.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0))
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -15849,6 +15953,11 @@ snapshots:
       homedir-polyfill: 1.0.3
 
   expect-type@1.2.2: {}
+
+  expo-checkbox@5.0.8(react-native@0.84.0(@babel/core@7.28.5)(@types/react@19.1.0)(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-native: 0.84.0(@babel/core@7.28.5)(@types/react@19.1.0)(react@19.1.0)
 
   exponential-backoff@3.1.3: {}
 

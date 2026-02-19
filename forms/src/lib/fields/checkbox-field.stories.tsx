@@ -204,7 +204,7 @@ export const Disabled: Story = {
   },
 }
 
-export const Error: Story = {
+export const WithError: Story = {
   name: 'Error State',
   args: { hasError: true, errorMessage: 'You must accept the terms.', showState: false },
   play: async ({ canvasElement }) => {

@@ -2,10 +2,8 @@
 
 import clsx from 'clsx'
 import React from 'react'
-import { useFormTheme } from '@nestledjs/forms-core'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
-import { DEFAULT_REQUIRED_ERROR_MESSAGE } from '@nestledjs/forms-core'
+import { useFormTheme, FormField, FormFieldProps, FormFieldType, DEFAULT_REQUIRED_ERROR_MESSAGE } from '@nestledjs/forms-core'
 
 type CheckboxFieldType = Extract<FormField, { type: FormFieldType.Checkbox }>
 

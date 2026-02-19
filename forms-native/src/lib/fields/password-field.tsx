@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { TextInput, View, Text, Pressable } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType, useFieldValidation } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'

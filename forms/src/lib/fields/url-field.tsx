@@ -1,8 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
-import { useFormTheme } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
 
 export function UrlField({
   form,
@@ -15,6 +14,7 @@ export function UrlField({
   formReadOnlyStyle?: 'value' | 'disabled'
 }) {
   const theme = useFormTheme()
+  const validationRules = useFieldValidation(field, form)
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''
@@ -60,7 +60,7 @@ export function UrlField({
         placeholder={field.options.placeholder}
         defaultValue={field.options.defaultValue}
         required={field.options.required}
-        {...form.register(field.key, { required: field.options.required })}
+        {...form.register(field.key, validationRules)}
         className={clsx(
           theme.urlField.input,
           field.options.disabled && theme.urlField.disabled,

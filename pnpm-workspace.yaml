@@ -1,7 +1,7 @@
 packages:
-  - 'forms'
-  - 'forms-core'
-  - 'forms-native'
+  - forms
+  - forms-core
+  - forms-native
 
 onlyBuiltDependencies:
   - '@apollo/protobufjs'
@@ -9,6 +9,7 @@ onlyBuiltDependencies:
   - '@swc/core'
   - '@tailwindcss/oxide'
   - core-js
+  - es5-ext
   - esbuild
   - nx
   - unrs-resolver
