@@ -34,12 +34,12 @@ export function useFieldValidation<TFieldValues extends FieldValues = FieldValue
       currentValidationGroup
     )
   }, [
-    // Use stable references for the field options
     field.key,
     field.options.required,
     field.options.schema,
-    // Don't use function references as dependencies - they might change on every render
-    // The validation functions themselves will be stable inside createFieldValidation
+    field.options.validate,
+    field.options.validateWithForm,
+    field.options.validateWhen,
   ])
 
   return validationRules
