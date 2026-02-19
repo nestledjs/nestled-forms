@@ -17,8 +17,8 @@ export function PhoneField({
 }) {
   const theme = useFormTheme()
   
-  function validatePhone(val: string) {
-    return val === undefined || val === '' || isPossiblePhoneNumber((val ?? '')?.toString(), 'US')
+  function validatePhone(val: string | null | undefined): string | boolean {
+    return val === undefined || val === null || val === '' || isPossiblePhoneNumber((val ?? '')?.toString(), 'US')
   }
 
   const isReadOnly = field.options.readOnly ?? formReadOnly
