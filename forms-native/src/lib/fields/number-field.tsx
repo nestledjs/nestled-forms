@@ -74,7 +74,7 @@ export function NumberField({
         editable={!field.options.disabled}
         placeholder={field.options.placeholder}
         placeholderTextColor="#9ca3af"
-        defaultValue={field.options.defaultValue !== undefined ? String(field.options.defaultValue) : undefined}
+        defaultValue={field.options.defaultValue === undefined ? undefined : String(field.options.defaultValue)}
         keyboardType="decimal-pad"
         onChangeText={handleChangeText}
         onBlur={handleBlur}

@@ -181,7 +181,7 @@ export function RadioField(
                         disabled={options?.disabled}
                         required={options.required}
                       />
-                      {!options?.fullWidthLabel ? (
+                      {options?.fullWidthLabel ? null : (
                         <label
                           htmlFor={option.key}
                           className={clsx(
@@ -191,7 +191,7 @@ export function RadioField(
                         >
                           {option.label}
                         </label>
-                      ) : null}
+                      )}
                     </div>
                     {option?.value === value && option?.checkedSubOption ? (
                       <input

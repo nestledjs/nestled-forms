@@ -184,9 +184,9 @@ export function CheckboxGroupField({
             <div className={clsx(groupTheme.wrapper)}>
               <div className={clsx(
                 groupTheme.container,
-                options.checkboxDirection !== 'row' 
-                  ? groupTheme.containerColumn 
-                  : groupTheme.containerRow
+                options.checkboxDirection === 'row'
+                  ? groupTheme.containerRow
+                  : groupTheme.containerColumn
               )}>
                 {options.checkboxOptions.map((option: CheckboxGroupOption) => {
                   const isChecked = selectedValues.includes(String(option.value))
