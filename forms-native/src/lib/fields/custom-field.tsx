@@ -8,11 +8,11 @@ export function CustomField<T = unknown>({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Custom }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Custom }>> & {
   hasError?: boolean
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme().customField
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly

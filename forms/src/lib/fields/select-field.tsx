@@ -10,10 +10,10 @@ export function SelectField({
   hasError, 
   formReadOnly = false, 
   formReadOnlyStyle = 'value' 
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Select }>> & { 
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Select }>> & {
   formReadOnly?: boolean
-  formReadOnlyStyle?: 'value' | 'disabled' 
-}) {
+  formReadOnlyStyle?: 'value' | 'disabled'
+}>) {
   const options: SelectOption[] = field.options.options || []
   
   // Function to render read-only value

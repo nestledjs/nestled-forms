@@ -11,12 +11,12 @@ export function DatePickerField({
   formReadOnly = false,
   formReadOnlyStyle = 'value',
   errorMessage,
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.DatePicker }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.DatePicker }>> & {
   hasError?: boolean
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
   errorMessage?: string
-}) {
+}>) {
   const theme = useFormTheme().datePicker
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly

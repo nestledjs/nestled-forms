@@ -16,10 +16,10 @@ export function PhoneField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Phone }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Phone }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useFormTheme()
 
   const fieldWithPhoneValidation = useMemo(() => {

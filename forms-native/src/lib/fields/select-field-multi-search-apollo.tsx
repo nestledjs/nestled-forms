@@ -30,10 +30,10 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelectMultiApollo }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelectMultiApollo }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme().multiSelect
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle

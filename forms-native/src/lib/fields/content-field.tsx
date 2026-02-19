@@ -4,9 +4,9 @@ import { useNativeTheme } from '../native-theme-context'
 
 export function ContentField({
   field,
-}: {
+}: Readonly<{
   field: Extract<FormField, { type: FormFieldType.Content }>
-}) {
+}>) {
   const theme = useNativeTheme().contentField
 
   return (

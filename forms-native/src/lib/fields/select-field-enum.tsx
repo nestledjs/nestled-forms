@@ -8,10 +8,10 @@ export function SelectFieldEnum({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.EnumSelect }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.EnumSelect }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const selectOptions = Object.entries(field.options.enum || {}).map(([label, value]) => ({
     label,
     value: String(value),

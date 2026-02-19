@@ -32,10 +32,10 @@ export function SelectFieldMulti({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.MultiSelect }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.MultiSelect }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme().multiSelect
   const options = (field.options.options || []).map(o => ({ label: o.label, value: String(o.value) }))
   const isReadOnly = field.options.readOnly ?? formReadOnly

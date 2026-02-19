@@ -9,7 +9,7 @@ interface TimePickerFieldType {
   options: BaseFieldOptions
 }
 
-export function TimePickerField({ form, field, hasError, formReadOnly = false, formReadOnlyStyle = 'value' }: FormFieldProps<TimePickerFieldType> & { formReadOnly?: boolean, formReadOnlyStyle?: 'value' | 'disabled' }) {
+export function TimePickerField({ form, field, hasError, formReadOnly = false, formReadOnlyStyle = 'value' }: Readonly<FormFieldProps<TimePickerFieldType> & { formReadOnly?: boolean, formReadOnlyStyle?: 'value' | 'disabled' }>) {
   const theme = useFormTheme()
   const isReadOnly = field.options.readOnly ?? formReadOnly;
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle;

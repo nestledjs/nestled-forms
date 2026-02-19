@@ -11,10 +11,10 @@ export function SelectFieldMultiSearch({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelectMulti }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelectMulti }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useFormTheme()
   
   // Ensure the field has submit transformation for form submission

@@ -9,10 +9,10 @@ export function EmailField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Email }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Email }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   // Get the fully resolved theme from the context
   const theme = useFormTheme()
   const emailTheme = theme.emailField

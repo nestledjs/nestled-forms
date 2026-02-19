@@ -5,7 +5,7 @@ export function ButtonField({
   field,
   form,
   hasError,
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Button }>>) {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Button }>>>) {
   const handlePress = async () => {
     if (field.options.disabled) return
 

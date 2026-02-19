@@ -5,10 +5,10 @@ import { FormFieldProps, FormField, FormFieldType, RadioOption, RadioFormFieldOp
 import { useNativeTheme } from '../native-theme-context'
 
 export function RadioField(
-  props: FormFieldProps<Extract<FormField, { type: FormFieldType.Radio }>> & {
+  props: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Radio }>> & {
     formReadOnly?: boolean
     formReadOnlyStyle?: 'value' | 'disabled'
-  },
+  }>,
 ) {
   const theme = useNativeTheme()
   const [subOptionKey, setSubOptionKey] = useState<string>()

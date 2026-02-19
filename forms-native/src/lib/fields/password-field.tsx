@@ -9,10 +9,10 @@ export function PasswordField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Password }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Password }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme()
   const [showPassword, setShowPassword] = useState(false)
   const isReadOnly = field.options.readOnly ?? formReadOnly

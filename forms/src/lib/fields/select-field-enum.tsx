@@ -3,7 +3,7 @@
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { SelectField } from './select-field'
 
-export function SelectFieldEnum({ form, field, hasError, formReadOnly = false, formReadOnlyStyle = 'value' }: FormFieldProps<Extract<FormField, { type: FormFieldType.EnumSelect }>> & { formReadOnly?: boolean, formReadOnlyStyle?: 'value' | 'disabled' }) {
+export function SelectFieldEnum({ form, field, hasError, formReadOnly = false, formReadOnlyStyle = 'value' }: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.EnumSelect }>> & { formReadOnly?: boolean, formReadOnlyStyle?: 'value' | 'disabled' }>) {
   // Transform enum to select options
   const selectOptions = Object.entries(field.options.enum || {}).map(([label, value]) => ({ 
     label, 

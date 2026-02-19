@@ -6,10 +6,10 @@ import clsx from 'clsx'
 import { FormFieldProps, FormField, FormFieldType, RadioOption, RadioFormFieldOptions, useFormTheme } from '@nestledjs/forms-core'
 
 export function RadioField(
-  props: FormFieldProps<Extract<FormField, { type: FormFieldType.Radio }>> & {
+  props: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Radio }>> & {
     formReadOnly?: boolean
     formReadOnlyStyle?: 'value' | 'disabled'
-  },
+  }>,
 ) {
   const theme = useFormTheme()
   const [subOptionKey, setSubOptionKey] = useState<string>()

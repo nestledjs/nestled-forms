@@ -9,7 +9,7 @@ type SwitchOptions = {
   helpText?: string;
 } & Partial<BaseFieldOptions>;
 
-export function SwitchField({ form, field, hasError, formReadOnly = false, formReadOnlyStyle = 'value' }: FormFieldProps<Extract<FormField, { type: FormFieldType.Switch }>> & { formReadOnly?: boolean, formReadOnlyStyle?: 'value' | 'disabled' }) {
+export function SwitchField({ form, field, hasError, formReadOnly = false, formReadOnlyStyle = 'value' }: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Switch }>> & { formReadOnly?: boolean, formReadOnlyStyle?: 'value' | 'disabled' }>) {
   const theme = useFormTheme()
   const isReadOnly = field.options.readOnly ?? formReadOnly;
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle;

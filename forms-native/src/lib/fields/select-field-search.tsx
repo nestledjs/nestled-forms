@@ -17,10 +17,10 @@ export function SelectFieldSearch({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelect }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelect }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme().searchSelect
   const options = field.options.options || []
   const isReadOnly = field.options.readOnly ?? formReadOnly

@@ -52,7 +52,7 @@ function FallbackCheckbox({ value, onValueChange, disabled, color }: {
   )
 }
 
-export function CheckboxField(props: CheckboxFieldProps) {
+export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
   const { field, form, hasError, errorMessage, formReadOnly = false, formReadOnlyStyle = 'value' } = props
   const options = field.options
   const theme = useNativeTheme()

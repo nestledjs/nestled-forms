@@ -25,7 +25,7 @@ export function FormLabel({
   containerClassName,
   labelClassName,
   requiredIndicatorClassName,
-}: FormLabelProps) {
+}: Readonly<FormLabelProps>) {
   const theme = useNativeTheme()
 
   return (

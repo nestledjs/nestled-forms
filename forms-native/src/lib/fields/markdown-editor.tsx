@@ -29,10 +29,10 @@ export function MarkdownEditor({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.MarkdownEditor }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.MarkdownEditor }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme().markdownEditor
   const [mode, setMode] = useState<'edit' | 'preview'>('edit')
   const isReadOnly = field.options.readOnly ?? formReadOnly

@@ -27,7 +27,7 @@ export function Button({
   textStyle,
   className,
   accessibilityLabel,
-}: ButtonProps) {
+}: Readonly<ButtonProps>) {
   const theme = useNativeTheme()
   const buttonTheme = theme.button
   const isDisabled = disabled || loading

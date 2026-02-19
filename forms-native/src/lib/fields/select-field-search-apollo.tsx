@@ -26,10 +26,10 @@ export function SelectFieldSearchApollo<
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelectApollo }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelectApollo }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme().searchSelect
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle

@@ -10,10 +10,10 @@ export function SelectFieldSearch({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelect }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelect }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const value = form.getValues(field.key)
   const selectedOption = field.options.options.find(o => o.value === value) ?? null
 

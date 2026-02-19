@@ -88,11 +88,11 @@ export function CustomCheckboxField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.CustomCheckbox }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.CustomCheckbox }>> & {
   hasError?: boolean
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useFormTheme().customCheckbox
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly

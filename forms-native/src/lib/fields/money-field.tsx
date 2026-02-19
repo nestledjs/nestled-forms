@@ -9,10 +9,10 @@ export function MoneyField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Currency }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Currency }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme()
   const currencyConfig = resolveCurrencyConfig(field.options.currency, field.options.customCurrency)
   const isReadOnly = field.options.readOnly ?? formReadOnly

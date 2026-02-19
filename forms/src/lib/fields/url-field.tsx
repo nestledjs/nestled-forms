@@ -9,10 +9,10 @@ export function UrlField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Url }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Url }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useFormTheme()
   const validationRules = useFieldValidation(field, form)
   const isReadOnly = field.options.readOnly ?? formReadOnly

@@ -17,11 +17,11 @@ export function DateTimePickerField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.DateTimePicker }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.DateTimePicker }>> & {
   hasError?: boolean
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme().dateTimePicker
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly

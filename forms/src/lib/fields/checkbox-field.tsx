@@ -141,7 +141,7 @@ function renderStandardLayout(props: CheckboxFieldProps, inputNode: React.ReactN
   )
 }
 
-export function CheckboxField(props: CheckboxFieldProps) {
+export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
   const { field, form, formReadOnly = false } = props
   const options = field.options
   const theme = useFormTheme().checkbox

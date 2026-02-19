@@ -11,10 +11,10 @@ export function SelectFieldMulti({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.MultiSelect }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.MultiSelect }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useFormTheme()
   
   // Ensure the field has submit transformation for form submission

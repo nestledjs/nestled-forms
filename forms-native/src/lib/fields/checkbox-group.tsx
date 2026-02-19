@@ -55,10 +55,10 @@ export function CheckboxGroupField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.CheckboxGroup }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.CheckboxGroup }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   const theme = useNativeTheme()
   const groupTheme = theme.checkboxGroup
   const options: CheckboxGroupOptions = field.options

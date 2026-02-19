@@ -12,10 +12,10 @@ export function MoneyField({
   hasError,
   formReadOnly = false,
   formReadOnlyStyle = 'value',
-}: FormFieldProps<Extract<FormField, { type: FormFieldType.Currency }>> & {
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Currency }>> & {
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
-}) {
+}>) {
   // Get the fully resolved theme from the context
   const theme = useFormTheme()
   const moneyTheme = theme.moneyField
