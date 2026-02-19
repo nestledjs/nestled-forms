@@ -406,7 +406,7 @@ export function parseCurrency(value: string, config: CurrencyConfig): number | n
   let cleanValue = value.replace(config.symbol, '').replace(config.code, '').trim()
 
   // Replace thousands separators
-  cleanValue = cleanValue.replace(new RegExp(`\\${config.thousandsSeparator}`, 'g'), '')
+  cleanValue = cleanValue.replaceAll(config.thousandsSeparator, '')
 
   // Replace decimal separator with standard dot
   if (config.decimalSeparator !== '.') {

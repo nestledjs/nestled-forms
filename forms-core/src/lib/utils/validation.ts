@@ -29,6 +29,27 @@ function combineValidators(existing: any, newValidator: any) {
   }
 }
 
+// Helper function to run Zod schema validation
+async function runSchemaValidation(
+  schema: ZodTypeAny,
+  value: any,
+  errorMessages?: Record<string, string | undefined>
+): Promise<{ type: string; message: string } | null> {
+  try {
+    await schema.parseAsync(value)
+    return null
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const firstError = error.errors[0]
+      return {
+        type: firstError.code,
+        message: errorMessages?.[firstError.code] || firstError.message
+      }
+    }
+    return null
+  }
+}
+
 // Helper function to validate a single field
 async function validateField(
   field: { key: string; options: InputFieldOptions },
@@ -53,17 +74,8 @@ async function validateField(
 
   // Run Zod schema validation
   if (fieldOptions.schema) {
-    try {
-      await fieldOptions.schema.parseAsync(value)
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const firstError = error.errors[0]
-        return {
-          type: firstError.code,
-          message: fieldOptions.errorMessages?.[firstError.code] || firstError.message
-        }
-      }
-    }
+    const schemaError = await runSchemaValidation(fieldOptions.schema, value, fieldOptions.errorMessages)
+    if (schemaError) return schemaError
   }
 
   // Run custom validate function
