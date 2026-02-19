@@ -440,21 +440,17 @@ export function RenderFormField({
 
   // --- CONFIGURABLE LABEL LOGIC ---
   const hasLabelProp = !!field.options.label
-  let showLabel = false
+  let showLabel: boolean
 
-  if (hasLabelProp) {
-    switch (labelDisplay) {
-      case 'all':
-        showLabel = true
-        break
-      case 'none':
-        showLabel = false
-        break
-      case 'default':
-      default:
-        showLabel = field.type !== FormFieldType.Checkbox
-        break
-    }
+  if (!hasLabelProp) {
+    showLabel = false
+  } else if (labelDisplay === 'all') {
+    showLabel = true
+  } else if (labelDisplay === 'none') {
+    showLabel = false
+  } else {
+    // labelDisplay === 'default' or unset
+    showLabel = field.type !== FormFieldType.Checkbox
   }
 
   // Determine final required state (static OR dynamic)

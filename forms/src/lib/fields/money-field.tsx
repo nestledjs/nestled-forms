@@ -34,12 +34,10 @@ export function MoneyField({
   // State to track if input has content (to show/hide currency symbol)
   const hideSymbolWhenEmpty = field.options.hideSymbolWhenEmpty ?? true
   const [hasContent, setHasContent] = useState(Boolean(value))
-  const [inputValue, setInputValue] = useState(value)
 
   // Update hasContent when form value changes
   useEffect(() => {
     const currentValue = form.getValues(field.key)
-    setInputValue(currentValue ?? '')
     setHasContent(Boolean(currentValue))
   }, [form, field.key])
 
@@ -109,9 +107,7 @@ export function MoneyField({
           required: field.options.required,
           valueAsNumber: true,
           onChange: (e) => {
-            const newValue = e.target.value
-            setInputValue(newValue)
-            setHasContent(Boolean(newValue))
+            setHasContent(Boolean(e.target.value))
           },
         })}
         disabled={field.options.disabled}

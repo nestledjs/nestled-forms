@@ -88,9 +88,9 @@ export function CheckboxGroupField({
             className={clsx(
               groupTheme.label,
               options.fullWidthLabel && groupTheme.labelFullWidth,
-              options.checkboxDirection !== 'row' 
-                ? groupTheme.labelColumn 
-                : groupTheme.labelRow
+              options.checkboxDirection === 'row'
+                ? groupTheme.labelRow
+                : groupTheme.labelColumn
             )}
           >
             {option.label}
@@ -135,9 +135,9 @@ export function CheckboxGroupField({
         <div className={clsx(groupTheme.wrapper)}>
           <div className={clsx(
             groupTheme.container,
-            options.checkboxDirection !== 'row' 
-              ? groupTheme.containerColumn 
-              : groupTheme.containerRow
+            options.checkboxDirection === 'row'
+              ? groupTheme.containerRow
+              : groupTheme.containerColumn
           )}>
             {options.checkboxOptions.map((option: CheckboxGroupOption) => {
               const isChecked = selectedValues.includes(String(option.value))

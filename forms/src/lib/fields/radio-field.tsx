@@ -47,7 +47,7 @@ export function RadioField(
       options?.fullWidthLabel && theme.radioField.inputFullWidth,
       isChecked && theme.radioField.inputChecked,
       (options?.hidden || option?.hidden) && 'opacity-0',
-      options.radioDirection !== 'row' && 'ml-4',
+      options.radioDirection === 'row' ? undefined : 'ml-4',
       options?.disabled && theme.radioField.inputDisabled
     )
   }
@@ -55,7 +55,7 @@ export function RadioField(
   function renderDisabledRadioOptions() {
     const containerClass = clsx(
       theme.radioField.container,
-      options.radioDirection !== 'row' ? theme.radioField.containerColumn : theme.radioField.containerRow
+      options.radioDirection === 'row' ? theme.radioField.containerRow : theme.radioField.containerColumn
     )
 
     return (
@@ -143,7 +143,7 @@ export function RadioField(
           render={({ field: { value, onChange } }) => (
             <div className={clsx(
               theme.radioField.container,
-              options.radioDirection !== 'row' ? theme.radioField.containerColumn : theme.radioField.containerRow
+              options.radioDirection === 'row' ? theme.radioField.containerRow : theme.radioField.containerColumn
             )}>
               {options?.radioOptions?.map((option: RadioOption) => (
                 <div
@@ -152,13 +152,13 @@ export function RadioField(
                     theme.radioField.optionContainer,
                     options?.fullWidthLabel && theme.radioField.optionContainerFullWidth,
                     option.checkedSubOption && 'grow',
-                    options.radioDirection !== 'row' ? 'flex-col justify-center' : 'flex-row items-center'
+                    options.radioDirection === 'row' ? 'flex-row items-center' : 'flex-col justify-center'
                   )}
                 >
                   <div
                     className={clsx(
                       'flex grow',
-                      options.radioDirection !== 'row' ? 'flex-col justify-center' : 'flex-row items-center'
+                      options.radioDirection === 'row' ? 'flex-row items-center' : 'flex-col justify-center'
                     )}
                   >
                     <div className={clsx(
@@ -186,7 +186,7 @@ export function RadioField(
                           htmlFor={option.key}
                           className={clsx(
                             theme.radioField.label,
-                            options.radioDirection !== 'row' ? theme.radioField.labelColumn : theme.radioField.labelRow
+                            options.radioDirection === 'row' ? theme.radioField.labelRow : theme.radioField.labelColumn
                           )}
                         >
                           {option.label}
