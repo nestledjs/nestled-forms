@@ -264,12 +264,12 @@ export const WithStep: Story = {
   },
 }
 
-export const Error: Story = {
+export const WithError: Story = {
   name: 'Error State',
-  args: { 
-    hasError: true, 
+  args: {
+    hasError: true,
     errorMessage: 'Please select a valid date and time.',
-    showState: false 
+    showState: false
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)

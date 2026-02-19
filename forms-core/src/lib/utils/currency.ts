@@ -358,8 +358,8 @@ export function formatCurrency(
     return ''
   }
 
-  const numValue = typeof value === 'string' ? parseFloat(value) : value
-  if (isNaN(numValue)) {
+  const numValue = typeof value === 'string' ? Number.parseFloat(value) : value
+  if (Number.isNaN(numValue)) {
     return ''
   }
 
@@ -413,8 +413,8 @@ export function parseCurrency(value: string, config: CurrencyConfig): number | n
     cleanValue = cleanValue.replace(config.decimalSeparator, '.')
   }
 
-  const parsed = parseFloat(cleanValue)
-  return isNaN(parsed) ? null : parsed
+  const parsed = Number.parseFloat(cleanValue)
+  return Number.isNaN(parsed) ? null : parsed
 }
 
 /**
@@ -498,7 +498,7 @@ export function formatCurrencyForDisplay(
 
     case 'compact': {
       // For compact display - abbreviated large numbers
-      const numValue = typeof value === 'string' ? parseFloat(value) : value
+      const numValue = typeof value === 'string' ? Number.parseFloat(value) : value
       if (numValue && numValue >= 1000000) {
         return formatCurrency(numValue / 1000000, config, { includeDecimals: false }) + 'M'
       } else if (numValue && numValue >= 1000) {

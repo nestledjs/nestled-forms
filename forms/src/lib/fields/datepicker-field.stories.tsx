@@ -236,7 +236,7 @@ export const WithMinMax: Story = {
   },
 }
 
-export const Error: Story = {
+export const WithError: Story = {
   name: 'Error State',
   args: { hasError: true, errorMessage: 'Please select a valid date.', showState: false },
   play: async ({ canvasElement, args }) => {
@@ -456,7 +456,7 @@ export const RequiredLabel: Story = {
     const matches = canvas.getAllByText((content, node) => {
       const hasText = (node: HTMLElement) =>
         node.textContent === 'Event Date *' ||
-        node.textContent?.replace(/\s+/g, ' ').trim() === 'Event Date *';
+        node.textContent?.replaceAll(/\s+/g, ' ').trim() === 'Event Date *';
       const nodeHasText = hasText(node as HTMLElement);
       const childrenDontHaveText = Array.from((node as HTMLElement)?.children || []).every(
         (child) => !hasText(child as HTMLElement)

@@ -193,7 +193,7 @@ export const Disabled: Story = {
   },
 }
 
-export const Error: Story = {
+export const WithError: Story = {
   args: {
     required: true,
     hasError: true,

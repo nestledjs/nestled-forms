@@ -220,7 +220,7 @@ export const Disabled: Story = {
   },
 }
 
-export const Error: Story = {
+export const WithError: Story = {
   args: {
     ...Default.args,
     required: true,
