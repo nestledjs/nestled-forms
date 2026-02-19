@@ -63,7 +63,7 @@ export function NumberField({
         max={field.options.max}
         step={field.options.step}
         defaultValue={field.options.defaultValue}
-        {...form.register(field.key, { ...validationRules, valueAsNumber: true })}
+        {...form.register(field.key, { ...validationRules, valueAsNumber: true, valueAsDate: false, pattern: undefined })}
       />
       {field.options.helpText && (
         <div className="text-xs text-gray-500">{field.options.helpText}</div>
