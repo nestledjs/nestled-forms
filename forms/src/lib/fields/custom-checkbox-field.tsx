@@ -45,19 +45,24 @@ function renderReadOnlyText(theme: any, value: any) {
   return <div className={theme.readOnly}>{value ? 'Yes' : 'No'}</div>
 }
 
+// Icons config for read-only rendering
+interface ReadOnlyIcons {
+  checked: React.ReactNode
+  unchecked: React.ReactNode
+  readonlyChecked: React.ReactNode
+  readonlyUnchecked: React.ReactNode
+}
+
 // Helper to determine the read-only content based on style and icons
 function getReadOnlyContent(
   effectiveReadOnlyStyle: string,
   theme: any,
   hasError: boolean | undefined,
   value: any,
-  checkedIcon: React.ReactNode,
-  uncheckedIcon: React.ReactNode,
-  readonlyCheckedIcon: React.ReactNode,
-  readonlyUncheckedIcon: React.ReactNode
+  icons: ReadOnlyIcons
 ) {
   if (effectiveReadOnlyStyle === 'disabled') {
-    return renderDisabledCheckbox(theme, hasError, value, checkedIcon, uncheckedIcon)
+    return renderDisabledCheckbox(theme, hasError, value, icons.checked, icons.unchecked)
   }
 
   if (effectiveReadOnlyStyle === 'value') {
@@ -65,12 +70,12 @@ function getReadOnlyContent(
   }
 
   // Icon-based display
-  if (value && readonlyCheckedIcon) {
-    return renderReadOnlyIcon(readonlyCheckedIcon, value)
+  if (value && icons.readonlyChecked) {
+    return renderReadOnlyIcon(icons.readonlyChecked, value)
   }
 
-  if (!value && readonlyUncheckedIcon) {
-    return renderReadOnlyIcon(readonlyUncheckedIcon, value)
+  if (!value && icons.readonlyUnchecked) {
+    return renderReadOnlyIcon(icons.readonlyUnchecked, value)
   }
 
   // Fallback to text
@@ -118,10 +123,7 @@ export function CustomCheckboxField({
       theme,
       hasError,
       value,
-      checkedIcon,
-      uncheckedIcon,
-      readonlyCheckedIcon,
-      readonlyUncheckedIcon
+      { checked: checkedIcon, unchecked: uncheckedIcon, readonlyChecked: readonlyCheckedIcon, readonlyUnchecked: readonlyUncheckedIcon }
     )
 
     return (
