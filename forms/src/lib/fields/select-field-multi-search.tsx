@@ -1,9 +1,8 @@
 'use client'
 
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormTheme } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { SelectedItems, multiSelectDisplayValue } from './search-select-helpers'
-import { useFormTheme } from '@nestledjs/forms-core'
 import { multiSelectSubmitTransform } from './select-field-multi-search-apollo'
 
 export function SelectFieldMultiSearch({

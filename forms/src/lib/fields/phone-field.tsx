@@ -3,9 +3,7 @@
 import { useMemo } from 'react'
 import { isPossiblePhoneNumber } from 'react-phone-number-input'
 import clsx from 'clsx'
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
-import { useFormTheme } from '@nestledjs/forms-core'
-import { useFieldValidation } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
 
 function validatePhone(val: string | null | undefined): string | boolean {
   if (val === undefined || val === null || val === '') return true

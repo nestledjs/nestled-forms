@@ -1,9 +1,8 @@
 'use client'
 
-import { FormField, FormFieldProps, FormFieldType, SearchSelectOption } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, SearchSelectOption, useFormTheme } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { multiSelectDisplayValue, SelectedItems } from './search-select-helpers'
-import { useFormTheme } from '@nestledjs/forms-core'
 import { useApolloSearch } from './use-apollo-search'
 import { useWatch } from 'react-hook-form'
 import { useCallback, useEffect, useMemo, useState } from 'react'

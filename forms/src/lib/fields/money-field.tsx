@@ -2,9 +2,7 @@
 
 import clsx from 'clsx'
 import React, { useState, useEffect } from 'react'
-import { FormField, FormFieldType, FormFieldProps } from '@nestledjs/forms-core'
-import { useFormTheme } from '@nestledjs/forms-core'
-import { resolveCurrencyConfig, getCurrencyStep, formatCurrency } from '@nestledjs/forms-core'
+import { FormField, FormFieldType, FormFieldProps, useFormTheme, resolveCurrencyConfig, getCurrencyStep, formatCurrency } from '@nestledjs/forms-core'
 
 // The component now accepts the new props structure and is strongly typed.
 // We use `Extract` to get the specific member of the FormField union we care about.

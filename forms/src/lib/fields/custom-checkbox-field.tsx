@@ -2,9 +2,8 @@
 
 import clsx from 'clsx'
 import React from 'react'
-import { useFormTheme } from '@nestledjs/forms-core'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
+import { useFormTheme, FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 
 export function CustomCheckboxField({
   form,
