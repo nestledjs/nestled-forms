@@ -18,13 +18,9 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
-  "nxCloudId": "6852e899c6189c97ea989f09",
+  "nxCloudId": "69977345aa98a7b8ccf6b3cc",
   "targetDefaults": {
-    "@nx/js:tsc": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
-    },
+    "@nx/js:tsc": { "cache": true, "dependsOn": ["^build"], "inputs": ["production", "^production"] },
     "@nx/eslint:lint": {
       "cache": true,
       "inputs": [
@@ -34,33 +30,17 @@
         "{workspaceRoot}/eslint.config.js"
       ]
     },
-    "@nx/vite:test": {
-      "cache": true,
-      "inputs": ["default", "^production"]
-    },
-    "nx-release-publish": {
-      "dependsOn": ["build"],
-      "options": {
-        "packageRoot": "dist/{projectRoot}"
-      }
-    }
+    "@nx/vite:test": { "cache": true, "inputs": ["default", "^production"] },
+    "nx-release-publish": { "dependsOn": ["build"], "options": { "packageRoot": "dist/{projectRoot}" } }
   },
   "release": {
     "projectsRelationship": "independent",
-    "changelog": {
-      "projectChangelogs": {
-        "createRelease": "github"
-      },
-      "workspaceChangelog": false
-    },
+    "changelog": { "projectChangelogs": { "createRelease": "github" }, "workspaceChangelog": false },
     "version": {
       "preVersionCommand": "nx affected --target=test --base=develop",
       "fallbackCurrentVersionResolver": "disk",
       "conventionalCommits": true,
-      "versionActionsOptions": {
-        "skipLockFileUpdate": true,
-        "installIgnoreScripts": true
-      },
+      "versionActionsOptions": { "skipLockFileUpdate": true, "installIgnoreScripts": true },
       "git": {
         "commit": true,
         "commitMessage": "chore(release): release {projectName} v{version}",
@@ -68,17 +48,10 @@
         "tagMessage": "Release {projectName} v{version}"
       }
     },
-    "releaseTag": {
-      "pattern": "{projectName}@{version}"
-    }
+    "releaseTag": { "pattern": "{projectName}@{version}" }
   },
   "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
+    { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } },
     {
       "plugin": "@nx/vite/plugin",
       "options": {
@@ -103,11 +76,5 @@
       }
     }
   ],
-  "generators": {
-    "@nx/react": {
-      "library": {
-        "unitTestRunner": "vitest"
-      }
-    }
-  }
+  "generators": { "@nx/react": { "library": { "unitTestRunner": "vitest" } } }
 }
