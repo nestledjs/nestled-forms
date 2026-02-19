@@ -52,47 +52,65 @@ export function RadioField(
     )
   }
 
+  function renderDisabledRadioOptions() {
+    const containerClass = clsx(
+      theme.radioField.container,
+      options.radioDirection !== 'row' ? theme.radioField.containerColumn : theme.radioField.containerRow
+    )
+
+    return (
+      <div className={containerClass}>
+        {options?.radioOptions?.map((option: RadioOption) => (
+          <div key={option.key + '_container'} className={clsx(theme.radioField.radioContainer)}>
+            <input
+              type="radio"
+              id={option.key}
+              name={props.field.key}
+              checked={option.value === value}
+              disabled={true}
+              required={options.required}
+              className={clsx(
+                theme.radioField.input,
+                theme.radioField.inputDisabled,
+                option.value === value && theme.radioField.inputChecked
+              )}
+              readOnly
+            />
+            <label htmlFor={option.key} className={clsx(theme.radioField.label)}>
+              {option.label}
+            </label>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  function renderReadOnlyValue() {
+    if (selectedOption) {
+      return (
+        <div className={clsx(theme.radioField.readOnlySelected)}>
+          {theme.radioField.readOnlyIcon}
+          <span className="pl-2">{selectedOption.label}</span>
+        </div>
+      )
+    }
+
+    return (
+      <div className={clsx(theme.radioField.readOnlyUnselected)}>
+        {theme.radioField.readOnlyUnselectedIcon}
+      </div>
+    )
+  }
+
   function renderReadOnly() {
+    const content = readOnlyStyle === 'disabled'
+      ? renderDisabledRadioOptions()
+      : renderReadOnlyValue()
+
     return (
       <>
         <div className="text-xs text-gray-500">{(options as any).helpText}</div>
-        {readOnlyStyle === 'disabled' ? (
-          <div className={clsx(
-            theme.radioField.container,
-            options.radioDirection !== 'row' ? theme.radioField.containerColumn : theme.radioField.containerRow
-          )}>
-            {options?.radioOptions?.map((option: RadioOption) => (
-              <div key={option.key + '_container'} className={clsx(theme.radioField.radioContainer)}>
-                <input
-                  type="radio"
-                  id={option.key}
-                  name={props.field.key}
-                  checked={option.value === value}
-                  disabled={true}
-                  required={options.required}
-                  className={clsx(
-                    theme.radioField.input, 
-                    theme.radioField.inputDisabled,
-                    option.value === value && theme.radioField.inputChecked
-                  )}
-                  readOnly
-                />
-                <label htmlFor={option.key} className={clsx(theme.radioField.label)}>
-                  {option.label}
-                </label>
-              </div>
-            ))}
-          </div>
-        ) : selectedOption ? (
-          <div className={clsx(theme.radioField.readOnlySelected)}>
-            {theme.radioField.readOnlyIcon}
-            <span className="pl-2">{selectedOption.label}</span>
-          </div>
-        ) : (
-          <div className={clsx(theme.radioField.readOnlyUnselected)}>
-            {theme.radioField.readOnlyUnselectedIcon}
-          </div>
-        )}
+        {content}
       </>
     )
   }

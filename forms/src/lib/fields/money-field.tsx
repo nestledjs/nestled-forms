@@ -1,7 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { FormField, FormFieldType, FormFieldProps, useFormTheme, resolveCurrencyConfig, getCurrencyStep, formatCurrency } from '@nestledjs/forms-core'
 
 // The component now accepts the new props structure and is strongly typed.

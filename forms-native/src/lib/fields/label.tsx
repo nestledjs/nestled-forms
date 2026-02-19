@@ -1,5 +1,4 @@
-import React from 'react'
-import { Text, View, ViewStyle, TextStyle } from 'react-native'
+import { Text, ViewStyle, TextStyle } from 'react-native'
 import { useNativeTheme } from '../native-theme-context'
 
 interface FormLabelProps {

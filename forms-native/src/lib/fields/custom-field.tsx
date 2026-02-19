@@ -1,4 +1,3 @@
-import React from 'react'
 import { View, Text, TextInput } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType, CustomFieldRenderProps } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'

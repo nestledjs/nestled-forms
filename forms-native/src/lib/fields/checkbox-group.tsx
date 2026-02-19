@@ -1,4 +1,3 @@
-import React from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { Controller } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, CheckboxGroupOption, CheckboxGroupOptions } from '@nestledjs/forms-core'

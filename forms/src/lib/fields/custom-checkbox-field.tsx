@@ -5,6 +5,78 @@ import React from 'react'
 import { Controller } from 'react-hook-form'
 import { useFormTheme, FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 
+// Helper to render the disabled style checkbox
+function renderDisabledCheckbox(
+  theme: any,
+  hasError: boolean | undefined,
+  value: any,
+  checkedIcon: React.ReactNode,
+  uncheckedIcon: React.ReactNode
+) {
+  return (
+    <div className={clsx(theme.checkboxContainer)}>
+      <span
+        data-testid="custom-checkbox-icon"
+        className={clsx(
+          theme.customCheckbox,
+          hasError && theme.error,
+          theme.disabled,
+          value && theme.checked
+        )}
+      >
+        {value ? checkedIcon : uncheckedIcon}
+      </span>
+    </div>
+  )
+}
+
+// Helper to render the icon-based read-only display
+function renderReadOnlyIcon(icon: React.ReactNode, value: any) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+      {icon}
+      <span className="sr-only">{value ? 'Yes' : 'No'}</span>
+    </span>
+  )
+}
+
+// Helper to render plain text read-only value
+function renderReadOnlyText(theme: any, value: any) {
+  return <div className={theme.readOnly}>{value ? 'Yes' : 'No'}</div>
+}
+
+// Helper to determine the read-only content based on style and icons
+function getReadOnlyContent(
+  effectiveReadOnlyStyle: string,
+  theme: any,
+  hasError: boolean | undefined,
+  value: any,
+  checkedIcon: React.ReactNode,
+  uncheckedIcon: React.ReactNode,
+  readonlyCheckedIcon: React.ReactNode,
+  readonlyUncheckedIcon: React.ReactNode
+) {
+  if (effectiveReadOnlyStyle === 'disabled') {
+    return renderDisabledCheckbox(theme, hasError, value, checkedIcon, uncheckedIcon)
+  }
+
+  if (effectiveReadOnlyStyle === 'value') {
+    return renderReadOnlyText(theme, value)
+  }
+
+  // Icon-based display
+  if (value && readonlyCheckedIcon) {
+    return renderReadOnlyIcon(readonlyCheckedIcon, value)
+  }
+
+  if (!value && readonlyUncheckedIcon) {
+    return renderReadOnlyIcon(readonlyUncheckedIcon, value)
+  }
+
+  // Fallback to text
+  return renderReadOnlyText(theme, value)
+}
+
 export function CustomCheckboxField({
   form,
   field,
@@ -41,38 +113,21 @@ export function CustomCheckboxField({
   const readonlyUncheckedIcon = options.readonlyUncheckedIcon ?? theme.readonlyUncheckedIcon
 
   if (isReadOnly) {
+    const readOnlyContent = getReadOnlyContent(
+      effectiveReadOnlyStyle,
+      theme,
+      hasError,
+      value,
+      checkedIcon,
+      uncheckedIcon,
+      readonlyCheckedIcon,
+      readonlyUncheckedIcon
+    )
+
     return (
       <div className={clsx(theme.wrapper, options.wrapperClassNames)}>
         <div className={clsx(options.fullWidthLabel ? theme.rowFullWidth : theme.row)}>
-          {effectiveReadOnlyStyle === 'disabled' ? (
-            <div className={clsx(theme.checkboxContainer)}>
-              <span
-                data-testid="custom-checkbox-icon"
-                className={clsx(
-                  theme.customCheckbox,
-                  hasError && theme.error,
-                  theme.disabled,
-                  value && theme.checked
-                )}
-              >
-                {value ? checkedIcon : uncheckedIcon}
-              </span>
-            </div>
-          ) : effectiveReadOnlyStyle === 'value' ? (
-            <div className={theme.readOnly}>{value ? 'Yes' : 'No'}</div>
-          ) : value && readonlyCheckedIcon ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-              {readonlyCheckedIcon}
-              <span className="sr-only">{value ? 'Yes' : 'No'}</span>
-            </span>
-          ) : !value && readonlyUncheckedIcon ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-              {readonlyUncheckedIcon}
-              <span className="sr-only">{value ? 'Yes' : 'No'}</span>
-            </span>
-          ) : (
-            <div className={theme.readOnly}>{value ? 'Yes' : 'No'}</div>
-          )}
+          {readOnlyContent}
           {labelNode}
         </div>
         {helpTextNode}
