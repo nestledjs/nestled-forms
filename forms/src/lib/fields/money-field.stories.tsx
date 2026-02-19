@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { FormFieldType, CurrencyFieldOptions, CurrencyCode } from '@nestledjs/forms-core'
+import { FormFieldType, CurrencyFieldOptions, CurrencyCode, getCurrencyOptions } from '@nestledjs/forms-core'
 import { StorybookFieldWrapper } from '../../../.storybook/StorybookFieldWrapper'
 import { expect, within, userEvent, fn } from 'storybook/test'
-import { getCurrencyOptions } from '@nestledjs/forms-core'
 
 // Helper function to generate realistic usage code with memoization
 const codeCache = new Map<string, string>()

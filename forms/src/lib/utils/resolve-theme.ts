@@ -17,19 +17,36 @@ import { tailwindTheme } from '../themes/tailwind'
  * @returns The final, complete, and inherited FormTheme object to be put in context.
  */
 
+// Check if a value is empty (null, undefined, or empty string)
+function isEmptyValue(value: unknown): boolean {
+  if (value == null) return true
+  if (typeof value === 'string' && value.trim() === '') return true
+  return false
+}
+
+// Merge a single key from global into section
+function mergeKey(
+  globalValue: string | undefined,
+  sectionValue: unknown
+): unknown {
+  // Both are strings - combine with clsx
+  if (typeof sectionValue === 'string' && typeof globalValue === 'string') {
+    return clsx(globalValue, sectionValue)
+  }
+  // Section is empty but global has value - use global
+  if (isEmptyValue(sectionValue) && typeof globalValue === 'string') {
+    return globalValue
+  }
+  // Keep section value
+  return sectionValue
+}
+
 // Helper function for type-safe merging
 function mergeSection<T extends object>(global: Partial<Record<string, string>>, section: T): T {
   const result = { ...section }
   for (const key in global) {
-    if (key in section && typeof (section as any)[key] === 'string' && typeof global[key] === 'string') {
-      ;(result as any)[key] = clsx(global[key], (section as any)[key])
-    } else if (
-      key in section &&
-      ((section as any)[key] == null ||
-        (typeof (section as any)[key] === 'string' && (section as any)[key].trim() === '')) &&
-      typeof global[key] === 'string'
-    ) {
-      ;(result as any)[key] = global[key]
+    if (key in section) {
+      ;(result as Record<string, unknown>)[key] = mergeKey(global[key], (section as Record<string, unknown>)[key])
     }
   }
   return result
