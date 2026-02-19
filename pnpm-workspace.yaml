@@ -1,3 +1,8 @@
+packages:
+  - 'forms'
+  - 'forms-core'
+  - 'forms-native'
+
 onlyBuiltDependencies:
   - '@apollo/protobufjs'
   - '@parcel/watcher'
