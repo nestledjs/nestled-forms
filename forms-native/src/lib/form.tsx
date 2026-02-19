@@ -11,7 +11,7 @@ import {
   FormThemeSchema,
   createFormResolver,
 } from '@nestledjs/forms-core'
-import type { FormTheme, FormConfig } from '@nestledjs/forms-core'
+import type { FormConfig } from '@nestledjs/forms-core'
 import { ZodTypeAny } from 'zod'
 import { NativeThemeContext } from './native-theme-context'
 import { NativeTheme } from './themes/default'
@@ -105,7 +105,7 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
       const filteredValues: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(values as Record<string, unknown>)) {
         const isButtonField = fields?.some(f =>
-          f && f.key === key && f.type === FormFieldType.Button
+          f?.key === key && f.type === FormFieldType.Button
         )
         if (!isButtonField) {
           filteredValues[key] = value

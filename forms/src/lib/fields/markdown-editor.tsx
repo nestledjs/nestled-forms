@@ -66,30 +66,30 @@ export const markdownToHtml = async (markdown: string): Promise<string> => {
 
   // Simple markdown to HTML conversion with ReDoS-safe patterns
   // For production use, consider using libraries like 'marked' or 'markdown-it'
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis.window !== 'undefined') {
     try {
       // Use non-backtracking patterns to prevent ReDoS
       return (
         markdown
           // Headings - safe patterns with line boundaries and length limits
-          .replace(/^### ([^\r\n]{0,200})$/gim, '<h3>$1</h3>')
-          .replace(/^## ([^\r\n]{0,200})$/gim, '<h2>$1</h2>')
-          .replace(/^# ([^\r\n]{0,200})$/gim, '<h1>$1</h1>')
+          .replaceAll(/^### ([^\r\n]{0,200})$/gim, '<h3>$1</h3>')
+          .replaceAll(/^## ([^\r\n]{0,200})$/gim, '<h2>$1</h2>')
+          .replaceAll(/^# ([^\r\n]{0,200})$/gim, '<h1>$1</h1>')
 
           // Bold text - ReDoS-safe pattern with negated character class and length limit
-          .replace(/\*\*([^*\r\n]{1,500}?)\*\*/gim, '<strong>$1</strong>')
+          .replaceAll(/\*\*([^*\r\n]{1,500}?)\*\*/gim, '<strong>$1</strong>')
 
           // Italic text - ReDoS-safe pattern with negated character class and length limit
-          .replace(/\*([^*\r\n]{1,500}?)\*/gim, '<em>$1</em>')
+          .replaceAll(/\*([^*\r\n]{1,500}?)\*/gim, '<em>$1</em>')
 
           // Images - safe with negated character classes and length limits
-          .replace(/!\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, '<img alt="$1" src="$2" />')
+          .replaceAll(/!\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, '<img alt="$1" src="$2" />')
 
           // Links - safe with negated character classes and length limits
-          .replace(/\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, '<a href="$2">$1</a>')
+          .replaceAll(/\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, '<a href="$2">$1</a>')
 
           // Line breaks
-          .replace(/\n$/gim, '<br />')
+          .replaceAll(/\n$/gim, '<br />')
       )
     } catch (error) {
       console.warn('Failed to convert markdown to HTML:', error)
@@ -154,7 +154,7 @@ let customZIndexInstanceCount = 0
 // Custom hook for managing popup z-index styles
 const usePopupZIndex = (popupZIndex?: number) => {
   useEffect(() => {
-    if (!popupZIndex || typeof window === 'undefined') return
+    if (!popupZIndex || typeof globalThis.window === 'undefined') return
 
     const styleId = 'mdx-editor-popup-z-index'
     let style = document.getElementById(styleId) as HTMLStyleElement
@@ -183,7 +183,7 @@ const usePopupZIndex = (popupZIndex?: number) => {
       if (customZIndexInstanceCount <= 0) {
         const styleElement = document.getElementById(styleId)
         if (styleElement) {
-          document.head.removeChild(styleElement)
+          styleElement.remove()
         }
         // Reset counter to prevent negative values
         customZIndexInstanceCount = 0

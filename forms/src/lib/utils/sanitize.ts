@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify';
 
 let purify: typeof DOMPurify;
 
-if (typeof window === 'undefined') {
+if (typeof globalThis.window === 'undefined') {
   // SSR: use jsdom
    
   const { JSDOM } = require('jsdom');

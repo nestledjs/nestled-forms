@@ -205,7 +205,7 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
 
   const finalTheme = useMemo(() => createFinalTheme(userTheme), [userTheme])
   // Create the value for our new context
-  const formConfig: FormConfig = { labelDisplay }
+  const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
 
   // Create a wrapper function that applies field transformations before submission
   const handleSubmitWithTransform = useMemo(() => {
@@ -215,7 +215,7 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
       for (const [key, value] of Object.entries(values as Record<string, unknown>)) {
         // Check if this key belongs to a button field
         const isButtonField = fields?.some(f =>
-          f && f.key === key && f.type === FormFieldType.Button
+          f?.key === key && f.type === FormFieldType.Button
         )
         if (!isButtonField) {
           filteredValues[key] = value
