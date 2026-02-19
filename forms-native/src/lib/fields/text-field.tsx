@@ -1,5 +1,5 @@
 import { TextInput, View, Text } from 'react-native'
-import { FormField, FormFieldProps, FormFieldType, useFieldValidation } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 export function TextField({
@@ -16,8 +16,6 @@ export function TextField({
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''
-
-  const validationRules = useFieldValidation(field, form)
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {
@@ -43,8 +41,6 @@ export function TextField({
       </>
     )
   }
-
-  const { onChange, onBlur, name, ref } = form.register(field.key, validationRules)
 
   return (
     <>

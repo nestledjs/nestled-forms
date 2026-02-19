@@ -43,6 +43,20 @@ export function Button({
     }
   }
 
+  const renderContent = () => {
+    if (loading) {
+      return <ActivityIndicator size="small" color={variant === 'secondary' ? '#374151' : '#ffffff'} />
+    }
+    if (typeof children === 'string') {
+      return (
+        <Text style={[buttonTheme.text, getTextStyle(), isDisabled && buttonTheme.disabledText, textStyle]}>
+          {children}
+        </Text>
+      )
+    }
+    return children
+  }
+
   return (
     <Pressable
       onPress={isDisabled ? undefined : onPress}
@@ -60,15 +74,7 @@ export function Button({
       accessibilityLabel={accessibilityLabel}
       {...(className ? { className } : {})}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={variant === 'secondary' ? '#374151' : '#ffffff'} />
-      ) : typeof children === 'string' ? (
-        <Text style={[buttonTheme.text, getTextStyle(), isDisabled && buttonTheme.disabledText, textStyle]}>
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
+      {renderContent()}
     </Pressable>
   )
 }

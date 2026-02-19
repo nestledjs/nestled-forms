@@ -11,6 +11,12 @@ try {
   // not installed
 }
 
+function normalizeToString(v: any): string {
+  if (typeof v === 'string') return v
+  if (v?.value !== undefined) return String(v.value)
+  return String(v)
+}
+
 function multiSelectSubmitTransform(value: any): string[] {
   if (!Array.isArray(value)) return []
   return value.map((item: any) => {
@@ -49,7 +55,7 @@ export function SelectFieldMultiSearch({
 
   if (isReadOnly) {
     const value = form.getValues(field.key) ?? []
-    const selectedValues = Array.isArray(value) ? value.map((v: any) => typeof v === 'string' ? v : v?.value || String(v)) : []
+    const selectedValues = Array.isArray(value) ? value.map(normalizeToString) : []
     const selectedLabels = options.filter(o => selectedValues.includes(o.value)).map(o => o.label)
 
     if (readOnlyStyle === 'disabled') {
@@ -81,7 +87,7 @@ export function SelectFieldMultiSearch({
       rules={{ required: field.options.required }}
       render={({ field: controllerField }) => {
         const selectedValues = Array.isArray(controllerField.value)
-          ? controllerField.value.map((v: any) => typeof v === 'string' ? v : v?.value ? String(v.value) : String(v))
+          ? controllerField.value.map(normalizeToString)
           : []
 
         return (

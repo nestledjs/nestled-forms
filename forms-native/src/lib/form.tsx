@@ -98,7 +98,7 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
   // For forms-core ThemeContext, provide the default parsed theme (CSS-based, unused in native)
   const coreTheme = useMemo(() => FormThemeSchema.parse({}), [])
   const finalNativeTheme = useMemo(() => createFinalNativeTheme(userNativeTheme), [userNativeTheme])
-  const formConfig: FormConfig = { labelDisplay }
+  const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
 
   const handleSubmitWithTransform = useMemo(() => {
     return (values: T) => {

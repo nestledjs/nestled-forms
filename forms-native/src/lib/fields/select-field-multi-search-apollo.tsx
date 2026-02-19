@@ -79,6 +79,11 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
     return Array.from(map.values())
   }, [apolloOptions, selectedOptionsCache])
 
+  const findOrCreateOption = useCallback((id: string): SearchSelectOption => {
+    const opt = allOptions.find(o => o.value === id)
+    return opt || { value: id, label: id }
+  }, [allOptions])
+
   if (!MultiSelect) {
     return (
       <View style={theme.container}>
@@ -130,11 +135,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
             search
             searchPlaceholder="Search..."
             onChange={(items: string[]) => {
-              // Store as option objects for submitTransform
-              const itemObjects = items.map(id => {
-                const opt = allOptions.find(o => o.value === id)
-                return opt || { value: id, label: id }
-              })
+              const itemObjects = items.map(findOrCreateOption)
               controllerField.onChange(itemObjects)
               if (form.trigger) form.trigger(field.key)
             }}

@@ -77,52 +77,11 @@ export function createFinalTheme(userTheme: DeepPartial<FormTheme> = {}): FormTh
     const section = finalTheme[key]
     if (!section) continue
 
-    if (key === 'textField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['textField'])
-    } else if (key === 'checkbox') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['checkbox'])
-    } else if (key === 'customCheckbox') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['customCheckbox'])
-    } else if (key === 'customField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['customField'])
-    } else if (key === 'datePicker') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['datePicker'])
-    } else if (key === 'dateTimePicker') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['dateTimePicker'])
-    } else if (key === 'emailField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['emailField'])
-    } else if (key === 'moneyField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['moneyField'])
-    } else if (key === 'numberField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['numberField'])
-    } else if (key === 'passwordField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['passwordField'])
-    } else if (key === 'phoneField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['phoneField'])
-    } else if (key === 'radioField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['radioField'])
-    } else if (key === 'checkboxGroup') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['checkboxGroup'])
-    } else if (key === 'searchSelectField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['searchSelectField'])
-    } else if (key === 'searchSelectMultiField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['searchSelectMultiField'])
-    } else if (key === 'selectField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['selectField'])
-    } else if (key === 'switchField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['switchField'])
-    } else if (key === 'textAreaField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['textAreaField'])
-    } else if (key === 'markdownEditor') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['markdownEditor'])
-    } else if (key === 'timePickerField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['timePickerField'])
-    } else if (key === 'urlField') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['urlField'])
-    } else if (key === 'button') {
-      finalTheme[key] = mergeSection(globalStyles, section as FormTheme['button'])
-    }
-    // Add more as needed for other inheritable keys
+    // Use type assertion to merge all inheritable sections uniformly
+    ;(finalTheme as Record<string, object>)[key] = mergeSection(
+      globalStyles,
+      section as Record<string, string>
+    )
   }
 
   return FormThemeSchema.parse(finalTheme)
