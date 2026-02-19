@@ -7,7 +7,7 @@ import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useFormTheme } from '@nestledjs/forms-core'
 import { useFieldValidation } from '@nestledjs/forms-core'
 
-function validatePhone(val: string): string | boolean {
+function validatePhone(val: string | null | undefined): string | boolean {
   if (val === undefined || val === null || val === '') return true
   return isPossiblePhoneNumber(val.toString(), 'US') || 'Please enter a valid phone number'
 }
