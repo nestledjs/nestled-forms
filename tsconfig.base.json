@@ -1,0 +1,23 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "nodeNext",
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "nodeNext",
+    "esModuleInterop": true,
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@nestledjs/forms": ["forms/src/index.ts"],
+      "@nestledjs/forms-core": ["forms-core/src/index.ts"],
+      "@nestledjs/forms-native": ["forms-native/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

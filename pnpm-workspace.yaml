@@ -1,0 +1,9 @@
+onlyBuiltDependencies:
+  - '@apollo/protobufjs'
+  - '@parcel/watcher'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - core-js
+  - esbuild
+  - nx
+  - unrs-resolver

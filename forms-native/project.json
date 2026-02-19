@@ -1,0 +1,29 @@
+{
+  "name": "forms-native",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "forms-native/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["forms-core"],
+  "publishable": true,
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/forms-native"
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production"
+        }
+      }
+    }
+  }
+}

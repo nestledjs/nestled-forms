@@ -1,0 +1,62 @@
+{
+  "name": "@nestledjs/forms-native",
+  "version": "0.1.0",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    }
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "type": "module",
+  "description": "React Native form library powered by @nestledjs/forms-core — declarative, validated, themeable forms for Expo and React Native",
+  "keywords": [
+    "react-native",
+    "expo",
+    "forms",
+    "typescript",
+    "validation",
+    "react-hook-form",
+    "zod",
+    "nativewind"
+  ],
+  "author": "Nestled Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nestledjs/nestled.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.72.0",
+    "expo-checkbox": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@apollo/client": {
+      "optional": true
+    },
+    "@react-native-community/datetimepicker": {
+      "optional": true
+    },
+    "react-native-phone-number-input": {
+      "optional": true
+    },
+    "react-native-element-dropdown": {
+      "optional": true
+    },
+    "react-native-markdown-display": {
+      "optional": true
+    },
+    "expo-checkbox": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@nestledjs/forms-core": "0.1.0",
+    "react-hook-form": "^7.58.1"
+  }
+}

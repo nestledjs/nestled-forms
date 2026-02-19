@@ -1,0 +1,29 @@
+{
+  "name": "forms-core",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "forms-core/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project forms-core --web",
+  "publishable": true,
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/forms-core"
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production"
+        }
+      }
+    }
+  }
+}

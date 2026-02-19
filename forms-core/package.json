@@ -1,0 +1,46 @@
+{
+  "name": "@nestledjs/forms-core",
+  "version": "0.1.0",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    }
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "type": "module",
+  "description": "Platform-agnostic core types, validation, contexts, and utilities for @nestledjs/forms",
+  "keywords": [
+    "react",
+    "forms",
+    "typescript",
+    "validation",
+    "form-types",
+    "react-hook-form",
+    "zod"
+  ],
+  "author": "Nestled Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nestledjs/nestled.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@apollo/client": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.0.0",
+    "dayjs": "^1.11.0",
+    "react-hook-form": "^7.58.1",
+    "zod": "^3.0.0"
+  }
+}
