@@ -7,11 +7,11 @@ export function SelectedItems({
   value,
   onChange,
   theme,
-}: {
+}: Readonly<{
   value: SearchSelectOption[]
   onChange: (items: SearchSelectOption[]) => void
   theme: any
-}) {
+}>) {
   // Defensive check for undefined or null values
   const items = value ?? []
 

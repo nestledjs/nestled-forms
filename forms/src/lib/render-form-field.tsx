@@ -381,12 +381,12 @@ export function RenderFormField({
   formReadOnly = false,
   formReadOnlyStyle = 'value',
   className,
-}: {
+}: Readonly<{
   field: FormField
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
   className?: string
-}) {
+}>) {
   const form = useFormContext()
   const { labelDisplay } = useFormConfig()
 

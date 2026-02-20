@@ -43,7 +43,7 @@ export function UrlField({
     // Render as plain value
     return (
       <>
-        <div className={theme.urlField.readOnlyValue}>{value ? value : '—'}</div>
+        <div className={theme.urlField.readOnlyValue}>{value || '—'}</div>
         {field.options.helpText && (
           <div className={clsx(theme.urlField.helpText)}>{field.options.helpText}</div>
         )}

@@ -100,36 +100,6 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
   const finalNativeTheme = useMemo(() => createFinalNativeTheme(userNativeTheme), [userNativeTheme])
   const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
 
-  const handleSubmitWithTransform = useMemo(() => {
-    return (values: T) => {
-      const filteredValues: Record<string, unknown> = {}
-      for (const [key, value] of Object.entries(values as Record<string, unknown>)) {
-        const isButtonField = fields?.some(f =>
-          f?.key === key && f.type === FormFieldType.Button
-        )
-        if (!isButtonField) {
-          filteredValues[key] = value
-        }
-      }
-
-      if (!fields) {
-        return submit(filteredValues as T)
-      }
-
-      const transformedValues: Record<string, unknown> = { ...filteredValues }
-      fields
-        .filter((field): field is FormField => field !== null)
-        .filter(field => field.type !== FormFieldType.Button)
-        .forEach((field) => {
-          if (field.options.submitTransform && field.key in transformedValues) {
-            transformedValues[field.key] = field.options.submitTransform(transformedValues[field.key])
-          }
-        })
-
-      return submit(transformedValues as T)
-    }
-  }, [fields, submit])
-
   return (
     <FormConfigContext.Provider value={formConfig}>
       <ThemeContext.Provider value={coreTheme}>

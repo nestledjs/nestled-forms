@@ -41,7 +41,7 @@ export function BaseSelectField({
   themeKey,
   children,
   renderReadOnlyValue,
-}: BaseSelectFieldProps) {
+}: Readonly<BaseSelectFieldProps>) {
   const theme = useFormTheme()
   const fieldTheme = theme[themeKey as keyof typeof theme] as any
   

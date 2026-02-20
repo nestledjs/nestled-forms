@@ -9,7 +9,7 @@ interface FormLabelProps {
   required?: boolean
 }
 
-export function FormLabel({ htmlFor, label, required }: FormLabelProps) {
+export function FormLabel({ htmlFor, label, required }: Readonly<FormLabelProps>) {
   const theme = useFormTheme()
 
   return (

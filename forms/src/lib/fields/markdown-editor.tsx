@@ -66,7 +66,7 @@ export const markdownToHtml = async (markdown: string): Promise<string> => {
 
   // Simple markdown to HTML conversion with ReDoS-safe patterns
   // For production use, consider using libraries like 'marked' or 'markdown-it'
-  if (typeof globalThis.window !== 'undefined') {
+  if (globalThis.window !== undefined) {
     try {
       // Use non-backtracking patterns to prevent ReDoS
       return (
@@ -154,7 +154,7 @@ let customZIndexInstanceCount = 0
 // Custom hook for managing popup z-index styles
 const usePopupZIndex = (popupZIndex?: number) => {
   useEffect(() => {
-    if (!popupZIndex || typeof globalThis.window === 'undefined') return
+    if (!popupZIndex || globalThis.window === undefined) return
 
     const styleId = 'mdx-editor-popup-z-index'
     let style = document.getElementById(styleId) as HTMLStyleElement

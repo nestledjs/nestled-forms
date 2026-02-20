@@ -46,7 +46,7 @@ function mergeSection<T extends object>(global: Partial<Record<string, string>>,
   const result = { ...section }
   for (const key in global) {
     if (key in section) {
-      ;(result as Record<string, unknown>)[key] = mergeKey(global[key], (section as Record<string, unknown>)[key])
+      (result as Record<string, unknown>)[key] = mergeKey(global[key], (section as Record<string, unknown>)[key])
     }
   }
   return result
@@ -95,7 +95,7 @@ export function createFinalTheme(userTheme: DeepPartial<FormTheme> = {}): FormTh
     if (!section) continue
 
     // Use type assertion to merge all inheritable sections uniformly
-    ;(finalTheme as Record<string, object>)[key] = mergeSection(
+    (finalTheme as Record<string, object>)[key] = mergeSection(
       globalStyles,
       section as Record<string, string>
     )

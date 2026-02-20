@@ -135,7 +135,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
             search
             searchPlaceholder="Search..."
             onChange={(items: string[]) => {
-              const itemObjects = items.map(findOrCreateOption)
+              const itemObjects = items.map(item => findOrCreateOption(item))
               controllerField.onChange(itemObjects)
               if (form.trigger) form.trigger(field.key)
             }}

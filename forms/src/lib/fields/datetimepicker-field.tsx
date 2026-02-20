@@ -85,7 +85,7 @@ export function DateTimePickerField({
       defaultValue={getDateTimeFromValue(options.defaultValue ?? '') ?? ''}
       {...form.register(field.key, {
         required: options.required,
-        setValueAs: (v) => (v ? v : ''),
+        setValueAs: (v) => v || '',
       })}
     />
   )

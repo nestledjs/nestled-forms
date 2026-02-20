@@ -22,12 +22,12 @@ try {
   // expo-checkbox not available
 }
 
-function FallbackCheckbox({ value, onValueChange, disabled, color }: {
+function FallbackCheckbox({ value, onValueChange, disabled, color }: Readonly<{
   value: boolean
   onValueChange: (val: boolean) => void
   disabled?: boolean
   color?: string
-}) {
+}>) {
   return (
     <Pressable
       onPress={() => !disabled && onValueChange(!value)}

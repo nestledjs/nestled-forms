@@ -42,7 +42,7 @@ export function TextAreaField({
     // Render as plain value
     return (
       <>
-        <div className={theme.textAreaField.readOnlyValue}>{value ? value : '—'}</div>
+        <div className={theme.textAreaField.readOnlyValue}>{value || '—'}</div>
         {field.options.helpText && (
           <div className={clsx(theme.textAreaField.helpText)}>{field.options.helpText}</div>
         )}

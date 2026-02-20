@@ -80,7 +80,7 @@ export function MoneyField({
           const filtered = text.replaceAll(/[^0-9.-]/g, '')
           const numValue = filtered === '' ? '' : Number.parseFloat(filtered)
           setHasContent(Boolean(filtered))
-          form.setValue(field.key, numValue === '' || Number.isNaN(numValue as number) ? '' : numValue, { shouldValidate: true })
+          form.setValue(field.key, numValue === '' || Number.isNaN(numValue) ? '' : numValue, { shouldValidate: true })
         }}
         onBlur={() => form.trigger(field.key)}
         style={[

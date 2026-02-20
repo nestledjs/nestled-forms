@@ -49,7 +49,7 @@ export function TextField({
     // Render as plain value
     return (
       <>
-        <div className={theme.textField.readOnly}>{value ? value : '—'}</div>
+        <div className={theme.textField.readOnly}>{value || '—'}</div>
         {field.options.helpText && (
           <div className={clsx(theme.textField.helpText)}>{field.options.helpText}</div>
         )}

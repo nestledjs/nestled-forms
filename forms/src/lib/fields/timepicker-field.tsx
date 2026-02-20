@@ -39,7 +39,7 @@ export function TimePickerField({ form, field, hasError, formReadOnly = false, f
     // Render as plain value
     return (
       <>
-        <div className={theme.timePickerField.readOnlyValue}>{value ? value : '—'}</div>
+        <div className={theme.timePickerField.readOnlyValue}>{value || '—'}</div>
         {field.options.helpText && (
           <div className={clsx(theme.timePickerField.helpText)}>{field.options.helpText}</div>
         )}

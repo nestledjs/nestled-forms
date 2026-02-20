@@ -115,13 +115,13 @@ export function RenderFormField({
   formReadOnlyStyle = 'value',
   style,
   className,
-}: {
+}: Readonly<{
   field: FormField
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
   style?: ViewStyle
   className?: string
-}) {
+}>) {
   const form = useFormContext()
   const { labelDisplay } = useFormConfig()
   const theme = useNativeTheme()
@@ -171,20 +171,16 @@ export function RenderFormField({
 
   // Label logic
   const hasLabelProp = !!field.options.label
-  let showLabel = false
-  if (hasLabelProp) {
-    switch (labelDisplay) {
-      case 'all':
-        showLabel = true
-        break
-      case 'none':
-        showLabel = false
-        break
-      case 'default':
-      default:
-        showLabel = field.type !== FormFieldType.Checkbox
-        break
-    }
+  let showLabel: boolean
+  if (!hasLabelProp) {
+    showLabel = false
+  } else if (labelDisplay === 'all') {
+    showLabel = true
+  } else if (labelDisplay === 'none') {
+    showLabel = false
+  } else {
+    // labelDisplay === 'default' or unset
+    showLabel = field.type !== FormFieldType.Checkbox
   }
 
   const finalRequired = field.options.required || conditionalState.isDynamicallyRequired
