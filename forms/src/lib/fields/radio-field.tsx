@@ -5,6 +5,99 @@ import { Controller } from 'react-hook-form'
 import clsx from 'clsx'
 import { FormFieldProps, FormField, FormFieldType, RadioOption, RadioFormFieldOptions, useFormTheme } from '@nestledjs/forms-core'
 
+// Props for the extracted RadioOptionItem component
+interface RadioOptionItemProps {
+  option: RadioOption
+  fieldKey: string
+  value: any
+  options: RadioFormFieldOptions
+  theme: ReturnType<typeof useFormTheme>['radioField']
+  onRadioChange: () => void
+  getInputClassName: (option: RadioOption, isChecked: boolean) => string
+  subOptionValue: string
+  onSubOptionChange: (key: string, value: string) => void
+  hasError?: boolean
+  registerSubOption: (key: string) => object
+}
+
+// Extracted component to reduce nesting depth
+function RadioOptionItem({
+  option,
+  fieldKey,
+  value,
+  options,
+  theme,
+  onRadioChange,
+  getInputClassName,
+  subOptionValue,
+  onSubOptionChange,
+  hasError,
+  registerSubOption,
+}: Readonly<RadioOptionItemProps>) {
+  const isChecked = option?.value === value
+  const directionClass = options.radioDirection === 'row' ? 'flex-row items-center' : 'flex-col justify-center'
+  const showSubOption = isChecked && option?.checkedSubOption
+  const subOptionKey = option?.checkedSubOption?.key ?? ''
+
+  const handleSubOptionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSubOptionChange(subOptionKey, e.target.value)
+  }
+
+  return (
+    <div
+      className={clsx(
+        theme.optionContainer,
+        options?.fullWidthLabel && theme.optionContainerFullWidth,
+        option.checkedSubOption && 'grow',
+        directionClass
+      )}
+    >
+      <div className={clsx('flex grow', directionClass)}>
+        <div className={clsx(theme.radioContainer, options.fancyStyle && theme.optionContainerFancy)}>
+          {options?.fullWidthLabel ? (
+            <label htmlFor={option.key} className={clsx(theme.labelFullWidth)}>
+              {option.label}
+            </label>
+          ) : null}
+          <input
+            onChange={onRadioChange}
+            type="radio"
+            className={getInputClassName(option, isChecked)}
+            id={option.key}
+            name={fieldKey}
+            value={String(option.value ?? '')}
+            checked={isChecked}
+            disabled={options?.disabled}
+            required={options.required}
+          />
+          {options?.fullWidthLabel ? null : (
+            <label
+              htmlFor={option.key}
+              className={clsx(
+                theme.label,
+                options.radioDirection === 'row' ? theme.labelRow : theme.labelColumn
+              )}
+            >
+              {option.label}
+            </label>
+          )}
+        </div>
+        {showSubOption ? (
+          <input
+            {...registerSubOption(subOptionKey)}
+            name={subOptionKey}
+            placeholder={option?.checkedSubOption?.label ?? ''}
+            disabled={options?.disabled}
+            onChange={handleSubOptionInputChange}
+            value={subOptionValue}
+            className={clsx(theme.subOptionInput, hasError && theme.subOptionError)}
+          />
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 export function RadioField(
   props: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.Radio }>> & {
     formReadOnly?: boolean
@@ -132,6 +225,18 @@ export function RadioField(
     }
   }
 
+  function handleSubOptionChange(key: string, newValue: string) {
+    setSubOptionKey(key)
+    setSubOptionValue(newValue)
+    if (props.form.setValue) {
+      props.form.setValue(key, newValue)
+    }
+  }
+
+  function registerSubOption(key: string): object {
+    return key ? props.form.register(key) : {}
+  }
+
   function renderEditable() {
     return (
       <>
@@ -140,81 +245,26 @@ export function RadioField(
           name={props.field.key}
           control={props.form.control}
           defaultValue={options?.defaultValue}
-          render={({ field: { value, onChange } }) => (
+          render={({ field: { value: controllerValue, onChange } }) => (
             <div className={clsx(
               theme.radioField.container,
               options.radioDirection === 'row' ? theme.radioField.containerRow : theme.radioField.containerColumn
             )}>
               {options?.radioOptions?.map((option: RadioOption) => (
-                <div
+                <RadioOptionItem
                   key={option.key + '_container'}
-                  className={clsx(
-                    theme.radioField.optionContainer,
-                    options?.fullWidthLabel && theme.radioField.optionContainerFullWidth,
-                    option.checkedSubOption && 'grow',
-                    options.radioDirection === 'row' ? 'flex-row items-center' : 'flex-col justify-center'
-                  )}
-                >
-                  <div
-                    className={clsx(
-                      'flex grow',
-                      options.radioDirection === 'row' ? 'flex-row items-center' : 'flex-col justify-center'
-                    )}
-                  >
-                    <div className={clsx(
-                      theme.radioField.radioContainer,
-                      options.fancyStyle && theme.radioField.optionContainerFancy
-                    )}>
-                      {options?.fullWidthLabel ? (
-                        <label htmlFor={option.key} className={clsx(theme.radioField.labelFullWidth)}>
-                          {option.label}
-                        </label>
-                      ) : null}
-                      <input
-                        onChange={() => handleRadioChange(option, onChange)}
-                        type="radio"
-                        className={getInputClassName(option, option?.value === value)}
-                        id={option.key}
-                        name={props.field.key}
-                        value={String(option.value ?? '')}
-                        checked={option?.value === value}
-                        disabled={options?.disabled}
-                        required={options.required}
-                      />
-                      {options?.fullWidthLabel ? null : (
-                        <label
-                          htmlFor={option.key}
-                          className={clsx(
-                            theme.radioField.label,
-                            options.radioDirection === 'row' ? theme.radioField.labelRow : theme.radioField.labelColumn
-                          )}
-                        >
-                          {option.label}
-                        </label>
-                      )}
-                    </div>
-                    {option?.value === value && option?.checkedSubOption ? (
-                      <input
-                        {...(option?.checkedSubOption?.key ? props.form.register(option.checkedSubOption.key) : {})}
-                        name={option?.checkedSubOption?.key ?? ''}
-                        placeholder={option?.checkedSubOption?.label ?? ''}
-                        disabled={options?.disabled}
-                        onChange={(e) => {
-                          setSubOptionKey(option?.checkedSubOption?.key ?? '')
-                          setSubOptionValue(e?.target?.value)
-                          if (props.form.setValue) {
-                            props.form.setValue(option?.checkedSubOption?.key ?? '', e?.target?.value)
-                          }
-                        }}
-                        value={subOptionValue}
-                        className={clsx(
-                          theme.radioField.subOptionInput,
-                          props.hasError && theme.radioField.subOptionError
-                        )}
-                      />
-                    ) : null}
-                  </div>
-                </div>
+                  option={option}
+                  fieldKey={props.field.key}
+                  value={controllerValue}
+                  options={options}
+                  theme={theme.radioField}
+                  onRadioChange={() => handleRadioChange(option, onChange)}
+                  getInputClassName={getInputClassName}
+                  subOptionValue={subOptionValue}
+                  onSubOptionChange={handleSubOptionChange}
+                  hasError={props.hasError}
+                  registerSubOption={registerSubOption}
+                />
               ))}
             </div>
           )}

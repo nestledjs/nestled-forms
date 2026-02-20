@@ -164,6 +164,9 @@ export function SearchSelectBase<TValue>({
     }
   }, [isOpen, onClose])
 
+  // Stable selection handler - uses separate single/multi handlers based on mode
+  const selectOption = multiple ? handleMultiSelect : handleSingleSelect
+
   // Handle keyboard navigation in dropdown
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -194,7 +197,7 @@ export function SearchSelectBase<TValue>({
         case 'Enter':
           event.preventDefault()
           if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
-            handleOptionSelect(filteredOptions[highlightedIndex])
+            selectOption(filteredOptions[highlightedIndex])
           }
           break
         case 'Tab':
@@ -204,7 +207,7 @@ export function SearchSelectBase<TValue>({
           break
       }
     },
-    [isOpen, highlightedIndex, filteredOptions, onClose],
+    [isOpen, highlightedIndex, filteredOptions, onClose, selectOption],
   )
 
   // Handle keyboard input in search field
@@ -220,15 +223,6 @@ export function SearchSelectBase<TValue>({
     },
     [multiple, searchTerm, value, onChange, handleKeyDown],
   )
-
-  // Handle option selection
-  const handleOptionSelect = (option: SearchSelectOption) => {
-    if (multiple) {
-      handleMultiSelect(option)
-    } else {
-      handleSingleSelect(option)
-    }
-  }
 
   // Handle input focus
   const handleInputFocus = () => {
@@ -359,21 +353,28 @@ export function SearchSelectBase<TValue>({
             </div>
 
             {isOpen && (
-              <div 
-                ref={dropdownRef} 
-                id={`${field.name}-listbox`}
-                className={theme.dropdown} 
-                role="listbox" 
-                aria-label="Options"
-              >
-                {loading && <div className={theme.loadingText}>Loading...</div>}
-                {filteredOptions.length === 0 && !loading
-                  ? renderNoResults?.(!!searchTerm) || (
-                      <div className={theme.loadingText || theme.noResultsText}>
-                        {searchTerm ? 'No results found' : 'No options available'}
-                      </div>
-                    )
-                  : filteredOptions.map((option, index) => {
+              <div ref={dropdownRef} className={theme.dropdown}>
+                {/* Status messages (loading/empty) - outside listbox for ARIA compliance */}
+                {loading && (
+                  <div className={theme.loadingText} role="status" aria-live="polite">
+                    Loading...
+                  </div>
+                )}
+                {!loading && filteredOptions.length === 0 && (
+                  renderNoResults?.(!!searchTerm) || (
+                    <div className={theme.loadingText || theme.noResultsText} role="status" aria-live="polite">
+                      {searchTerm ? 'No results found' : 'No options available'}
+                    </div>
+                  )
+                )}
+                {/* Options listbox - only rendered when there are options */}
+                {filteredOptions.length > 0 && (
+                  <div
+                    id={`${field.name}-listbox`}
+                    role="listbox"
+                    aria-label="Options"
+                  >
+                    {filteredOptions.map((option, index) => {
                       const isSelected = isOptionSelected(option, fieldValue)
                       const isHighlighted = index === highlightedIndex
 
@@ -386,11 +387,11 @@ export function SearchSelectBase<TValue>({
                             isHighlighted ? theme.optionActive : 'text-gray-900',
                             isSelected && theme.optionSelected,
                           )}
-                          onClick={() => handleOptionSelect(option)}
+                          onClick={() => selectOption(option)}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault()
-                              handleOptionSelect(option)
+                              selectOption(option)
                             }
                           }}
                           role="option"
@@ -419,6 +420,8 @@ export function SearchSelectBase<TValue>({
                         </div>
                       )
                     })}
+                  </div>
+                )}
               </div>
             )}
           </div>
