@@ -367,10 +367,11 @@ export function SearchSelectBase<TValue>({
                     </output>
                   )
                 )}
-                {/* Options list - using semantic ul/li for accessibility */}
+                {/* Options list - semantic ul/li with explicit ARIA roles for listbox pattern */}
                 {filteredOptions.length > 0 && (
                   <ul
                     id={`${field.name}-listbox`}
+                    role="listbox"
                     aria-label="Options"
                     style={{ listStyle: 'none', margin: 0, padding: 0 }}
                   >
@@ -382,6 +383,7 @@ export function SearchSelectBase<TValue>({
                         <li
                           key={option.value}
                           id={`${field.name}-option-${index}`}
+                          role="option"
                           className={clsx(
                             theme.option,
                             isHighlighted ? theme.optionActive : 'text-gray-900',
