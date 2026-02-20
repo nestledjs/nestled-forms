@@ -12,7 +12,8 @@ interface RadioOptionItemProps {
   value: any
   options: RadioFormFieldOptions
   theme: ReturnType<typeof useFormTheme>['radioField']
-  onRadioChange: () => void
+  handleRadioChange: (option: RadioOption, onChange: (value: any) => void) => void
+  formOnChange: (value: any) => void
   getInputClassName: (option: RadioOption, isChecked: boolean) => string
   subOptionValue: string
   onSubOptionChange: (key: string, value: string) => void
@@ -27,7 +28,8 @@ function RadioOptionItem({
   value,
   options,
   theme,
-  onRadioChange,
+  handleRadioChange,
+  formOnChange,
   getInputClassName,
   subOptionValue,
   onSubOptionChange,
@@ -38,6 +40,10 @@ function RadioOptionItem({
   const directionClass = options.radioDirection === 'row' ? 'flex-row items-center' : 'flex-col justify-center'
   const showSubOption = isChecked && option?.checkedSubOption
   const subOptionKey = option?.checkedSubOption?.key ?? ''
+
+  const onRadioInputChange = () => {
+    handleRadioChange(option, formOnChange)
+  }
 
   const handleSubOptionInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSubOptionChange(subOptionKey, e.target.value)
@@ -60,7 +66,7 @@ function RadioOptionItem({
             </label>
           ) : null}
           <input
-            onChange={onRadioChange}
+            onChange={onRadioInputChange}
             type="radio"
             className={getInputClassName(option, isChecked)}
             id={option.key}
@@ -258,7 +264,8 @@ export function RadioField(
                   value={controllerValue}
                   options={options}
                   theme={theme.radioField}
-                  onRadioChange={() => handleRadioChange(option, onChange)}
+                  handleRadioChange={handleRadioChange}
+                  formOnChange={onChange}
                   getInputClassName={getInputClassName}
                   subOptionValue={subOptionValue}
                   onSubOptionChange={handleSubOptionChange}

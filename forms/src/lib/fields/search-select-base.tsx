@@ -354,32 +354,32 @@ export function SearchSelectBase<TValue>({
 
             {isOpen && (
               <div ref={dropdownRef} className={theme.dropdown}>
-                {/* Status messages (loading/empty) - outside listbox for ARIA compliance */}
+                {/* Status messages (loading/empty) - using <output> for accessibility */}
                 {loading && (
-                  <div className={theme.loadingText} role="status" aria-live="polite">
+                  <output className={theme.loadingText} aria-live="polite">
                     Loading...
-                  </div>
+                  </output>
                 )}
                 {!loading && filteredOptions.length === 0 && (
                   renderNoResults?.(!!searchTerm) || (
-                    <div className={theme.loadingText || theme.noResultsText} role="status" aria-live="polite">
+                    <output className={theme.loadingText || theme.noResultsText} aria-live="polite">
                       {searchTerm ? 'No results found' : 'No options available'}
-                    </div>
+                    </output>
                   )
                 )}
-                {/* Options listbox - only rendered when there are options */}
+                {/* Options list - using semantic ul/li for accessibility */}
                 {filteredOptions.length > 0 && (
-                  <div
+                  <ul
                     id={`${field.name}-listbox`}
-                    role="listbox"
                     aria-label="Options"
+                    style={{ listStyle: 'none', margin: 0, padding: 0 }}
                   >
                     {filteredOptions.map((option, index) => {
                       const isSelected = isOptionSelected(option, fieldValue)
                       const isHighlighted = index === highlightedIndex
 
                       return (
-                        <div
+                        <li
                           key={option.value}
                           id={`${field.name}-option-${index}`}
                           className={clsx(
@@ -394,7 +394,6 @@ export function SearchSelectBase<TValue>({
                               selectOption(option)
                             }
                           }}
-                          role="option"
                           aria-selected={isSelected}
                           tabIndex={-1}
                         >
@@ -417,10 +416,10 @@ export function SearchSelectBase<TValue>({
                               </svg>
                             </span>
                           )}
-                        </div>
+                        </li>
                       )
                     })}
-                  </div>
+                  </ul>
                 )}
               </div>
             )}
