@@ -1,6 +1,6 @@
 {
   "name": "@nestledjs/forms-native",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "exports": {
     ".": {
       "import": "./index.js",
@@ -56,7 +56,7 @@
     }
   },
   "dependencies": {
-    "@nestledjs/forms-core": "0.1.0",
+    "@nestledjs/forms-core": "0.1.1",
     "react-hook-form": "^7.58.1"
   }
 }
