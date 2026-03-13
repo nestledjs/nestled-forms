@@ -943,12 +943,20 @@ FormFieldClass.markdownEditor('content', {
   // Read-only configuration
   readOnly: false,
   readOnlyStyle: 'value', // 'value' | 'disabled'
+
+  // Advanced: custom MDXEditor plugins (replaces all defaults)
+  plugins: [
+    headingsPlugin(),
+    listsPlugin(),
+    tablePlugin(),
+    toolbarPlugin({ toolbarContents: () => <MyCustomToolbar /> }),
+  ],
 })
 ```
 
 ### Markdown Editor Features
 
-- **Rich text toolbar** with formatting options
+- **Rich text toolbar** with formatting options including a heading picker (Normal / H1 / H2 / H3)
 - **Live preview** of markdown content
 - **Dual format output** - Get both markdown and HTML
 - **Image upload** with drag-and-drop support
@@ -993,6 +1001,47 @@ FormFieldClass.markdownEditor('content', {
 - Use robust, security-tested parsers like `marked`, `markdown-it`, or `remark`
 - The built-in converter includes ReDoS protection (input size limits, safe regex patterns)
 - Consider server-side conversion for untrusted input to avoid client-side DoS attacks
+
+### Custom Plugins
+
+The `plugins` option gives you full control over the MDXEditor plugin set. When provided, it completely replaces the default plugins — you get exactly what you pass in, nothing more.
+
+This is useful when you need features beyond the defaults (tables, diff view, custom MDX elements) or want a completely custom toolbar:
+
+```tsx
+import {
+  headingsPlugin,
+  listsPlugin,
+  tablePlugin,
+  toolbarPlugin,
+  BlockTypeSelect,
+  BoldItalicUnderlineToggles,
+  InsertTable,
+  Separator,
+} from '@mdxeditor/editor'
+
+FormFieldClass.markdownEditor('content', {
+  label: 'Content',
+  plugins: [
+    headingsPlugin(),
+    listsPlugin(),
+    tablePlugin(),
+    toolbarPlugin({
+      toolbarContents: () => (
+        <>
+          <BlockTypeSelect />
+          <Separator />
+          <BoldItalicUnderlineToggles />
+          <Separator />
+          <InsertTable />
+        </>
+      ),
+    }),
+  ],
+})
+```
+
+When `plugins` is not provided, the editor uses sensible defaults: headings, lists, blockquotes, links, link dialogs, markdown shortcuts, and a toolbar with a heading picker, undo/redo, bold/italic/underline, code, lists, and links.
 
 ### Modal-on-Modal Conflicts
 

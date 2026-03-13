@@ -682,6 +682,9 @@ export interface MarkdownEditorOptions extends BaseFieldOptions {
   // Modal/Dialog configuration
   overlayContainer?: HTMLElement | null // Custom container for editor popups (fixes modal-on-modal conflicts)
   popupZIndex?: number // Custom z-index for popups
+
+  // Advanced: custom MDXEditor plugins — replaces all default plugins when provided
+  plugins?: any[]
 }
 
 interface MarkdownEditorField {

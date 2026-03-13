@@ -102,6 +102,7 @@ export const markdownToHtml = async (markdown: string): Promise<string> => {
 // Toolbar contents as a top-level function
 export const toolbarContents = ({
   enableImageUpload,
+  BlockTypeSelect,
   UndoRedo,
   Separator,
   BoldItalicUnderlineToggles,
@@ -111,6 +112,7 @@ export const toolbarContents = ({
   InsertImage,
 }: {
   enableImageUpload: boolean
+  BlockTypeSelect: React.ComponentType<object>
   UndoRedo: React.ComponentType<object>
   Separator: React.ComponentType<object>
   BoldItalicUnderlineToggles: React.ComponentType<object>
@@ -120,6 +122,8 @@ export const toolbarContents = ({
   InsertImage: React.ComponentType<Record<string, never>>
 }) => (
   <>
+    <BlockTypeSelect />
+    <Separator />
     <UndoRedo />
     <Separator />
     <BoldItalicUnderlineToggles />
@@ -300,6 +304,7 @@ interface SimpleEditorProps {
   onHtmlChange?: (html: string) => void
   overlayContainer?: HTMLElement | null
   popupZIndex?: number
+  plugins?: any[]
 }
 
 // Create the editor component factory
@@ -314,6 +319,7 @@ const createSimpleEditor = (mod: any) => {
     linkDialogPlugin,
     imagePlugin,
     markdownShortcutPlugin,
+    BlockTypeSelect,
     UndoRedo,
     BoldItalicUnderlineToggles,
     CodeToggle,
@@ -324,6 +330,7 @@ const createSimpleEditor = (mod: any) => {
   } = mod
 
   const toolbarComponents = {
+    BlockTypeSelect,
     UndoRedo,
     Separator,
     BoldItalicUnderlineToggles,
@@ -362,6 +369,7 @@ const createSimpleEditor = (mod: any) => {
       onHtmlChange,
       overlayContainer,
       popupZIndex,
+      plugins: customPlugins,
     } = props
 
     const editorStyle = usePopupZIndex(popupZIndex)
@@ -374,7 +382,7 @@ const createSimpleEditor = (mod: any) => {
       allowedImageTypes,
     )
 
-    const plugins = createEditorPlugins(enableImageUpload, imageUploadWrapper, readOnly, pluginComponents)
+    const plugins = customPlugins ?? createEditorPlugins(enableImageUpload, imageUploadWrapper, readOnly, pluginComponents)
 
     return (
       <div style={editorStyle}>
@@ -472,6 +480,7 @@ export function MarkdownEditor({
               onHtmlChange={field.options.onHtmlChange}
               overlayContainer={field.options.overlayContainer}
               popupZIndex={field.options.popupZIndex}
+              plugins={field.options.plugins}
             />
           </Suspense>
         </div>
@@ -528,6 +537,7 @@ export function MarkdownEditor({
                 outputFormat={field.options.outputFormat}
                 overlayContainer={field.options.overlayContainer}
                 popupZIndex={field.options.popupZIndex}
+                plugins={field.options.plugins}
                 onHtmlChange={(html: string) => {
                   // Store HTML in a separate field if outputFormat is 'both'
                   if (field.options.outputFormat === 'both') {
