@@ -41,7 +41,17 @@ export default defineConfig({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime', '@mdxeditor/editor', '@nestledjs/forms-core'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'react-hook-form',
+        'zod',
+        '@hookform/resolvers',
+        '@hookform/resolvers/zod',
+        '@mdxeditor/editor',
+        '@nestledjs/forms-core',
+      ],
     },
   },
   test: {
