@@ -70,6 +70,6 @@
     }
   },
   "dependencies": {
-    "@nestledjs/forms-core": "0.1.2"
+    "@nestledjs/forms-core": "0.1.3"
   }
 }
