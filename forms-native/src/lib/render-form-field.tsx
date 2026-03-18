@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react'
 import { View, Text, ViewStyle } from 'react-native'
+import { useWatch } from 'react-hook-form'
 import { FormField, FormFieldType, useFormContext, useFormConfig, DEFAULT_REQUIRED_ERROR_MESSAGE } from '@nestledjs/forms-core'
 import { useNativeTheme } from './native-theme-context'
 
@@ -126,8 +127,11 @@ export function RenderFormField({
   const { labelDisplay } = useFormConfig()
   const theme = useNativeTheme()
 
-  // Watch all form values for conditional logic
-  const formValues = form.watch()
+  // Watch all form values for conditional logic.
+  // useWatch creates an explicit subscription to the form's control, so it reliably
+  // triggers re-renders for any value change — including values set via setValue on
+  // unregistered custom fields — in all environments (dev, prod, SSR).
+  const formValues = useWatch({ control: form.control })
 
   // Evaluate conditional logic
   const conditionalState = useMemo(() => {
