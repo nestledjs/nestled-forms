@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { useForm, UseFormProps, FieldValues } from 'react-hook-form'
 import {
   FormField,
@@ -103,6 +103,23 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
   validationGroups?: string[]
 }
 
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false
+  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime()
+  if (Array.isArray(a) !== Array.isArray(b)) return false
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false
+    return a.every((item, i) => deepEqual(item, (b as unknown[])[i]))
+  }
+  const aObj = a as Record<string, unknown>
+  const bObj = b as Record<string, unknown>
+  const aKeys = Object.keys(aObj)
+  const bKeys = Object.keys(bObj)
+  if (aKeys.length !== bKeys.length) return false
+  return aKeys.every(key => deepEqual(aObj[key], bObj[key]))
+}
+
 /**
  * Main form component that provides both declarative and imperative form usage patterns.
  * 
@@ -197,9 +214,13 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
     reValidateMode: 'onChange' // Re-validate on every change
   })
 
+  const prevDefaultValuesRef = useRef(defaultValues)
   useEffect(() => {
     if (defaultValues && typeof defaultValues !== 'function') {
-      form.reset(defaultValues)
+      if (!deepEqual(defaultValues, prevDefaultValuesRef.current)) {
+        prevDefaultValuesRef.current = defaultValues
+        form.reset(defaultValues)
+      }
     }
   }, [defaultValues, form])
 
