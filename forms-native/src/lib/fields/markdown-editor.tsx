@@ -6,7 +6,7 @@ import { useNativeTheme } from '../native-theme-context'
 
 let MarkdownDisplay: any = null
 try {
-  MarkdownDisplay = require('react-native-markdown-display').default
+  MarkdownDisplay = require('@ronradtke/react-native-markdown-display').default
 } catch {
   // react-native-markdown-display not installed
 }

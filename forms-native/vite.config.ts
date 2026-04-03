@@ -43,7 +43,7 @@ export default defineConfig({
         '@react-native-community/datetimepicker',
         'react-native-phone-number-input',
         'react-native-element-dropdown',
-        'react-native-markdown-display',
+        '@ronradtke/react-native-markdown-display',
       ],
     },
   },

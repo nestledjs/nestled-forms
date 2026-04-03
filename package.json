@@ -121,6 +121,7 @@
       "metro-config>yaml": "^1.10.3",
       "postcss-load-config>yaml": "^1.10.3",
       "isomorphic-fetch>node-fetch": "^2.7.0",
+      "markdown-it": "^14.1.1",
       "test-exclude>minimatch": "^9.0.7",
       "@vue/language-core>minimatch": "^9.0.7",
       "js-yaml": "^4.1.1",
