@@ -7,7 +7,7 @@ import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidat
 
 function validatePhone(val: string | null | undefined): string | boolean {
   if (val === undefined || val === null || val === '') return true
-  return isPossiblePhoneNumber(val.toString(), 'US') || 'Please enter a valid phone number'
+  return isPossiblePhoneNumber(val.toString()) || 'Please enter a valid phone number'
 }
 
 export function PhoneField({

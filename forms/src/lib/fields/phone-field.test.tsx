@@ -73,6 +73,38 @@ describe('PhoneField Validation', () => {
     })
   })
 
+  it('should accept international phone numbers', async () => {
+    const handleSubmit = vi.fn()
+
+    render(
+      <Form
+        id="test-phone-form"
+        fields={[
+          FormFieldClass.phone('phone', {
+            label: 'Phone',
+            defaultValue: '+442071234567',
+          }),
+          FormFieldClass.button('submit', {
+            type: 'submit',
+            text: 'Submit',
+          }),
+        ]}
+        submit={handleSubmit}
+      />
+    )
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+
+    const submitButton = screen.getByRole('button', { name: 'Submit' })
+    fireEvent.click(submitButton)
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith({ phone: '+442071234567' })
+    })
+  })
+
   it('should allow empty phone fields when not required', async () => {
     const handleSubmit = vi.fn()
 
