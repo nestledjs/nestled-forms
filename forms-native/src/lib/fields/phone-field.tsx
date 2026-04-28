@@ -4,10 +4,9 @@ import { useNativeTheme } from '../native-theme-context'
 
 /**
  * Phone field using a basic TextInput with phone-pad keyboard.
- * For full country-picker support, consumers should install
- * `react-native-phone-number-input` and use a CustomField.
- * This basic implementation handles phone input with validation
- * delegated to forms-core.
+ * Supports `defaultCountry` option for informational/UX purposes.
+ * `showCountrySelect` is not supported on native — use a CustomField
+ * with `react-native-phone-number-input` for a country picker.
  */
 export function PhoneField({
   form,

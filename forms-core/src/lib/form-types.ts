@@ -264,7 +264,15 @@ export interface InputFieldOptions extends BaseFieldOptions {
 export type UrlFieldOptions = InputFieldOptions
 export type EmailFieldOptions = InputFieldOptions
 export type PasswordFieldOptions = InputFieldOptions
-export type PhoneFieldOptions = InputFieldOptions
+export interface PhoneFieldOptions extends InputFieldOptions {
+  /** ISO 3166-1 alpha-2 country code (e.g. 'US', 'GB'). When set, local-format numbers
+   *  for that country are accepted without a country code prefix. */
+  defaultCountry?: string
+  /** When true, renders a country flag + selector before the number input (react-phone-number-input).
+   *  Value is stored in E.164 format (e.g. +15035551234).
+   *  Requires importing react-phone-number-input/style.css in the consuming app. */
+  showCountrySelect?: boolean
+}
 export interface NumberFieldOptions extends InputFieldOptions {
   min?: number
   max?: number
