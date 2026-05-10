@@ -7,7 +7,7 @@
 | `github_slug` | `nestledjs/nestled-forms` |
 | `base_branch` | `develop` |
 | `repo_path` | `~/IdeaProjects/nestled-forms` |
-| `flightdesk_project_id` | *(TBD — set when first task is run through pipeline)* |
+| `flightdesk_project_id` | `e7f6e567-caf6-4291-8b5d-6fcda9f60096` |
 | `sdk_command` | `pnpm sdk` |
 
 ## Deployment
@@ -20,6 +20,6 @@
 ## Source System
 | Field | Value |
 |---|---|
-| `source_system` | *(TBD)* |
+| `source_system` | `none` — tasks created manually in Qalatra, no external PM |
 
-*Full source system config to be filled in when this repo is first onboarded into the pipeline.*
+No source writes, no closeout action needed.
