@@ -51,3 +51,4 @@ storybook-static
 .ai-cli
 .env
 tmp.html
+.claude/**
