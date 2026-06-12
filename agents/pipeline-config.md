@@ -4,23 +4,39 @@
 | Field | Value |
 |---|---|
 | `repo_name` | `nestled-forms` |
-| `framework` | `nestled` |
+| `framework` | `nestled-library` |
 | `github_slug` | `nestledjs/nestled-forms` |
 | `base_branch` | `develop` |
-| `repo_path` | `~/IdeaProjects/nestled-forms` |
+| `repo_path` | resolve at runtime with `git rev-parse --show-toplevel` — portable across Mac (`~/IdeaProjects`) and Linux (`~/workspaces`) hosts; never hardcode |
 | `flightdesk_project_id` | `e7f6e567-caf6-4291-8b5d-6fcda9f60096` |
-| `sdk_command` | `pnpm sdk` |
+| `sdk_command` | `none` |
 
 ## Deployment
 | Field | Value |
 |---|---|
-| `auto_merge` | `false` |
-| `deploy_command` | `none` |
-| `qa_reviewer_id` | `none` |
+| `auto_merge` | `true` — Justin setting `Approved` in Linear IS the merge + deploy confirmation (dangerous mode) |
+| `deploy_command` | `none` — library — merge only; npm release stays a manual human step |
+| `merge_command` | `gh pr merge <prNumber> --repo nestledjs/nestled-forms --merge --delete-branch` |
 
-## Source System
+## Quality Gates
 | Field | Value |
 |---|---|
-| `source_system` | `none` — tasks created manually in Qalatra, no external PM |
+| `new_code_coverage_target` | `80%` (SonarCloud quality gate on new/changed code) |
+| `coverage_policy` | Pipeline verifies the SonarCloud gate passes before advancing to `In Review`. Gate fails → inject fix instructions into the session, stay at `In Progress`. |
+| plus | Intelligence Check green |
 
-No source writes, no closeout action needed.
+## Source System — Linear (Pirate & Fox team)
+| Field | Value |
+|---|---|
+| `source_system` | `linear` |
+| Canonical lifecycle | `https://raw.githubusercontent.com/pirateandfox/qalatra-prompts/develop/linear-pipeline.md` — state IDs, GraphQL patterns, turn-taking, identity |
+| `linear_project_id` | `5de2da9a-9b50-4287-bc29-aa8c4dfd2b5a` (Nestled Forms) |
+| API token | `~/.config/qalatra/secrets.md` → `SHI_LINEAR=` (authors as Shi) |
+| FD task reference | the issue's `FlightDesk` attachment |
+
+This pipeline only processes issues whose Linear project is `5de2da9a-9b50-4287-bc29-aa8c4dfd2b5a`. Never mutate issues
+routed to other repos.
+
+## Closeout
+Approved → merge (= deploy) → archive cloud session → archive FlightDesk task (webhook usually
+handles it) → set Linear `Done` **last**, only after cleanup succeeds.
