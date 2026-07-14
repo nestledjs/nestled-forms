@@ -11,10 +11,10 @@ import {
   createSubmitHandler,
   resolveFormStrings,
   deepEqual,
+  type FormStrings,
+  type FormConfig,
 } from '@nestledjs/forms-core'
-import type { FormStrings } from '@nestledjs/forms-core'
 import { NativeFormSubmitContext } from './native-form-submit-context'
-import type { FormConfig } from '@nestledjs/forms-core'
 import { ZodTypeAny } from 'zod'
 import { NativeThemeContext } from './native-theme-context'
 import { NativeTheme } from './themes/default'
