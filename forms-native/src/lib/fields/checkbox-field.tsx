@@ -94,7 +94,7 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
       name={field.key}
       control={form.control}
       defaultValue={options.defaultValue}
-      rules={{ required: options.required ? strings.requiredError : false }}
+      rules={{ required: options.required ? (options.errorMessages?.required || strings.requiredError) : false }}
       render={({ field: controllerField }) => (
         <View style={checkboxTheme.wrapper}>
           <View style={checkboxTheme.row}>

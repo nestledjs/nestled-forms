@@ -58,3 +58,42 @@ export function resolveSubmitTransform(field: {
 }): ((value: any) => unknown) | undefined {
   return field.options?.submitTransform ?? DEFAULT_SUBMIT_TRANSFORMS[field.type]
 }
+
+type SubmitField = { key: string; type: FormFieldType; options?: { submitTransform?: (value: any) => unknown } }
+
+/**
+ * Builds the validated-values submit pipeline shared by Form (web) and
+ * NativeForm: strips button-field keys, applies each field's submit transform
+ * (explicit or per-type default), then calls the consumer's submit handler.
+ */
+export function createSubmitHandler<T>(
+  fields: Array<SubmitField | null> | undefined,
+  submit: (values: T) => void | Promise<unknown>,
+): (values: T) => void | Promise<unknown> {
+  return (values: T) => {
+    const filteredValues: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(values as Record<string, unknown>)) {
+      const isButtonField = fields?.some((f) => f?.key === key && f.type === FormFieldType.Button)
+      if (!isButtonField) {
+        filteredValues[key] = value
+      }
+    }
+
+    if (!fields) {
+      return submit(filteredValues as T)
+    }
+
+    const transformedValues: Record<string, unknown> = { ...filteredValues }
+    fields
+      .filter((field): field is SubmitField => field !== null)
+      .filter((field) => field.type !== FormFieldType.Button)
+      .forEach((field) => {
+        const transform = resolveSubmitTransform(field)
+        if (transform && field.key in transformedValues) {
+          transformedValues[field.key] = transform(transformedValues[field.key])
+        }
+      })
+
+    return submit(transformedValues as T)
+  }
+}

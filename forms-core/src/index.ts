@@ -16,7 +16,16 @@ export {
   multiSelectSubmitTransform,
   DEFAULT_SUBMIT_TRANSFORMS,
   resolveSubmitTransform,
+  createSubmitHandler,
 } from './lib/submit-transforms'
+
+// Conditional field logic (shared by web and native renderers)
+export {
+  STATIC_CONDITIONAL_STATE,
+  hasConditionalLogic,
+  evaluateConditionalState,
+} from './lib/conditional-state'
+export type { ConditionalState } from './lib/conditional-state'
 
 // Contexts
 export { FormContext, useFormContext } from './lib/form-context'

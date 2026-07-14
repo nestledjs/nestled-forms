@@ -10,7 +10,7 @@ import {
   ThemeContext,
   FormConfigContext,
   createFormResolver,
-  resolveSubmitTransform,
+  createSubmitHandler,
 } from '@nestledjs/forms-core'
 import type { FormTheme, FormConfig, FormStrings } from '@nestledjs/forms-core'
 import { resolveFormStrings } from '@nestledjs/forms-core'
@@ -254,43 +254,9 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
     [labelDisplay, formStrings],
   )
 
-  // Create a wrapper function that applies field transformations before submission
-  const handleSubmitWithTransform = useMemo(() => {
-    return (values: T) => {
-      // First, filter out button fields from the values
-      const filteredValues: Record<string, unknown> = {}
-      for (const [key, value] of Object.entries(values as Record<string, unknown>)) {
-        // Check if this key belongs to a button field
-        const isButtonField = fields?.some(f =>
-          f?.key === key && f.type === FormFieldType.Button
-        )
-        if (!isButtonField) {
-          filteredValues[key] = value
-        }
-      }
-
-      if (!fields) {
-        // No fields to transform, call submit directly with filtered values
-        return submit(filteredValues as T)
-      }
-
-      // Apply submitTransform functions: explicit per-field transforms win,
-      // otherwise the per-type default (e.g. option objects -> ID strings)
-      const transformedValues: Record<string, unknown> = { ...filteredValues }
-
-      fields
-        .filter((field): field is FormField => field !== null)
-        .filter(field => field.type !== FormFieldType.Button) // Skip button fields
-        .forEach((field) => {
-          const transform = resolveSubmitTransform(field)
-          if (transform && field.key in transformedValues) {
-            transformedValues[field.key] = transform(transformedValues[field.key])
-          }
-        })
-
-      return submit(transformedValues as T)
-    }
-  }, [fields, submit])
+  // Shared pipeline: strips button keys and applies submit transforms
+  // (explicit per-field transforms win, otherwise the per-type default)
+  const handleSubmitWithTransform = useMemo(() => createSubmitHandler<T>(fields, submit), [fields, submit])
 
   return (
     <FormConfigContext.Provider value={formConfig}>

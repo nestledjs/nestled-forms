@@ -2,6 +2,7 @@ import { ZodTypeAny, ZodError } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FieldValues, RegisterOptions, Resolver } from 'react-hook-form'
 import { BaseFieldOptions, InputFieldOptions } from '../form-types'
+import { DEFAULT_FORM_STRINGS } from '../form-config-context'
 
 // Helper function to create Zod validator
 function createZodValidator(schema: ZodTypeAny, errorMessages?: Record<string, string | undefined>) {
@@ -70,7 +71,7 @@ async function validateField(
   field: { key: string; options: InputFieldOptions },
   value: any,
   values: any,
-  defaultRequiredMessage = 'This field is required'
+  defaultRequiredMessage = DEFAULT_FORM_STRINGS.requiredError
 ): Promise<{ type: string; message: string } | null> {
   const { options: fieldOptions } = field
 
@@ -199,13 +200,15 @@ function createConditionalWrapper(
 export function createFieldValidation(
   field: InputFieldOptions,
   isRequired: boolean,
-  currentValidationGroup?: string
+  currentValidationGroup?: string,
+  defaultRequiredMessage = DEFAULT_FORM_STRINGS.requiredError
 ): RegisterOptions {
   const rules: RegisterOptions = {}
 
-  // Add required validation
+  // Add required validation (per-field errorMessages.required wins over the
+  // form-level/localized default)
   if (isRequired) {
-    rules.required = field.errorMessages?.required || 'This field is required'
+    rules.required = field.errorMessages?.required || defaultRequiredMessage
   }
 
   // Add Zod schema validation if present

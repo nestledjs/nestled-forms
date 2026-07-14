@@ -95,7 +95,7 @@ function renderControlledInput(props: CheckboxFieldProps, theme: any, inputRef: 
       name={field.key}
       control={form.control}
       defaultValue={options.defaultValue}
-      rules={{ required: options.required ? strings.requiredError : false }}
+      rules={{ required: options.required ? (options.errorMessages?.required || strings.requiredError) : false }}
       render={({ field: controllerField }) => (
         <input
           id={field.key}

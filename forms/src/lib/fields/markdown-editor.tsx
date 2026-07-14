@@ -89,39 +89,38 @@ export const markdownToHtml = async (markdown: string): Promise<string> => {
 
   // Simple markdown to HTML conversion with ReDoS-safe patterns
   // For production use, consider using libraries like 'marked' or 'markdown-it'
-  if (globalThis.window !== undefined) {
-    try {
-      // Escape first: every capture group below then operates on inert text
-      return (
-        escapeHtml(markdown)
-          // Headings - safe patterns with line boundaries and length limits
-          .replaceAll(/^### ([^\r\n]{0,200})$/gim, '<h3>$1</h3>')
-          .replaceAll(/^## ([^\r\n]{0,200})$/gim, '<h2>$1</h2>')
-          .replaceAll(/^# ([^\r\n]{0,200})$/gim, '<h1>$1</h1>')
+  // Runs in every environment (SSR included) — returning raw markdown outside
+  // the browser would reintroduce the unescaped-output XSS surface
+  try {
+    // Escape first: every capture group below then operates on inert text
+    return (
+      escapeHtml(markdown)
+        // Headings - safe patterns with line boundaries and length limits
+        .replaceAll(/^### ([^\r\n]{0,200})$/gim, '<h3>$1</h3>')
+        .replaceAll(/^## ([^\r\n]{0,200})$/gim, '<h2>$1</h2>')
+        .replaceAll(/^# ([^\r\n]{0,200})$/gim, '<h1>$1</h1>')
 
-          // Bold text - ReDoS-safe pattern with negated character class and length limit
-          .replaceAll(/\*\*([^*\r\n]{1,500}?)\*\*/gim, '<strong>$1</strong>')
+        // Bold text - ReDoS-safe pattern with negated character class and length limit
+        .replaceAll(/\*\*([^*\r\n]{1,500}?)\*\*/gim, '<strong>$1</strong>')
 
-          // Italic text - ReDoS-safe pattern with negated character class and length limit
-          .replaceAll(/\*([^*\r\n]{1,500}?)\*/gim, '<em>$1</em>')
+        // Italic text - ReDoS-safe pattern with negated character class and length limit
+        .replaceAll(/\*([^*\r\n]{1,500}?)\*/gim, '<em>$1</em>')
 
-          // Images - safe with negated character classes and length limits
-          .replaceAll(/!\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, (_m, alt: string, src: string) =>
-            `<img alt="${alt}" src="${sanitizeUrl(src)}" />`)
+        // Images - safe with negated character classes and length limits
+        .replaceAll(/!\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, (_m, alt: string, src: string) =>
+          `<img alt="${alt}" src="${sanitizeUrl(src)}" />`)
 
-          // Links - safe with negated character classes and length limits
-          .replaceAll(/\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, (_m, text: string, href: string) =>
-            `<a href="${sanitizeUrl(href)}">${text}</a>`)
+        // Links - safe with negated character classes and length limits
+        .replaceAll(/\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, (_m, text: string, href: string) =>
+          `<a href="${sanitizeUrl(href)}">${text}</a>`)
 
-          // Line breaks
-          .replaceAll(/\n$/gim, '<br />')
-      )
-    } catch (error) {
-      console.warn('Failed to convert markdown to HTML:', error)
-      return escapeHtml(markdown)
-    }
+        // Line breaks
+        .replaceAll(/\n$/gim, '<br />')
+    )
+  } catch (error) {
+    console.warn('Failed to convert markdown to HTML:', error)
+    return escapeHtml(markdown)
   }
-  return markdown
 }
 
 // Toolbar contents as a top-level function
