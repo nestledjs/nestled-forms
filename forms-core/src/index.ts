@@ -26,6 +26,7 @@ export {
   evaluateConditionalState,
 } from './lib/conditional-state'
 export type { ConditionalState } from './lib/conditional-state'
+export { FieldConditionalWrapper } from './lib/conditional-field-wrapper'
 
 // Contexts
 export { FormContext, useFormContext } from './lib/form-context'
@@ -48,10 +49,12 @@ export { deepEqual } from './lib/utils/deep-equal'
 export {
   createFieldValidation,
   createFormResolver,
+  buildFieldsResolver,
   validateGroup,
   getValidationGroups,
   getFieldsInGroup,
   shouldValidateField,
+  type FormFieldLike,
   type InferSchemaType,
 } from './lib/utils/validation'
 

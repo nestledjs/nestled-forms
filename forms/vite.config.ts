@@ -60,8 +60,7 @@ export default defineConfig({
         '@nestledjs/forms-core/apollo',
       ],
       output: {
-        // Vite lib mode strips 'use client'; Next.js App Router needs it on
-        // every chunk of this client-only library
+        // Vite lib mode strips 'use client'; RSC-aware bundlers need it on every chunk
         banner: `'use client';`,
       },
     },
