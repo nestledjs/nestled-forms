@@ -52,7 +52,7 @@ export default defineConfig({
         '@ronradtke/react-native-markdown-display',
       ],
       output: {
-        // Vite lib mode strips 'use client'; keep it for RSC-aware bundlers
+        // Vite lib mode strips 'use client'; RSC-aware bundlers need it on every chunk
         banner: `'use client';`,
       },
     },

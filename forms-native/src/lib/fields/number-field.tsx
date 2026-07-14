@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
 import { TextInput, View, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
+import { useTextFieldDefault } from '../hooks/use-text-field-default'
 
 export function NumberField({
   form,
@@ -18,15 +18,7 @@ export function NumberField({
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''
 
-  // Reflect form-level values / field defaults in the uncontrolled TextInput,
-  // and seed form state with the default so untouched forms submit it (web parity)
-  const initialValue = form.getValues(field.key) ?? field.options.defaultValue ?? ''
-  useEffect(() => {
-    const currentValue = form.getValues(field.key)
-    if ((currentValue === undefined || currentValue === null) && field.options.defaultValue !== undefined) {
-      form.setValue(field.key, field.options.defaultValue)
-    }
-  }, [form, field.key, field.options.defaultValue])
+  const initialValue = useTextFieldDefault(form, field)
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {

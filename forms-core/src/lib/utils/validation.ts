@@ -1,7 +1,7 @@
 import { ZodTypeAny, ZodError } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FieldValues, RegisterOptions, Resolver } from 'react-hook-form'
-import { BaseFieldOptions, InputFieldOptions } from '../form-types'
+import { BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
 import { DEFAULT_FORM_STRINGS } from '../form-config-context'
 
 // Helper function to create Zod validator
@@ -331,6 +331,50 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
       errors
     }
   }
+}
+
+/** Minimal field shape the resolver builder needs (structurally matches FormField). */
+export interface FormFieldLike {
+  key: string
+  type: FormFieldType
+  options: InputFieldOptions
+}
+
+/**
+ * Builds the form resolver from field definitions when any field (or the
+ * form) declares validation. required/requiredWhen count: react-hook-form
+ * ignores register rules once a resolver exists.
+ */
+export function buildFieldsResolver<TFieldValues extends FieldValues = FieldValues>(options: {
+  schema?: ZodTypeAny
+  fields?: (FormFieldLike | null)[]
+  validationGroup?: string
+  /** Localized fallback for required errors (per-field errorMessages.required wins) */
+  defaultRequiredMessage?: string
+}): Resolver<TFieldValues> | undefined {
+  const { schema, fields, validationGroup, defaultRequiredMessage } = options
+
+  const needsResolver = schema || fields?.some(f => {
+    if (f?.type === FormFieldType.Button) return false // Never validate buttons
+    const opts = f?.options
+    return opts?.schema || opts?.validateWithForm || opts?.validate || opts?.required || opts?.requiredWhen
+  })
+
+  if (!needsResolver) {
+    return undefined
+  }
+
+  return createFormResolver<TFieldValues>(
+    schema,
+    fields?.filter((f): f is FormFieldLike => f !== null)
+      .filter(f => f.type !== FormFieldType.Button) // Never validate button fields
+      .map(f => ({
+        key: f.key,
+        options: f.options
+      })),
+    validationGroup,
+    defaultRequiredMessage
+  )
 }
 
 /**
