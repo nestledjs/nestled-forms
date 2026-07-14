@@ -65,5 +65,10 @@ describe('searchSelect with loadOptions', () => {
     fireEvent.click(input)
 
     await waitFor(() => expect(screen.getByText('Ada')).toBeInTheDocument())
+
+    // Exactly one initial fetch: the hook's mount fetch. SearchSelectBase's
+    // debounced effect must not double-hit the backend with a second ''.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(load).toHaveBeenCalledTimes(1)
   })
 })
