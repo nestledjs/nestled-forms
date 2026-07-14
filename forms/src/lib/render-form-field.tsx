@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React from 'react'
 import clsx from 'clsx'
-import { useWatch } from 'react-hook-form'
 import {
   FormField,
   FormFieldType,
@@ -11,7 +10,7 @@ import {
   DEFAULT_REQUIRED_ERROR_MESSAGE,
   STATIC_CONDITIONAL_STATE,
   hasConditionalLogic,
-  evaluateConditionalState,
+  FieldConditionalWrapper,
 } from '@nestledjs/forms-core'
 import type { ConditionalState } from '@nestledjs/forms-core'
 
@@ -404,27 +403,13 @@ export function RenderFormField(props: Readonly<RenderFormFieldProps>) {
   // Only fields with conditional logic pay for a whole-form value subscription;
   // everything else skips it so a keystroke doesn't re-render every field.
   if (hasConditionalLogic(props.field)) {
-    return <ConditionalFormField {...props} />
+    return (
+      <FieldConditionalWrapper field={props.field}>
+        {(conditionalState) => <RenderFormFieldInner {...props} conditionalState={conditionalState} />}
+      </FieldConditionalWrapper>
+    )
   }
   return <RenderFormFieldInner {...props} conditionalState={STATIC_CONDITIONAL_STATE} />
-}
-
-function ConditionalFormField(props: Readonly<RenderFormFieldProps>) {
-  const form = useFormContext()
-  const { field } = props
-
-  // Watch all form values for conditional logic.
-  // useWatch creates an explicit subscription to the form's control, so it reliably
-  // triggers re-renders for any value change — including values set via setValue on
-  // unregistered custom fields — in all environments (dev, prod, SSR).
-  const formValues = useWatch({ control: form.control })
-
-  const conditionalState = useMemo<ConditionalState>(
-    () => evaluateConditionalState(field, formValues),
-    [formValues, field],
-  )
-
-  return <RenderFormFieldInner {...props} conditionalState={conditionalState} />
 }
 
 function RenderFormFieldInner({

@@ -3,13 +3,11 @@ import { View, ViewStyle } from 'react-native'
 import { useForm, UseFormProps, FieldValues } from 'react-hook-form'
 import {
   FormField,
-  FormFieldType,
-  InputFieldOptions,
   FormContext,
   ThemeContext,
   FormConfigContext,
   FormThemeSchema,
-  createFormResolver,
+  buildFieldsResolver,
   createSubmitHandler,
   deepEqual,
 } from '@nestledjs/forms-core'
@@ -70,29 +68,10 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
   validationGroup,
   validationGroups,
 }: Readonly<NativeFormProps<T>>) {
-  const resolver = useMemo(() => {
-    // required/requiredWhen must go through the resolver too: react-hook-form
-    // ignores register/Controller rules once any resolver exists.
-    const needsResolver = schema || fields?.some(f => {
-      if (f?.type === FormFieldType.Button) return false
-      const opts = f?.options as InputFieldOptions
-      return opts?.schema || opts?.validateWithForm || opts?.validate || opts?.required || opts?.requiredWhen
-    })
-
-    if (needsResolver) {
-      return createFormResolver<T>(
-        schema,
-        fields?.filter((f): f is FormField => f !== null)
-          .filter(f => f.type !== FormFieldType.Button)
-          .map(f => ({
-            key: f.key,
-            options: f.options as InputFieldOptions
-          })),
-        validationGroup
-      )
-    }
-    return undefined
-  }, [schema, fields, validationGroup, validationGroups])
+  const resolver = useMemo(
+    () => buildFieldsResolver<T>({ schema, fields, validationGroup }),
+    [schema, fields, validationGroup, validationGroups],
+  )
 
   const form = useForm<T>({
     defaultValues,

@@ -4,13 +4,12 @@ import React, { useEffect, useMemo, useRef } from 'react'
 import { useForm, UseFormProps, FieldValues } from 'react-hook-form'
 import {
   FormField,
-  FormFieldType,
-  InputFieldOptions,
   FormContext,
   ThemeContext,
   FormConfigContext,
-  createFormResolver,
+  buildFieldsResolver,
   createSubmitHandler,
+  deepEqual,
 } from '@nestledjs/forms-core'
 import type { FormTheme, FormConfig } from '@nestledjs/forms-core'
 import clsx from 'clsx'
@@ -110,23 +109,6 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
 const EMPTY_THEME = {}
 const DEFAULT_FINAL_THEME = createFinalTheme(EMPTY_THEME)
 
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true
-  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false
-  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime()
-  if (Array.isArray(a) !== Array.isArray(b)) return false
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false
-    return a.every((item, i) => deepEqual(item, (b as unknown[])[i]))
-  }
-  const aObj = a as Record<string, unknown>
-  const bObj = b as Record<string, unknown>
-  const aKeys = Object.keys(aObj)
-  const bKeys = Object.keys(bObj)
-  if (aKeys.length !== bKeys.length) return false
-  return aKeys.every(key => deepEqual(aObj[key], bObj[key]))
-}
-
 /**
  * Main form component that provides both declarative and imperative form usage patterns.
  * 
@@ -191,30 +173,10 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
   validationGroups,
 }: Readonly<FormProps<T>>) {
   // Create resolver for validation if needed
-  const resolver = useMemo(() => {
-    // Check if any field needs validation that requires a resolver (excluding buttons).
-    // required/requiredWhen must go through the resolver too: react-hook-form
-    // ignores register rules once any resolver exists.
-    const needsResolver = schema || fields?.some(f => {
-      if (f?.type === FormFieldType.Button) return false // Never validate buttons
-      const opts = f?.options as InputFieldOptions
-      return opts?.schema || opts?.validateWithForm || opts?.validate || opts?.required || opts?.requiredWhen
-    })
-
-    if (needsResolver) {
-      return createFormResolver<T>(
-        schema,
-        fields?.filter((f): f is FormField => f !== null)
-          .filter(f => f.type !== FormFieldType.Button) // Never validate button fields
-          .map(f => ({
-            key: f.key,
-            options: f.options as InputFieldOptions
-          })),
-        validationGroup
-      )
-    }
-    return undefined
-  }, [schema, fields, validationGroup, validationGroups])
+  const resolver = useMemo(
+    () => buildFieldsResolver<T>({ schema, fields, validationGroup }),
+    [schema, fields, validationGroup, validationGroups],
+  )
 
   const form = useForm<T>({
     defaultValues,
