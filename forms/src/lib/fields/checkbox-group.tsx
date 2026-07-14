@@ -183,8 +183,7 @@ export function CheckboxGroupField({
 
           return (
             <div className={clsx(groupTheme.wrapper)}>
-              <div
-                role="group"
+              <fieldset
                 aria-label={options.label || undefined}
                 className={clsx(
                   groupTheme.container,
@@ -197,7 +196,7 @@ export function CheckboxGroupField({
                   const isDisabled = options.disabled
                   return renderOption(option, isChecked, !!isDisabled, handleCheckboxChange)
                 })}
-              </div>
+              </fieldset>
             </div>
           )
         }}

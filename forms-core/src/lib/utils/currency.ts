@@ -394,6 +394,28 @@ export function formatCurrency(
   return result
 }
 
+// Both '.' and ',' present: the last-occurring one is the decimal separator,
+// the other is a grouping separator (e.g. '1.234,56' -> '1234.56')
+function normalizeDualSeparators(value: string): string {
+  const decimalSep = value.lastIndexOf('.') > value.lastIndexOf(',') ? '.' : ','
+  const groupSep = decimalSep === '.' ? ',' : '.'
+  const ungrouped = value.replaceAll(groupSep, '')
+  return decimalSep === '.' ? ungrouped : ungrouped.replace(decimalSep, '.')
+}
+
+// Exactly one of '.'/',' present. A single separator followed by 1-2 trailing
+// digits is decimal regardless of currency config ('1.5' or '1,5' -> '1.5');
+// a single occurrence of the configured decimal separator is also decimal.
+// Otherwise it's grouping ('.'/',' followed by 3 digits or repeated): strip it.
+function normalizeSingleSeparator(value: string, sep: '.' | ',', config: CurrencyConfig): string {
+  const parts = value.split(sep)
+  const isDecimal = parts.length === 2 && (/^\d{1,2}$/.test(parts[1]) || sep === config.decimalSeparator)
+  if (isDecimal) {
+    return sep === '.' ? value : value.replace(sep, '.')
+  }
+  return value.replaceAll(sep, '')
+}
+
 /**
  * Parse a formatted currency string back to a number
  */
@@ -409,28 +431,9 @@ export function parseCurrency(value: string, config: CurrencyConfig): number | n
   const hasComma = cleanValue.includes(',')
 
   if (hasDot && hasComma) {
-    // Both separators present: the last-occurring one is the decimal separator,
-    // the other is a grouping separator (e.g. '1.234,56' -> 1234.56)
-    const decimalSep = cleanValue.lastIndexOf('.') > cleanValue.lastIndexOf(',') ? '.' : ','
-    const groupSep = decimalSep === '.' ? ',' : '.'
-    cleanValue = cleanValue.replaceAll(groupSep, '')
-    if (decimalSep !== '.') {
-      cleanValue = cleanValue.replace(decimalSep, '.')
-    }
+    cleanValue = normalizeDualSeparators(cleanValue)
   } else if (hasDot || hasComma) {
-    const sep = hasDot ? '.' : ','
-    const parts = cleanValue.split(sep)
-    // A single separator followed by 1-2 trailing digits is a decimal separator
-    // regardless of the currency config (e.g. '1.5' or '1,5' -> 1.5). A single
-    // occurrence of the configured decimal separator is also treated as decimal.
-    if (parts.length === 2 && (/^\d{1,2}$/.test(parts[1]) || sep === config.decimalSeparator)) {
-      if (sep !== '.') {
-        cleanValue = cleanValue.replace(sep, '.')
-      }
-    } else {
-      // Grouping separator(s) (followed by exactly 3 digits or repeated): strip them
-      cleanValue = cleanValue.replaceAll(sep, '')
-    }
+    cleanValue = normalizeSingleSeparator(cleanValue, hasDot ? '.' : ',', config)
   }
 
   // Strip any non '.'/',' thousands separators (e.g. spaces, apostrophes)

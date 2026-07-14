@@ -282,50 +282,67 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
       Object.assign(errors, schemaResult.errors)
     }
 
-    for (const field of fieldsNeedingValidation) {
-      // Respect validateWhen and the active validation group (multi-step forms)
-      if (!shouldValidateField(field, values, currentValidationGroup)) {
-        continue
-      }
-
-      const value = values[field.key as keyof TFieldValues]
-      const error = await validateField(field, value, values)
-
-      if (error) {
-        errors[field.key] = error
-      }
-    }
-
-    // Run register-time `validate` rules too (e.g. the phone field's
-    // auto-injected format validator, useFieldValidation composites):
-    // react-hook-form ignores register rules whenever a resolver exists, so
-    // the resolver has to execute them itself from options.fields.
-    for (const [name, registered] of Object.entries(options.fields ?? {})) {
-      if (errors[name]) continue
-      const registeredValidate = (registered as { validate?: unknown })?.validate
-      if (!registeredValidate) continue
-
-      const value = values[name as keyof TFieldValues]
-      let result: unknown = true
-      if (typeof registeredValidate === 'function') {
-        result = await registeredValidate(value, values)
-      } else if (typeof registeredValidate === 'object') {
-        result = await runObjectValidators(registeredValidate as Record<string, any>, value, values)
-      }
-
-      if (result !== true && result !== undefined) {
-        errors[name] = {
-          type: 'validate',
-          message: typeof result === 'string' ? result : 'Invalid value',
-        }
-      }
-    }
+    await collectFieldErrors(fieldsNeedingValidation, values, currentValidationGroup, errors)
+    await collectRegisteredRuleErrors(options.fields ?? {}, values, errors)
 
     return {
       values: Object.keys(errors).length ? {} : values,
       errors
     }
   }
+}
+
+async function collectFieldErrors(
+  fields: Array<{ key: string; options: InputFieldOptions }>,
+  values: any,
+  currentValidationGroup: string | undefined,
+  errors: Record<string, any>
+): Promise<void> {
+  for (const field of fields) {
+    // Respect validateWhen and the active validation group (multi-step forms)
+    if (!shouldValidateField(field, values, currentValidationGroup)) {
+      continue
+    }
+
+    const error = await validateField(field, values[field.key], values)
+    if (error) {
+      errors[field.key] = error
+    }
+  }
+}
+
+// Run register-time `validate` rules too (e.g. the phone field's
+// auto-injected format validator, useFieldValidation composites):
+// react-hook-form ignores register rules whenever a resolver exists, so
+// the resolver has to execute them itself from options.fields.
+async function collectRegisteredRuleErrors(
+  registeredFields: Record<string, unknown>,
+  values: any,
+  errors: Record<string, any>
+): Promise<void> {
+  for (const [name, registered] of Object.entries(registeredFields)) {
+    if (errors[name]) continue
+    const registeredValidate = (registered as { validate?: unknown })?.validate
+    if (!registeredValidate) continue
+
+    const result = await runRegisteredValidate(registeredValidate, values[name], values)
+    if (result !== true && result !== undefined) {
+      errors[name] = {
+        type: 'validate',
+        message: typeof result === 'string' ? result : 'Invalid value',
+      }
+    }
+  }
+}
+
+async function runRegisteredValidate(validate: unknown, value: any, values: any): Promise<unknown> {
+  if (typeof validate === 'function') {
+    return validate(value, values)
+  }
+  if (typeof validate === 'object' && validate !== null) {
+    return runObjectValidators(validate as Record<string, any>, value, values)
+  }
+  return true
 }
 
 /** Minimal field shape the resolver builder needs (structurally matches FormField). */
