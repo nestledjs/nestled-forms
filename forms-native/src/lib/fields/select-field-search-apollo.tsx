@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { View, Text } from 'react-native'
 import { Controller, useWatch } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType, useSearchSelect } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useSearchSelect, useFormConfig } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 let Dropdown: any = null
@@ -24,6 +24,7 @@ export function SelectFieldSearchApollo<
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const theme = useNativeTheme().searchSelect
+  const { strings } = useFormConfig()
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const { options: apolloOptions, handleSearchChange } = useSearchSelect<TDataItem>(field.options)
@@ -91,7 +92,7 @@ export function SelectFieldSearchApollo<
             valueField="value"
             value={selectedOption?.value}
             search
-            searchPlaceholder="Search..."
+            searchPlaceholder={strings.searchPlaceholder}
             onChangeText={handleSearchChange}
             onChange={(item: { value: string; label: string }) => {
               controllerField.onChange(item)
@@ -99,7 +100,7 @@ export function SelectFieldSearchApollo<
             }}
             onBlur={controllerField.onBlur}
             disable={field.options.disabled}
-            placeholder={(field.options as any).placeholder || 'Search...'}
+            placeholder={(field.options as any).placeholder || strings.searchPlaceholder}
             style={[theme.container, field.options.disabled && theme.disabled, hasError && theme.error]}
             placeholderStyle={theme.placeholder}
             inputSearchStyle={theme.inputSearch}

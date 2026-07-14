@@ -8,6 +8,7 @@ import {
   SearchSelectOption,
   multiSelectSubmitTransform,
   useSearchSelect,
+  useFormConfig,
 } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -38,6 +39,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const theme = useNativeTheme().multiSelect
+  const { strings } = useFormConfig()
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const { options: apolloOptions, handleSearchChange } = useSearchSelect<TDataItem>(field.options)
@@ -132,7 +134,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
             valueField="value"
             value={processedValue}
             search
-            searchPlaceholder="Search..."
+            searchPlaceholder={strings.searchPlaceholder}
             onChangeText={handleSearchChange}
             onChange={(items: string[]) => {
               const itemObjects = items.map(item => findOrCreateOption(item))
@@ -140,7 +142,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
               if (form.trigger) form.trigger(field.key)
             }}
             disable={field.options.disabled}
-            placeholder={(field.options as any).placeholder || 'Search...'}
+            placeholder={(field.options as any).placeholder || strings.searchPlaceholder}
             style={[theme.container, field.options.disabled && theme.disabled, hasError && theme.error]}
             placeholderStyle={theme.placeholder}
             accessibilityLabel={field.options.label}

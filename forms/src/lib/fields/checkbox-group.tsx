@@ -2,7 +2,7 @@
 
 import { Controller } from 'react-hook-form'
 import clsx from 'clsx'
-import { FormField, FormFieldProps, FormFieldType, CheckboxGroupOption, CheckboxGroupOptions, useFormTheme } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, CheckboxGroupOption, CheckboxGroupOptions, useFormTheme, useFormConfig } from '@nestledjs/forms-core'
 
 // Utility functions for value conversion (moved outside component for performance)
 const stringToArray = (value: string | null | undefined, separator: string): string[] => {
@@ -25,6 +25,7 @@ export function CheckboxGroupField({
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const theme = useFormTheme()
+  const { strings } = useFormConfig()
   const checkboxTheme = theme.checkbox
   const groupTheme = theme.checkboxGroup
   const options: CheckboxGroupOptions = field.options
@@ -162,7 +163,7 @@ export function CheckboxGroupField({
           </div>
         ) : (
           <div className={clsx(groupTheme.readOnlyUnselected)}>
-            No options selected
+            {strings.noneSelected}
           </div>
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { useState, ReactNode, useRef, useEffect, useCallback } from 'react'
 import clsx from 'clsx'
-import { SearchSelectOption, useDebounce } from '@nestledjs/forms-core'
+import { SearchSelectOption, useDebounce, useFormConfig } from '@nestledjs/forms-core'
 import { BaseSelectField } from './base-select-field'
 
 export interface SearchSelectBaseProps<TValue> {
@@ -55,6 +55,7 @@ export function SearchSelectBase<TValue>({
   renderSelectedItems,
   renderNoResults,
 }: Readonly<SearchSelectBaseProps<TValue>>) {
+  const { strings } = useFormConfig()
   const [searchTerm, setSearchTerm] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
@@ -315,7 +316,7 @@ export function SearchSelectBase<TValue>({
                     inputRef.current?.focus()
                   }}
                   disabled={isDisabled}
-                  aria-label="Clear selection"
+                  aria-label={strings.clearSelection}
                 >
                   <svg
                     className={theme.clearIcon || theme.buttonIcon}
@@ -336,7 +337,7 @@ export function SearchSelectBase<TValue>({
                 className={theme.button}
                 onClick={handleToggleDropdown}
                 disabled={isDisabled}
-                aria-label="Toggle dropdown"
+                aria-label={strings.toggleDropdown}
               >
                 <svg
                   className={theme.buttonIcon}
@@ -358,13 +359,13 @@ export function SearchSelectBase<TValue>({
                 {/* Status messages (loading/empty) - using <output> for accessibility */}
                 {loading && (
                   <output className={theme.loadingText} aria-live="polite">
-                    Loading...
+                    {strings.loading}
                   </output>
                 )}
                 {!loading && filteredOptions.length === 0 && (
                   renderNoResults?.(!!searchTerm) || (
                     <output className={theme.loadingText || theme.noResultsText} aria-live="polite">
-                      {searchTerm ? 'No results found' : 'No options available'}
+                      {searchTerm ? strings.noResults : strings.noOptions}
                     </output>
                   )
                 )}

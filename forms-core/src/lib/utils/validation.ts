@@ -69,7 +69,8 @@ function isEmptyValue(value: any): boolean {
 async function validateField(
   field: { key: string; options: InputFieldOptions },
   value: any,
-  values: any
+  values: any,
+  defaultRequiredMessage = 'This field is required'
 ): Promise<{ type: string; message: string } | null> {
   const { options: fieldOptions } = field
 
@@ -83,7 +84,7 @@ async function validateField(
   if (isRequired && isEmptyValue(value)) {
     return {
       type: 'required',
-      message: fieldOptions.errorMessages?.required || 'This field is required'
+      message: fieldOptions.errorMessages?.required || defaultRequiredMessage
     }
   }
 
@@ -244,7 +245,8 @@ export function createFieldValidation(
 export function createFormResolver<TFieldValues extends FieldValues = FieldValues>(
   schema?: ZodTypeAny,
   fields?: Array<{ key: string; options: InputFieldOptions }>,
-  currentValidationGroup?: string
+  currentValidationGroup?: string,
+  defaultRequiredMessage?: string
 ): Resolver<TFieldValues> | undefined {
   // Every field with any validation-relevant option must go through the
   // resolver: react-hook-form ignores register/Controller rules entirely once
@@ -289,7 +291,7 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
       }
 
       const value = values[field.key as keyof TFieldValues]
-      const error = await validateField(field, value, values)
+      const error = await validateField(field, value, values, defaultRequiredMessage)
 
       if (error) {
         errors[field.key] = error

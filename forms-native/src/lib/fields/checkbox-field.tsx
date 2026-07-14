@@ -1,6 +1,6 @@
 import { View, Text, Pressable } from 'react-native'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType, DEFAULT_REQUIRED_ERROR_MESSAGE } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormConfig } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 type CheckboxFieldType = Extract<FormField, { type: FormFieldType.Checkbox }>
@@ -56,6 +56,7 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
   const { field, form, hasError, errorMessage, formReadOnly = false, formReadOnlyStyle = 'value' } = props
   const options = field.options
   const theme = useNativeTheme()
+  const { strings } = useFormConfig()
   const checkboxTheme = theme.checkbox
   const isReadOnly = options.readOnly ?? formReadOnly
   const readOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
@@ -83,7 +84,7 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
     }
     return (
       <View style={checkboxTheme.wrapper}>
-        <Text style={checkboxTheme.readOnly}>{value ? 'Yes' : 'No'}</Text>
+        <Text style={checkboxTheme.readOnly}>{value ? strings.readOnlyYes : strings.readOnlyNo}</Text>
       </View>
     )
   }
@@ -93,7 +94,7 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
       name={field.key}
       control={form.control}
       defaultValue={options.defaultValue}
-      rules={{ required: options.required ? DEFAULT_REQUIRED_ERROR_MESSAGE : false }}
+      rules={{ required: options.required ? strings.requiredError : false }}
       render={({ field: controllerField }) => (
         <View style={checkboxTheme.wrapper}>
           <View style={checkboxTheme.row}>

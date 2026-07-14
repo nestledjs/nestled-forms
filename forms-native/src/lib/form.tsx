@@ -11,8 +11,10 @@ import {
   FormThemeSchema,
   createFormResolver,
   resolveSubmitTransform,
+  resolveFormStrings,
   deepEqual,
 } from '@nestledjs/forms-core'
+import type { FormStrings } from '@nestledjs/forms-core'
 import { NativeFormSubmitContext } from './native-form-submit-context'
 import type { FormConfig } from '@nestledjs/forms-core'
 import { ZodTypeAny } from 'zod'
@@ -42,6 +44,8 @@ export interface NativeFormProps<T extends FieldValues = Record<string, unknown>
   readOnlyStyle?: 'value' | 'disabled'
   nativeTheme?: DeepPartial<NativeTheme>
   labelDisplay?: 'all' | 'default' | 'none'
+  /** Override any user-facing strings (localization). Merged over English defaults. */
+  strings?: Partial<FormStrings>
   schema?: ZodTypeAny
   validationGroup?: string
   validationGroups?: string[]
@@ -66,10 +70,12 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
   readOnlyStyle: formReadOnlyStyle = 'value',
   nativeTheme: userNativeTheme = EMPTY_NATIVE_THEME,
   labelDisplay = 'default',
+  strings,
   schema,
   validationGroup,
   validationGroups,
 }: Readonly<NativeFormProps<T>>) {
+  const formStrings = useMemo(() => resolveFormStrings(strings), [strings])
   const resolver = useMemo(() => {
     // required/requiredWhen must go through the resolver too: react-hook-form
     // ignores register/Controller rules once any resolver exists.
@@ -88,11 +94,12 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
             key: f.key,
             options: f.options as InputFieldOptions
           })),
-        validationGroup
+        validationGroup,
+        formStrings.requiredError
       )
     }
     return undefined
-  }, [schema, fields, validationGroup, validationGroups])
+  }, [schema, fields, validationGroup, validationGroups, formStrings.requiredError])
 
   const form = useForm<T>({
     defaultValues,
@@ -155,7 +162,10 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
     () => (userNativeTheme === EMPTY_NATIVE_THEME ? DEFAULT_FINAL_NATIVE_THEME : createFinalNativeTheme(userNativeTheme)),
     [userNativeTheme],
   )
-  const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
+  const formConfig = useMemo<FormConfig>(
+    () => ({ labelDisplay, strings: formStrings }),
+    [labelDisplay, formStrings],
+  )
 
   return (
     <FormConfigContext.Provider value={formConfig}>
