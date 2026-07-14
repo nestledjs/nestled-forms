@@ -121,7 +121,7 @@ export function RadioField(
     if (options?.defaultValue !== undefined && (currentValue === undefined || currentValue === '')) {
       const defaultOption = options?.radioOptions?.find((o: RadioOption) => o.value === options?.defaultValue)
       // Use a null/undefined check so falsy defaults like `false` or `0` are still applied
-      if (defaultOption != null && defaultOption.value !== undefined) {
+      if (defaultOption?.value !== undefined) {
         props.form.setValue(props.field.key, defaultOption.value)
       }
       if (options?.defaultSubValue !== undefined && defaultOption?.checkedSubOption) {
