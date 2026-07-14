@@ -1,6 +1,6 @@
 'use client'
 
-import { FormField, FormFieldProps, FormFieldType, useFormTheme } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormTheme, useLoadOptions } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { SelectedItems, multiSelectDisplayValue } from './search-select-helpers'
 
@@ -18,6 +18,11 @@ export function SelectFieldMultiSearch({
 
   const value = form.getValues(field.key) ?? []
 
+  // loadOptions mode: the hook manages options/loading/search; the input's own
+  // debounce (SearchSelectBase) already paces calls, so debounceMs is 0
+  const asyncSearch = useLoadOptions(field.options.loadOptions, field.options.options || [])
+  const usingLoadOptions = !!field.options.loadOptions
+
   return (
     <SearchSelectBase
       form={form}
@@ -25,9 +30,9 @@ export function SelectFieldMultiSearch({
       hasError={hasError}
       formReadOnly={formReadOnly}
       formReadOnlyStyle={formReadOnlyStyle}
-      options={field.options.options || []}
-      loading={field.options.loading}
-      onSearchChange={field.options.onSearchChange}
+      options={usingLoadOptions ? asyncSearch.options : field.options.options || []}
+      loading={usingLoadOptions ? asyncSearch.loading : field.options.loading}
+      onSearchChange={usingLoadOptions ? asyncSearch.handleSearchChange : field.options.onSearchChange}
       searchDebounceMs={field.options.searchDebounceMs}
       value={value}
       onChange={(items) => {

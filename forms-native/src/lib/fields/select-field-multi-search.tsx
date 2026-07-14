@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text } from 'react-native'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType, useFormConfig } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormConfig, useLoadOptions } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 let MultiSelect: any = null
@@ -29,7 +29,13 @@ export function SelectFieldMultiSearch({
 }>) {
   const theme = useNativeTheme().multiSelect
   const { strings } = useFormConfig()
-  const options = (field.options.options || []).map(o => ({ label: o.label, value: o.value }))
+  const staticOptions = field.options.options || []
+  // loadOptions mode: async source with internal debounce (native dropdowns
+  // don't debounce their search input themselves)
+  const asyncSearch = useLoadOptions(field.options.loadOptions, staticOptions, field.options.searchDebounceMs ?? 300)
+  const usingLoadOptions = !!field.options.loadOptions
+  const onSearchText = usingLoadOptions ? asyncSearch.handleSearchChange : field.options.onSearchChange
+  const options = (usingLoadOptions ? asyncSearch.options : staticOptions).map(o => ({ label: o.label, value: o.value }))
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   if (!MultiSelect) {
@@ -88,6 +94,7 @@ export function SelectFieldMultiSearch({
               value={selectedValues}
               search
               searchPlaceholder={strings.searchPlaceholder}
+              onChangeText={onSearchText}
               onChange={(items: string[]) => {
                 controllerField.onChange(items)
                 if (form.trigger) form.trigger(field.key)
