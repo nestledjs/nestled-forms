@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { UseFormReturn, FieldValues } from 'react-hook-form'
 import { createFieldValidation } from '../utils/validation'
 import { InputFieldOptions } from '../form-types'
+import { useFormConfig } from '../form-config-context'
 
 /**
  * Hook that provides validation rules for a form field,
@@ -20,6 +21,8 @@ export function useFieldValidation<TFieldValues extends FieldValues = FieldValue
   },
   form: UseFormReturn<TFieldValues>
 ) {
+  const { strings } = useFormConfig()
+
   const validationRules = useMemo(() => {
     // For now, use static required - dynamic required will be handled in validation
     const isRequired = field.options.required || false
@@ -31,7 +34,8 @@ export function useFieldValidation<TFieldValues extends FieldValues = FieldValue
     return createFieldValidation(
       field.options,
       isRequired,
-      currentValidationGroup
+      currentValidationGroup,
+      strings.requiredError
     )
   }, [
     field.key,
@@ -40,6 +44,7 @@ export function useFieldValidation<TFieldValues extends FieldValues = FieldValue
     field.options.validate,
     field.options.validateWithForm,
     field.options.validateWhen,
+    strings.requiredError,
   ])
 
   return validationRules
