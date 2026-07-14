@@ -56,7 +56,6 @@ export default defineConfig({
         '@apollo/client/react',
         'graphql',
         'react-phone-number-input',
-        'date-fns',
         '@nestledjs/forms-core',
         '@nestledjs/forms-core/apollo',
       ],
