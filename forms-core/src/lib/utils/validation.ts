@@ -1,7 +1,7 @@
 import { ZodTypeAny, ZodError } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FieldValues, RegisterOptions, Resolver } from 'react-hook-form'
-import { BaseFieldOptions, InputFieldOptions } from '../form-types'
+import { BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
 
 // Helper function to create Zod validator
 function createZodValidator(schema: ZodTypeAny, errorMessages?: Record<string, string | undefined>) {
@@ -46,8 +46,23 @@ async function runSchemaValidation(
         message: errorMessages?.[firstError.code] || firstError.message
       }
     }
-    return null
+    // A throwing schema must not pass the field as valid
+    return { type: 'schema', message: error instanceof Error ? error.message : 'Invalid value' }
   }
+}
+
+/**
+ * Required-check emptiness: null/undefined, empty/whitespace string, empty array,
+ * and NaN (a cleared number input) are empty. `0` is a real value. `false` is
+ * treated as empty to match HTML/react-hook-form semantics for required
+ * checkboxes ("must be checked").
+ */
+function isEmptyValue(value: any): boolean {
+  if (value === null || value === undefined || value === false) return true
+  if (typeof value === 'string') return value.trim() === ''
+  if (typeof value === 'number') return Number.isNaN(value)
+  if (Array.isArray(value)) return value.length === 0
+  return false
 }
 
 // Helper function to validate a single field
@@ -65,7 +80,7 @@ async function validateField(
 
   // Check required validation
   const isRequired = fieldOptions.required || fieldOptions.requiredWhen?.(values)
-  if (isRequired && !value) {
+  if (isRequired && isEmptyValue(value)) {
     return {
       type: 'required',
       message: fieldOptions.errorMessages?.required || 'This field is required'
@@ -231,38 +246,144 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
   fields?: Array<{ key: string; options: InputFieldOptions }>,
   currentValidationGroup?: string
 ): Resolver<TFieldValues> | undefined {
-  // If we have a form-level Zod schema, use the zodResolver
-  if (schema) {
-    return zodResolver(schema) as Resolver<TFieldValues>
-  }
-
-  // Check if we need a custom resolver for field-level validation
+  // Every field with any validation-relevant option must go through the
+  // resolver: react-hook-form ignores register/Controller rules entirely once
+  // a resolver is set, so leaving e.g. required-only fields out silently
+  // disables their validation.
   // Note: Button fields should already be filtered out before calling this function
-  const fieldsNeedingValidation = fields?.filter(f =>
-    f.options.schema || f.options.validateWithForm || f.options.validate
-  )
-  if (!fieldsNeedingValidation?.length) {
+  const fieldsNeedingValidation =
+    fields?.filter(
+      (f) =>
+        f.options.required ||
+        f.options.requiredWhen ||
+        f.options.schema ||
+        f.options.validateWithForm ||
+        f.options.validate,
+    ) ?? []
+
+  if (!schema && !fieldsNeedingValidation.length) {
     return undefined
   }
 
-  // Create a custom resolver that handles all field-level validation
+  // Form-level schema with no field-level validation: plain zodResolver
+  if (schema && !fieldsNeedingValidation.length) {
+    return zodResolver(schema) as Resolver<TFieldValues>
+  }
+
+  const schemaResolver = schema ? (zodResolver(schema) as Resolver<TFieldValues>) : undefined
+
+  // Custom resolver: form-level schema (if any) and field-level validation
+  // both run; field-level errors win on key collisions.
   return async (values, context, options) => {
     const errors: Record<string, any> = {}
 
-    for (const field of fieldsNeedingValidation) {
-      const value = values[field.key as keyof TFieldValues]
-      const error = await validateField(field, value, values)
-
-      if (error) {
-        errors[field.key] = error
-      }
+    if (schemaResolver) {
+      const schemaResult = await schemaResolver(values, context, options)
+      Object.assign(errors, schemaResult.errors)
     }
+
+    await collectFieldErrors(fieldsNeedingValidation, values, currentValidationGroup, errors)
+    await collectRegisteredRuleErrors(options.fields ?? {}, values, errors)
 
     return {
       values: Object.keys(errors).length ? {} : values,
       errors
     }
   }
+}
+
+async function collectFieldErrors(
+  fields: Array<{ key: string; options: InputFieldOptions }>,
+  values: any,
+  currentValidationGroup: string | undefined,
+  errors: Record<string, any>
+): Promise<void> {
+  for (const field of fields) {
+    // Respect validateWhen and the active validation group (multi-step forms)
+    if (!shouldValidateField(field, values, currentValidationGroup)) {
+      continue
+    }
+
+    const error = await validateField(field, values[field.key], values)
+    if (error) {
+      errors[field.key] = error
+    }
+  }
+}
+
+// Run register-time `validate` rules too (e.g. the phone field's
+// auto-injected format validator, useFieldValidation composites):
+// react-hook-form ignores register rules whenever a resolver exists, so
+// the resolver has to execute them itself from options.fields.
+async function collectRegisteredRuleErrors(
+  registeredFields: Record<string, unknown>,
+  values: any,
+  errors: Record<string, any>
+): Promise<void> {
+  for (const [name, registered] of Object.entries(registeredFields)) {
+    if (errors[name]) continue
+    const registeredValidate = (registered as { validate?: unknown })?.validate
+    if (!registeredValidate) continue
+
+    const result = await runRegisteredValidate(registeredValidate, values[name], values)
+    if (result !== true && result !== undefined) {
+      errors[name] = {
+        type: 'validate',
+        message: typeof result === 'string' ? result : 'Invalid value',
+      }
+    }
+  }
+}
+
+async function runRegisteredValidate(validate: unknown, value: any, values: any): Promise<unknown> {
+  if (typeof validate === 'function') {
+    return validate(value, values)
+  }
+  if (typeof validate === 'object' && validate !== null) {
+    return runObjectValidators(validate as Record<string, any>, value, values)
+  }
+  return true
+}
+
+/** Minimal field shape the resolver builder needs (structurally matches FormField). */
+export interface FormFieldLike {
+  key: string
+  type: FormFieldType
+  options: InputFieldOptions
+}
+
+/**
+ * Builds the form resolver from field definitions when any field (or the
+ * form) declares validation. required/requiredWhen count: react-hook-form
+ * ignores register rules once a resolver exists.
+ */
+export function buildFieldsResolver<TFieldValues extends FieldValues = FieldValues>(options: {
+  schema?: ZodTypeAny
+  fields?: (FormFieldLike | null)[]
+  validationGroup?: string
+}): Resolver<TFieldValues> | undefined {
+  const { schema, fields, validationGroup } = options
+
+  const needsResolver = schema || fields?.some(f => {
+    if (f?.type === FormFieldType.Button) return false // Never validate buttons
+    const opts = f?.options
+    return opts?.schema || opts?.validateWithForm || opts?.validate || opts?.required || opts?.requiredWhen
+  })
+
+  if (!needsResolver) {
+    return undefined
+  }
+
+  return createFormResolver<TFieldValues>(
+    schema,
+    fields?.filter((f): f is FormFieldLike => f !== null)
+      .filter(f => f.type !== FormFieldType.Button) // Never validate button fields
+      .map(f => ({
+        key: f.key,
+        options: f.options
+      })),
+    validationGroup
+  )
 }
 
 /**

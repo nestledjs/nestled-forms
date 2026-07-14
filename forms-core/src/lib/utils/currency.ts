@@ -394,6 +394,28 @@ export function formatCurrency(
   return result
 }
 
+// Both '.' and ',' present: the last-occurring one is the decimal separator,
+// the other is a grouping separator (e.g. '1.234,56' -> '1234.56')
+function normalizeDualSeparators(value: string): string {
+  const decimalSep = value.lastIndexOf('.') > value.lastIndexOf(',') ? '.' : ','
+  const groupSep = decimalSep === '.' ? ',' : '.'
+  const ungrouped = value.replaceAll(groupSep, '')
+  return decimalSep === '.' ? ungrouped : ungrouped.replace(decimalSep, '.')
+}
+
+// Exactly one of '.'/',' present. A single separator followed by 1-2 trailing
+// digits is decimal regardless of currency config ('1.5' or '1,5' -> '1.5');
+// a single occurrence of the configured decimal separator is also decimal.
+// Otherwise it's grouping ('.'/',' followed by 3 digits or repeated): strip it.
+function normalizeSingleSeparator(value: string, sep: '.' | ',', config: CurrencyConfig): string {
+  const parts = value.split(sep)
+  const isDecimal = parts.length === 2 && (/^\d{1,2}$/.test(parts[1]) || sep === config.decimalSeparator)
+  if (isDecimal) {
+    return sep === '.' ? value : value.replace(sep, '.')
+  }
+  return value.replaceAll(sep, '')
+}
+
 /**
  * Parse a formatted currency string back to a number
  */
@@ -405,12 +427,18 @@ export function parseCurrency(value: string, config: CurrencyConfig): number | n
   // Remove currency symbol and code
   let cleanValue = value.replace(config.symbol, '').replace(config.code, '').trim()
 
-  // Replace thousands separators
-  cleanValue = cleanValue.replaceAll(config.thousandsSeparator, '')
+  const hasDot = cleanValue.includes('.')
+  const hasComma = cleanValue.includes(',')
 
-  // Replace decimal separator with standard dot
-  if (config.decimalSeparator !== '.') {
-    cleanValue = cleanValue.replace(config.decimalSeparator, '.')
+  if (hasDot && hasComma) {
+    cleanValue = normalizeDualSeparators(cleanValue)
+  } else if (hasDot || hasComma) {
+    cleanValue = normalizeSingleSeparator(cleanValue, hasDot ? '.' : ',', config)
+  }
+
+  // Strip any non '.'/',' thousands separators (e.g. spaces, apostrophes)
+  if (config.thousandsSeparator !== '.' && config.thousandsSeparator !== ',') {
+    cleanValue = cleanValue.replaceAll(config.thousandsSeparator, '')
   }
 
   const parsed = Number.parseFloat(cleanValue)

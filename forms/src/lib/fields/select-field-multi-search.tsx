@@ -3,7 +3,6 @@
 import { FormField, FormFieldProps, FormFieldType, useFormTheme } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { SelectedItems, multiSelectDisplayValue } from './search-select-helpers'
-import { multiSelectSubmitTransform } from './select-field-multi-search-apollo'
 
 export function SelectFieldMultiSearch({
   form,
@@ -16,12 +15,7 @@ export function SelectFieldMultiSearch({
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const theme = useFormTheme()
-  
-  // Ensure the field has submit transformation for form submission
-  // The Form component looks for field.options.submitTransform during submission
-   
-  field.options.submitTransform ??= multiSelectSubmitTransform
-  
+
   const value = form.getValues(field.key) ?? []
 
   return (
@@ -38,7 +32,7 @@ export function SelectFieldMultiSearch({
       value={value}
       onChange={(items) => {
         // Multi-select should use empty array instead of null
-        form.setValue(field.key, items || [])
+        form.setValue(field.key, items || [], { shouldDirty: true, shouldTouch: true })
         // Trigger form validation/dirty state
         if (form.trigger) {
           form.trigger(field.key)

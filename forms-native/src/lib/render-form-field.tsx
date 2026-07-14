@@ -1,7 +1,16 @@
-import React, { useMemo, useEffect, useRef } from 'react'
+import React from 'react'
 import { View, Text, ViewStyle } from 'react-native'
-import { useWatch } from 'react-hook-form'
-import { FormField, FormFieldType, useFormContext, useFormConfig, DEFAULT_REQUIRED_ERROR_MESSAGE } from '@nestledjs/forms-core'
+import {
+  FormField,
+  FormFieldType,
+  useFormContext,
+  useFormConfig,
+  DEFAULT_REQUIRED_ERROR_MESSAGE,
+  STATIC_CONDITIONAL_STATE,
+  hasConditionalLogic,
+  FieldConditionalWrapper,
+} from '@nestledjs/forms-core'
+import type { ConditionalState } from '@nestledjs/forms-core'
 import { useNativeTheme } from './native-theme-context'
 
 import { TextField } from './fields/text-field'
@@ -110,61 +119,42 @@ function renderComponent(
   }
 }
 
-export function RenderFormField({
-  field,
-  formReadOnly = false,
-  formReadOnlyStyle = 'value',
-  style,
-  className,
-}: Readonly<{
+interface RenderFormFieldProps {
   field: FormField
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
   style?: ViewStyle
   className?: string
-}>) {
+}
+
+export function RenderFormField(props: Readonly<RenderFormFieldProps>) {
+  // Only fields with conditional logic pay for a whole-form value subscription;
+  // everything else skips it so a keystroke doesn't re-render every field.
+  if (hasConditionalLogic(props.field)) {
+    return (
+      <FieldConditionalWrapper field={props.field}>
+        {(conditionalState) => <RenderFormFieldInner {...props} conditionalState={conditionalState} />}
+      </FieldConditionalWrapper>
+    )
+  }
+  return <RenderFormFieldInner {...props} conditionalState={STATIC_CONDITIONAL_STATE} />
+}
+
+// Note: no re-register effect here. register() replaces all rules in
+// react-hook-form v7 (it clobbered Controller-supplied rules and registered
+// phantom keys for button/content fields); required is enforced centrally by
+// the form resolver instead.
+function RenderFormFieldInner({
+  field,
+  formReadOnly = false,
+  formReadOnlyStyle = 'value',
+  style,
+  className,
+  conditionalState,
+}: Readonly<RenderFormFieldProps & { conditionalState: ConditionalState }>) {
   const form = useFormContext()
   const { labelDisplay } = useFormConfig()
   const theme = useNativeTheme()
-
-  // Watch all form values for conditional logic.
-  // useWatch creates an explicit subscription to the form's control, so it reliably
-  // triggers re-renders for any value change — including values set via setValue on
-  // unregistered custom fields — in all environments (dev, prod, SSR).
-  const formValues = useWatch({ control: form.control })
-
-  // Evaluate conditional logic
-  const conditionalState = useMemo(() => {
-    const { showWhen, requiredWhen, disabledWhen } = field.options
-
-    try {
-      const isVisible = showWhen ? showWhen(formValues) : true
-      const isDynamicallyRequired = requiredWhen ? requiredWhen(formValues) : false
-      const isDynamicallyDisabled = disabledWhen ? disabledWhen(formValues) : false
-
-      return { isVisible, isDynamicallyRequired, isDynamicallyDisabled }
-    } catch (error) {
-      console.warn(`Error evaluating conditional logic for field ${field.key}:`, error)
-      return { isVisible: true, isDynamicallyRequired: false, isDynamicallyDisabled: false }
-    }
-  }, [formValues, field.options, field.key])
-
-  const previousRequiredRef = useRef<boolean | undefined>(undefined)
-
-  useEffect(() => {
-    const currentRequired = field.options.required || conditionalState.isDynamicallyRequired
-
-    if (previousRequiredRef.current !== currentRequired) {
-      previousRequiredRef.current = currentRequired
-      try {
-        form.register(field.key, {
-          required: currentRequired ? DEFAULT_REQUIRED_ERROR_MESSAGE : false
-        })
-      } catch (error) {
-        console.warn(`Error updating field registration for ${field.key}:`, error)
-      }
-    }
-  }, [conditionalState.isDynamicallyRequired, field.options.required, field.key, form])
 
   if (!conditionalState.isVisible) {
     return null

@@ -24,10 +24,14 @@ export function ButtonField({
       }
     } : undefined
 
+  // Submit buttons disable (and show the loading state) while the form is submitting
+  const isSubmit = (field.options.type ?? 'button') === 'submit'
+  const isSubmitting = isSubmit && form.formState.isSubmitting
+
   const buttonProps: ButtonProps = {
     variant: field.options.variant,
-    loading: field.options.loading,
-    disabled: field.options.disabled,
+    loading: field.options.loading || isSubmitting,
+    disabled: field.options.disabled || isSubmitting,
     type: field.options.type ?? 'button',
     fullWidth: field.options.fullWidth,
     className: field.options.className,

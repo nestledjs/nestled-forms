@@ -95,9 +95,13 @@ A multi-select searchable dropdown component that integrates with Apollo GraphQL
 }
 \`\`\`
 
-### Apollo Client Setup Required
+### Setup Required
 
-This component requires Apollo Client to be configured in your application. The stories below are for documentation only and cannot be fully interactive without proper Apollo setup.
+This field fetches options through a pluggable search query adapter. Wrap your app with
+\`<ApolloSearchProvider>\` from \`@nestledjs/forms/apollo\` (placed inside your \`<ApolloProvider>\`;
+requires \`@apollo/client\` v3 or v4), or supply your own hook via \`<SearchQueryProvider>\` from
+\`@nestledjs/forms-core\` to use a different data layer. The stories below are for documentation
+only and cannot be fully interactive without a live GraphQL backend.
 
 ### Differences from Basic Version
 

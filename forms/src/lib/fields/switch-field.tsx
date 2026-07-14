@@ -35,7 +35,7 @@ export function SwitchField({ form, field, hasError, formReadOnly = false, formR
               hasError && theme.switchField.error
             )}
             role="switch"
-            aria-checked={value}
+            aria-checked={!!value}
             aria-readonly="true"
             aria-labelledby={`${field.key}-switch-label`}
           >
@@ -80,7 +80,7 @@ export function SwitchField({ form, field, hasError, formReadOnly = false, formR
             <input
               id={field.key}
               type="checkbox"
-              checked={value}
+              checked={!!value}
               onChange={(e) => onChange(e.target.checked)}
               onBlur={onBlur}
               disabled={field.options.disabled}
@@ -100,7 +100,7 @@ export function SwitchField({ form, field, hasError, formReadOnly = false, formR
               }}
               disabled={field.options.disabled}
               role="switch"
-              aria-checked={value}
+              aria-checked={!!value}
                               aria-labelledby={`${field.key}-switch-label`}
               aria-required={field.options.required}
               className={clsx(

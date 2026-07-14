@@ -17,7 +17,8 @@ export { TextAreaField } from './lib/fields/textarea-field'
 export { EmailField } from './lib/fields/email-field'
 export { PasswordField } from './lib/fields/password-field'
 export { UrlField } from './lib/fields/url-field'
-export { PhoneField } from './lib/fields/phone-field'
+// PhoneField removed from main exports to keep libphonenumber metadata out of
+// the main bundle. Import from '@nestledjs/forms/phone' when composing it directly.
 export { NumberField } from './lib/fields/number-field'
 export { MoneyField } from './lib/fields/money-field'
 export { CheckboxField } from './lib/fields/checkbox-field'

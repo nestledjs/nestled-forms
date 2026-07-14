@@ -4,12 +4,12 @@ import React, { useEffect, useMemo, useRef } from 'react'
 import { useForm, UseFormProps, FieldValues } from 'react-hook-form'
 import {
   FormField,
-  FormFieldType,
-  InputFieldOptions,
   FormContext,
   ThemeContext,
   FormConfigContext,
-  createFormResolver,
+  buildFieldsResolver,
+  createSubmitHandler,
+  deepEqual,
 } from '@nestledjs/forms-core'
 import type { FormTheme, FormConfig } from '@nestledjs/forms-core'
 import clsx from 'clsx'
@@ -103,22 +103,11 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
   validationGroups?: string[]
 }
 
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true
-  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false
-  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime()
-  if (Array.isArray(a) !== Array.isArray(b)) return false
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false
-    return a.every((item, i) => deepEqual(item, (b as unknown[])[i]))
-  }
-  const aObj = a as Record<string, unknown>
-  const bObj = b as Record<string, unknown>
-  const aKeys = Object.keys(aObj)
-  const bKeys = Object.keys(bObj)
-  if (aKeys.length !== bKeys.length) return false
-  return aKeys.every(key => deepEqual(aObj[key], bObj[key]))
-}
+// Module-level defaults keep identity stable across renders: an inline `{}`
+// default parameter would recompute the theme and re-render every
+// ThemeContext consumer on each Form render
+const EMPTY_THEME = {}
+const DEFAULT_FINAL_THEME = createFinalTheme(EMPTY_THEME)
 
 /**
  * Main form component that provides both declarative and imperative form usage patterns.
@@ -177,35 +166,17 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
   className,
   readOnly = false,
   readOnlyStyle = 'value',
-  theme: userTheme = {},
+  theme: userTheme = EMPTY_THEME,
   labelDisplay = 'default',
   schema,
   validationGroup,
   validationGroups,
 }: Readonly<FormProps<T>>) {
   // Create resolver for validation if needed
-  const resolver = useMemo(() => {
-    // Check if any field needs validation that requires a resolver (excluding buttons)
-    const needsResolver = schema || fields?.some(f => {
-      if (f?.type === FormFieldType.Button) return false // Never validate buttons
-      const opts = f?.options as InputFieldOptions
-      return opts?.schema || opts?.validateWithForm || opts?.validate
-    })
-
-    if (needsResolver) {
-      return createFormResolver<T>(
-        schema,
-        fields?.filter((f): f is FormField => f !== null)
-          .filter(f => f.type !== FormFieldType.Button) // Never validate button fields
-          .map(f => ({
-            key: f.key,
-            options: f.options as InputFieldOptions
-          })),
-        validationGroup
-      )
-    }
-    return undefined
-  }, [schema, fields, validationGroup, validationGroups])
+  const resolver = useMemo(
+    () => buildFieldsResolver<T>({ schema, fields, validationGroup }),
+    [schema, fields, validationGroup, validationGroups],
+  )
 
   const form = useForm<T>({
     defaultValues,
@@ -224,51 +195,22 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
     }
   }, [defaultValues, form])
 
-  const finalTheme = useMemo(() => createFinalTheme(userTheme), [userTheme])
+  const finalTheme = useMemo(
+    () => (userTheme === EMPTY_THEME ? DEFAULT_FINAL_THEME : createFinalTheme(userTheme)),
+    [userTheme],
+  )
   // Create the value for our new context
   const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
 
-  // Create a wrapper function that applies field transformations before submission
-  const handleSubmitWithTransform = useMemo(() => {
-    return (values: T) => {
-      // First, filter out button fields from the values
-      const filteredValues: Record<string, unknown> = {}
-      for (const [key, value] of Object.entries(values as Record<string, unknown>)) {
-        // Check if this key belongs to a button field
-        const isButtonField = fields?.some(f =>
-          f?.key === key && f.type === FormFieldType.Button
-        )
-        if (!isButtonField) {
-          filteredValues[key] = value
-        }
-      }
-
-      if (!fields) {
-        // No fields to transform, call submit directly with filtered values
-        return submit(filteredValues as T)
-      }
-
-      // Apply submitTransform functions to each field that has one
-      const transformedValues: Record<string, unknown> = { ...filteredValues }
-
-      fields
-        .filter((field): field is FormField => field !== null)
-        .filter(field => field.type !== FormFieldType.Button) // Skip button fields
-        .forEach((field) => {
-          if (field.options.submitTransform && field.key in transformedValues) {
-            transformedValues[field.key] = field.options.submitTransform(transformedValues[field.key])
-          }
-        })
-
-      return submit(transformedValues as T)
-    }
-  }, [fields, submit])
+  // Shared pipeline: strips button keys and applies submit transforms
+  // (explicit per-field transforms win, otherwise the per-type default)
+  const handleSubmitWithTransform = useMemo(() => createSubmitHandler<T>(fields, submit), [fields, submit])
 
   return (
     <FormConfigContext.Provider value={formConfig}>
       <ThemeContext.Provider value={finalTheme}>
         <FormContext.Provider value={form as unknown as import('react-hook-form').UseFormReturn<import('react-hook-form').FieldValues>}>
-          <form id={id} className={clsx('space-y-6', className)} onSubmit={form.handleSubmit(handleSubmitWithTransform)}>
+          <form id={id} noValidate className={clsx('space-y-6', className)} onSubmit={form.handleSubmit(handleSubmitWithTransform)}>
             {/* Render fields from the declarative array */}
             {fields
               ?.filter((field): field is FormField => field !== null)

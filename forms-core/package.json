@@ -5,8 +5,13 @@
     ".": {
       "import": "./index.js",
       "types": "./index.d.ts"
+    },
+    "./apollo": {
+      "import": "./apollo.js",
+      "types": "./apollo.d.ts"
     }
   },
+  "sideEffects": false,
   "main": "./index.js",
   "types": "./index.d.ts",
   "type": "module",
@@ -30,7 +35,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@apollo/client": "^3.0.0",
+    "@apollo/client": "^3.0.0 || ^4.0.0",
     "@hookform/resolvers": "^3.0.0",
     "dayjs": "^1.11.0",
     "react": ">=18.0.0",
@@ -45,5 +50,8 @@
       "optional": true
     }
   },
-  "dependencies": {}
+  "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
+  }
 }

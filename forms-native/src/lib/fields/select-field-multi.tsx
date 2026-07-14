@@ -17,15 +17,6 @@ function normalizeToString(v: any): string {
   return String(v)
 }
 
-function multiSelectSubmitTransform(value: any): string[] {
-  if (!Array.isArray(value)) return []
-  return value.map((item: any) => {
-    if (typeof item === 'string') return item
-    if (item && typeof item === 'object' && 'value' in item) return item.value
-    return String(item)
-  })
-}
-
 export function SelectFieldMulti({
   form,
   field,
@@ -40,9 +31,6 @@ export function SelectFieldMulti({
   const options = (field.options.options || []).map(o => ({ label: o.label, value: String(o.value) }))
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-
-  field.options.submitTransform ??= multiSelectSubmitTransform
-
   if (!MultiSelect) {
     return (
       <View style={theme.container}>

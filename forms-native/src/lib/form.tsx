@@ -1,16 +1,17 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { View, ViewStyle } from 'react-native'
 import { useForm, UseFormProps, FieldValues } from 'react-hook-form'
 import {
   FormField,
-  FormFieldType,
-  InputFieldOptions,
   FormContext,
   ThemeContext,
   FormConfigContext,
   FormThemeSchema,
-  createFormResolver,
+  buildFieldsResolver,
+  createSubmitHandler,
+  deepEqual,
 } from '@nestledjs/forms-core'
+import { NativeFormSubmitContext } from './native-form-submit-context'
 import type { FormConfig } from '@nestledjs/forms-core'
 import { ZodTypeAny } from 'zod'
 import { NativeThemeContext } from './native-theme-context'
@@ -21,6 +22,12 @@ import { RenderFormField } from './render-form-field'
 type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
 }
+
+// Module-level defaults keep identity stable across renders: an inline `{}`
+// default parameter would recompute the theme and re-render every
+// NativeThemeContext consumer on each NativeForm render
+const EMPTY_NATIVE_THEME = {}
+const DEFAULT_FINAL_NATIVE_THEME = createFinalNativeTheme(EMPTY_NATIVE_THEME)
 
 export interface NativeFormProps<T extends FieldValues = Record<string, unknown>> extends UseFormProps<T> {
   id: string
@@ -40,9 +47,10 @@ export interface NativeFormProps<T extends FieldValues = Record<string, unknown>
 
 /**
  * React Native Form component. Wraps fields in a View (no <form> element in RN).
- * Provides FormContext, ThemeContext, FormConfigContext, and NativeThemeContext.
- * Submission is handled via form.handleSubmit() — consumers typically wire a
- * ButtonField with type="submit" that calls form.handleSubmit().
+ * Provides FormContext, ThemeContext, FormConfigContext, NativeThemeContext, and
+ * NativeFormSubmitContext. A ButtonField with type="submit" (or any component
+ * calling useNativeFormSubmit()) triggers validation, applies each field's
+ * submitTransform, and invokes the `submit` prop.
  */
 export function NativeForm<T extends FieldValues = Record<string, unknown>>({
   id,
@@ -54,33 +62,16 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
   className,
   readOnly = false,
   readOnlyStyle: formReadOnlyStyle = 'value',
-  nativeTheme: userNativeTheme = {},
+  nativeTheme: userNativeTheme = EMPTY_NATIVE_THEME,
   labelDisplay = 'default',
   schema,
   validationGroup,
   validationGroups,
 }: Readonly<NativeFormProps<T>>) {
-  const resolver = useMemo(() => {
-    const needsResolver = schema || fields?.some(f => {
-      if (f?.type === FormFieldType.Button) return false
-      const opts = f?.options as InputFieldOptions
-      return opts?.schema || opts?.validateWithForm || opts?.validate
-    })
-
-    if (needsResolver) {
-      return createFormResolver<T>(
-        schema,
-        fields?.filter((f): f is FormField => f !== null)
-          .filter(f => f.type !== FormFieldType.Button)
-          .map(f => ({
-            key: f.key,
-            options: f.options as InputFieldOptions
-          })),
-        validationGroup
-      )
-    }
-    return undefined
-  }, [schema, fields, validationGroup, validationGroups])
+  const resolver = useMemo(
+    () => buildFieldsResolver<T>({ schema, fields, validationGroup }),
+    [schema, fields, validationGroup, validationGroups],
+  )
 
   const form = useForm<T>({
     defaultValues,
@@ -89,15 +80,33 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
     reValidateMode: 'onChange'
   })
 
+  const prevDefaultValuesRef = useRef(defaultValues)
   useEffect(() => {
     if (defaultValues && typeof defaultValues !== 'function') {
-      form.reset(defaultValues)
+      // Only reset on a structural change — identity-only changes from inline
+      // defaultValues objects must not wipe what the user has typed
+      if (!deepEqual(defaultValues, prevDefaultValuesRef.current)) {
+        prevDefaultValuesRef.current = defaultValues
+        form.reset(defaultValues)
+      }
     }
   }, [defaultValues, form])
 
+  // Shared pipeline: strips button keys and applies submit transforms
+  // (explicit per-field transforms win, otherwise the per-type default)
+  const handleSubmitWithTransform = useMemo(() => createSubmitHandler<T>(fields, submit), [fields, submit])
+
+  const submitForm = useMemo(
+    () => form.handleSubmit(handleSubmitWithTransform as Parameters<typeof form.handleSubmit>[0]),
+    [form, handleSubmitWithTransform],
+  )
+
   // For forms-core ThemeContext, provide the default parsed theme (CSS-based, unused in native)
   const coreTheme = useMemo(() => FormThemeSchema.parse({}), [])
-  const finalNativeTheme = useMemo(() => createFinalNativeTheme(userNativeTheme), [userNativeTheme])
+  const finalNativeTheme = useMemo(
+    () => (userNativeTheme === EMPTY_NATIVE_THEME ? DEFAULT_FINAL_NATIVE_THEME : createFinalNativeTheme(userNativeTheme)),
+    [userNativeTheme],
+  )
   const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
 
   return (
@@ -105,6 +114,7 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
       <ThemeContext.Provider value={coreTheme}>
         <NativeThemeContext.Provider value={finalNativeTheme}>
           <FormContext.Provider value={form as any}>
+            <NativeFormSubmitContext.Provider value={submitForm}>
             <View
               nativeID={id}
               style={[{ gap: 16 }, style]}
@@ -122,6 +132,7 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
                 ))}
               {children}
             </View>
+            </NativeFormSubmitContext.Provider>
           </FormContext.Provider>
         </NativeThemeContext.Provider>
       </ThemeContext.Provider>

@@ -1,8 +1,9 @@
 'use client'
 
 import clsx from 'clsx'
-import { useState, useEffect } from 'react'
+import { useWatch } from 'react-hook-form'
 import { FormField, FormFieldType, FormFieldProps, useFormTheme, resolveCurrencyConfig, getCurrencyStep, formatCurrency } from '@nestledjs/forms-core'
+import { fieldA11yProps } from './field-a11y'
 
 // The component now accepts the new props structure and is strongly typed.
 // We use `Extract` to get the specific member of the FormField union we care about.
@@ -31,15 +32,11 @@ export function MoneyField({
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''
 
-  // State to track if input has content (to show/hide currency symbol)
+  // Track if input has content (to show/hide currency symbol).
+  // useWatch keeps this in sync with the form state, including reset()/setValue.
   const hideSymbolWhenEmpty = field.options.hideSymbolWhenEmpty ?? true
-  const [hasContent, setHasContent] = useState(Boolean(value))
-
-  // Update hasContent when form value changes
-  useEffect(() => {
-    const currentValue = form.getValues(field.key)
-    setHasContent(Boolean(currentValue))
-  }, [form, field.key])
+  const watchedValue = useWatch({ control: form.control, name: field.key })
+  const hasContent = watchedValue !== '' && watchedValue !== null && watchedValue !== undefined
 
   // Determine if symbol should be shown
   const shouldShowSymbol = !hideSymbolWhenEmpty || hasContent
@@ -105,11 +102,9 @@ export function MoneyField({
         step={getCurrencyStep(currencyConfig)}
         {...form.register(field.key, {
           required: field.options.required,
-          valueAsNumber: true,
-          onChange: (e) => {
-            setHasContent(Boolean(e.target.value))
-          },
+          setValueAs: (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
         })}
+        {...fieldA11yProps(field.key, hasError, field.options.helpText)}
         disabled={field.options.disabled}
         defaultValue={field.options.defaultValue}
         placeholder={field.options.placeholder}

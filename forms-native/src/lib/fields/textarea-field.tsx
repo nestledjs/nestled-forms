@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { TextInput, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
+import { useTextFieldDefault } from '../hooks/use-text-field-default'
 
 export function TextAreaField({
   form,
@@ -19,6 +20,8 @@ export function TextAreaField({
   const value = form.getValues(field.key) ?? ''
   const rows = field.options.rows ?? 4
   const [height, setHeight] = useState(rows * 20)
+
+  const initialValue = useTextFieldDefault(form, field)
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {
@@ -54,7 +57,7 @@ export function TextAreaField({
         editable={!field.options.disabled}
         placeholder={field.options.placeholder}
         placeholderTextColor="#9ca3af"
-        defaultValue={field.options.defaultValue}
+        defaultValue={initialValue}
         onChangeText={(text) => form.setValue(field.key, text, { shouldValidate: true })}
         onBlur={() => form.trigger(field.key)}
         onContentSizeChange={(e) => {

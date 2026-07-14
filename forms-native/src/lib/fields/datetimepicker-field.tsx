@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { View, Text, Pressable, Platform } from 'react-native'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType, formatDateTimeFromValue, getDateTimeFromValue } from '@nestledjs/forms-core'
+import {
+  FormField,
+  FormFieldProps,
+  FormFieldType,
+  formatDateTimeFromValue,
+  formatLocalDateTime,
+  getDateTimeFromValue,
+  parseLocalDateTime,
+} from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 let DateTimePicker: any = null
@@ -63,7 +71,7 @@ export function DateTimePickerField({
       defaultValue={getDateTimeFromValue(options.defaultValue ?? '')}
       rules={{ required: options.required }}
       render={({ field: controllerField }) => {
-        const dateValue = controllerField.value ? new Date(controllerField.value) : new Date()
+        const dateValue = (controllerField.value ? parseLocalDateTime(controllerField.value) : null) ?? new Date()
 
         return (
           <View>
@@ -110,8 +118,9 @@ export function DateTimePickerField({
                     const combined = new Date(tempDate)
                     combined.setHours(selectedTime.getHours())
                     combined.setMinutes(selectedTime.getMinutes())
-                    const formatted = combined.toISOString().slice(0, 16) // YYYY-MM-DDTHH:mm
-                    controllerField.onChange(formatted)
+                    // Local wall-clock time, matching web's datetime-local input
+                    // (toISOString would shift the value by the UTC offset)
+                    controllerField.onChange(formatLocalDateTime(combined))
                   }
                   setTempDate(null)
                 }}

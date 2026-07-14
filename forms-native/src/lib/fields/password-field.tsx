@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { TextInput, View, Text, Pressable } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
+import { useTextFieldDefault } from '../hooks/use-text-field-default'
 
 export function PasswordField({
   form,
@@ -18,6 +19,8 @@ export function PasswordField({
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''
+
+  const initialValue = useTextFieldDefault(form, field)
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {
@@ -46,7 +49,7 @@ export function PasswordField({
         editable={!field.options.disabled}
         placeholder={field.options.placeholder}
         placeholderTextColor="#9ca3af"
-        defaultValue={field.options.defaultValue}
+        defaultValue={initialValue}
         secureTextEntry={!showPassword}
         autoCapitalize="none"
         autoComplete="password"

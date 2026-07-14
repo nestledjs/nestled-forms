@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { View, Text, Pressable, Platform } from 'react-native'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType, formatDateFromDateTime, getDateFromDateTime } from '@nestledjs/forms-core'
+import {
+  FormField,
+  FormFieldProps,
+  FormFieldType,
+  formatDateFromDateTime,
+  formatLocalDate,
+  getDateFromDateTime,
+  parseLocalDate,
+} from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 let DateTimePicker: any = null
@@ -67,7 +75,8 @@ export function DatePickerField({
       defaultValue={getDateFromDateTime(options.defaultValue ?? '')}
       rules={{ required: options.required }}
       render={({ field: controllerField }) => {
-        const dateValue = controllerField.value ? new Date(controllerField.value) : new Date()
+        // parseLocalDate: 'YYYY-MM-DD' must be local midnight, not UTC
+        const dateValue = (controllerField.value ? parseLocalDate(controllerField.value) : null) ?? new Date()
 
         return (
           <View>
@@ -90,13 +99,14 @@ export function DatePickerField({
                 value={dateValue}
                 mode="date"
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                minimumDate={options.min ? new Date(options.min) : undefined}
-                maximumDate={options.max ? new Date(options.max) : undefined}
+                minimumDate={options.min ? parseLocalDate(String(options.min)) ?? undefined : undefined}
+                maximumDate={options.max ? parseLocalDate(String(options.max)) ?? undefined : undefined}
                 onChange={(_event: any, selectedDate?: Date) => {
                   setShowPicker(Platform.OS === 'ios')
                   if (selectedDate) {
-                    const formatted = selectedDate.toISOString().split('T')[0]
-                    controllerField.onChange(formatted)
+                    // Local components, not toISOString: the user picked a
+                    // calendar date in their own timezone
+                    controllerField.onChange(formatLocalDate(selectedDate))
                   }
                 }}
               />

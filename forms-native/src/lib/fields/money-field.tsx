@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
 import { TextInput, View, Text } from 'react-native'
+import { useWatch } from 'react-hook-form'
 import { FormField, FormFieldType, FormFieldProps, resolveCurrencyConfig, formatCurrency } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
+import { useTextFieldDefault } from '../hooks/use-text-field-default'
 
 export function MoneyField({
   form,
@@ -20,12 +21,11 @@ export function MoneyField({
   const value = form.getValues(field.key) ?? ''
 
   const hideSymbolWhenEmpty = field.options.hideSymbolWhenEmpty ?? true
-  const [hasContent, setHasContent] = useState(Boolean(value))
+  // useWatch keeps the symbol visibility in sync with the form state, including reset()/setValue
+  const watchedValue = useWatch({ control: form.control, name: field.key })
+  const hasContent = watchedValue !== '' && watchedValue !== null && watchedValue !== undefined
 
-  useEffect(() => {
-    const currentValue = form.getValues(field.key)
-    setHasContent(Boolean(currentValue))
-  }, [form, field.key])
+  const initialValue = useTextFieldDefault(form, field)
 
   const shouldShowSymbol = !hideSymbolWhenEmpty || hasContent
 
@@ -74,12 +74,13 @@ export function MoneyField({
         editable={!field.options.disabled}
         placeholder={field.options.placeholder}
         placeholderTextColor="#9ca3af"
-        defaultValue={field.options.defaultValue === undefined ? undefined : String(field.options.defaultValue)}
+        defaultValue={initialValue === '' ? '' : String(initialValue)}
         keyboardType="decimal-pad"
         onChangeText={(text) => {
-          const filtered = text.replaceAll(/[^0-9.-]/g, '')
+          // Treat a single trailing comma-decimal as a decimal point (European input, e.g. '1,5')
+          const normalized = text.includes('.') ? text : text.replace(/,(\d{1,2})$/, '.$1')
+          const filtered = normalized.replaceAll(/[^0-9.-]/g, '')
           const numValue = filtered === '' ? '' : Number.parseFloat(filtered)
-          setHasContent(Boolean(filtered))
           form.setValue(field.key, numValue === '' || Number.isNaN(numValue) ? '' : numValue, { shouldValidate: true })
         }}
         onBlur={() => form.trigger(field.key)}

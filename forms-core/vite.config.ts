@@ -23,9 +23,12 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
     lib: {
-      entry: 'src/index.ts',
+      entry: {
+        index: 'src/index.ts',
+        apollo: 'src/apollo.ts',
+      },
       name: 'forms-core',
-      fileName: 'index',
+      fileName: (_format, entryName) => `${entryName}.js`,
       formats: ['es' as const],
     },
     rollupOptions: {
@@ -37,8 +40,15 @@ export default defineConfig({
         '@hookform/resolvers',
         '@hookform/resolvers/zod',
         '@apollo/client',
+        '@apollo/client/react',
+        'graphql',
+        '@graphql-typed-document-node/core',
         'dayjs',
       ],
+      output: {
+        // Vite lib mode strips 'use client'; RSC-aware bundlers need it on every chunk
+        banner: `'use client';`,
+      },
     },
   },
 })

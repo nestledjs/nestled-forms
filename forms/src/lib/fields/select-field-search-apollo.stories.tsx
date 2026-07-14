@@ -60,7 +60,22 @@ const meta: Meta = {
         component: `
 The SelectFieldSearchApollo component integrates with Apollo GraphQL to provide a searchable dropdown interface.
 
-**Apollo Client Setup Required**: This component uses \`useQuery\` from Apollo Client and requires your application to be wrapped with an \`ApolloProvider\`.
+**Setup Required**: This field fetches options through a pluggable search query adapter.
+Wrap your app with \`<ApolloSearchProvider>\` from \`@nestledjs/forms/apollo\` (placed inside your
+\`<ApolloProvider>\`; requires \`@apollo/client\` v3 or v4). To use a different data layer
+(urql, TanStack Query, fetch), supply your own hook via \`<SearchQueryProvider>\` from
+\`@nestledjs/forms-core\` instead — the main \`@nestledjs/forms\` bundle never imports Apollo.
+
+\`\`\`tsx
+import { ApolloProvider } from '@apollo/client/react'
+import { ApolloSearchProvider } from '@nestledjs/forms/apollo'
+
+<ApolloProvider client={client}>
+  <ApolloSearchProvider>
+    <App />
+  </ApolloSearchProvider>
+</ApolloProvider>
+\`\`\`
 
 **Key Props:**
 - \`document\`: GraphQL query document

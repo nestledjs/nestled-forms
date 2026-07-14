@@ -9,8 +9,17 @@
     "./markdown": {
       "import": "./markdown.js",
       "types": "./markdown.d.ts"
+    },
+    "./apollo": {
+      "import": "./apollo.js",
+      "types": "./apollo.d.ts"
+    },
+    "./phone": {
+      "import": "./phone.js",
+      "types": "./phone.d.ts"
     }
   },
+  "sideEffects": false,
   "main": "./index.js",
   "types": "./index.d.ts",
   "type": "module",
@@ -39,6 +48,7 @@
     "access": "public"
   },
   "peerDependencies": {
+    "@apollo/client": "^3.0.0 || ^4.0.0",
     "@mdxeditor/editor": "^3.39.1",
     "@hookform/resolvers": "^3.0.0",
     "react": ">=18.0.0",
@@ -47,13 +57,15 @@
     "zod": "^3.0.0"
   },
   "peerDependenciesMeta": {
+    "@apollo/client": {
+      "optional": true
+    },
     "@mdxeditor/editor": {
       "optional": true
     }
   },
   "dependencies": {
     "@nestledjs/forms-core": "0.1.4",
-    "date-fns": "^4.1.0",
     "react-phone-number-input": "^3.4.12"
   }
 }

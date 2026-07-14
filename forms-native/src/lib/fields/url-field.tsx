@@ -1,6 +1,7 @@
 import { TextInput, View, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
+import { useTextFieldDefault } from '../hooks/use-text-field-default'
 
 export function UrlField({
   form,
@@ -16,6 +17,8 @@ export function UrlField({
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''
+
+  const initialValue = useTextFieldDefault(form, field)
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {
@@ -49,7 +52,7 @@ export function UrlField({
         editable={!field.options.disabled}
         placeholder={field.options.placeholder}
         placeholderTextColor="#9ca3af"
-        defaultValue={field.options.defaultValue}
+        defaultValue={initialValue}
         keyboardType="url"
         autoCapitalize="none"
         onChangeText={(text) => form.setValue(field.key, text, { shouldValidate: true })}

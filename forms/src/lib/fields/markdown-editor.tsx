@@ -49,13 +49,36 @@ export const handleImageUpload = async ({
   return await imageUploadHandler(file)
 }
 
-// Convert markdown to HTML using ReDoS-safe regex patterns
-// SECURITY: This function includes protections against ReDoS (Regular Expression Denial of Service):
-// 1. Input size limits (100KB max)
-// 2. Length-bounded capture groups
-// 3. Negated character classes instead of .* patterns
-// 4. Non-greedy quantifiers where appropriate
-// For production use with untrusted input, consider server-side conversion with battle-tested parsers
+// HTML-escape all special characters so form-filler input can never become markup
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+// Allow http(s), mailto, and scheme-less (relative/anchor) URLs; anything else
+// (javascript:, data:, vbscript:, ...) is replaced with '#'. Control characters
+// and whitespace are stripped before the check to defeat obfuscation like `java\tscript:`.
+function sanitizeUrl(url: string): string {
+  // eslint-disable-next-line no-control-regex
+  const probe = url.replaceAll(/[\u0000-\u0020]/g, '').toLowerCase()
+  const schemeMatch = /^([a-z][a-z0-9+.-]*):/.exec(probe)
+  if (!schemeMatch || ['http', 'https', 'mailto'].includes(schemeMatch[1])) {
+    return url
+  }
+  return '#'
+}
+
+// Convert markdown to HTML.
+// SECURITY:
+// - The entire input is HTML-escaped BEFORE conversion, so raw HTML and
+//   quote-injection in link text/URLs render as text, never as markup.
+// - Link/image URLs are scheme-filtered (http/https/mailto/relative only).
+// - ReDoS protections: input size limit, length-bounded captures, negated
+//   character classes, non-greedy quantifiers.
 export const markdownToHtml = async (markdown: string): Promise<string> => {
   // Prevent DoS by limiting input size (100KB max)
   const MAX_INPUT_SIZE = 100 * 1024
@@ -66,37 +89,38 @@ export const markdownToHtml = async (markdown: string): Promise<string> => {
 
   // Simple markdown to HTML conversion with ReDoS-safe patterns
   // For production use, consider using libraries like 'marked' or 'markdown-it'
-  if (globalThis.window !== undefined) {
-    try {
-      // Use non-backtracking patterns to prevent ReDoS
-      return (
-        markdown
-          // Headings - safe patterns with line boundaries and length limits
-          .replaceAll(/^### ([^\r\n]{0,200})$/gim, '<h3>$1</h3>')
-          .replaceAll(/^## ([^\r\n]{0,200})$/gim, '<h2>$1</h2>')
-          .replaceAll(/^# ([^\r\n]{0,200})$/gim, '<h1>$1</h1>')
+  // Runs in every environment (SSR included) — returning raw markdown outside
+  // the browser would reintroduce the unescaped-output XSS surface
+  try {
+    // Escape first: every capture group below then operates on inert text
+    return (
+      escapeHtml(markdown)
+        // Headings - safe patterns with line boundaries and length limits
+        .replaceAll(/^### ([^\r\n]{0,200})$/gim, '<h3>$1</h3>')
+        .replaceAll(/^## ([^\r\n]{0,200})$/gim, '<h2>$1</h2>')
+        .replaceAll(/^# ([^\r\n]{0,200})$/gim, '<h1>$1</h1>')
 
-          // Bold text - ReDoS-safe pattern with negated character class and length limit
-          .replaceAll(/\*\*([^*\r\n]{1,500}?)\*\*/gim, '<strong>$1</strong>')
+        // Bold text - ReDoS-safe pattern with negated character class and length limit
+        .replaceAll(/\*\*([^*\r\n]{1,500}?)\*\*/gim, '<strong>$1</strong>')
 
-          // Italic text - ReDoS-safe pattern with negated character class and length limit
-          .replaceAll(/\*([^*\r\n]{1,500}?)\*/gim, '<em>$1</em>')
+        // Italic text - ReDoS-safe pattern with negated character class and length limit
+        .replaceAll(/\*([^*\r\n]{1,500}?)\*/gim, '<em>$1</em>')
 
-          // Images - safe with negated character classes and length limits
-          .replaceAll(/!\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, '<img alt="$1" src="$2" />')
+        // Images - safe with negated character classes and length limits
+        .replaceAll(/!\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, (_m, alt: string, src: string) =>
+          `<img alt="${alt}" src="${sanitizeUrl(src)}" />`)
 
-          // Links - safe with negated character classes and length limits
-          .replaceAll(/\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, '<a href="$2">$1</a>')
+        // Links - safe with negated character classes and length limits
+        .replaceAll(/\[([^\]]{0,200})\]\(([^)\s]{1,500})\)/gim, (_m, text: string, href: string) =>
+          `<a href="${sanitizeUrl(href)}">${text}</a>`)
 
-          // Line breaks
-          .replaceAll(/\n$/gim, '<br />')
-      )
-    } catch (error) {
-      console.warn('Failed to convert markdown to HTML:', error)
-      return markdown
-    }
+        // Line breaks
+        .replaceAll(/\n$/gim, '<br />')
+    )
+  } catch (error) {
+    console.warn('Failed to convert markdown to HTML:', error)
+    return escapeHtml(markdown)
   }
-  return markdown
 }
 
 // Toolbar contents as a top-level function

@@ -100,8 +100,9 @@ export const Default: Story = {
   args: { showState: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number')
-    
+    // findBy: PhoneField is lazy-loaded, so wait for the Suspense fallback to resolve
+    const input = await canvas.findByLabelText('Phone Number', {}, { timeout: 15000 })
+
     // Verify it's a tel input
     await expect(input).toHaveAttribute('type', 'tel')
     await expect(input).toBeEnabled()
@@ -118,7 +119,7 @@ export const WithDefaultValue: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number')
+    const input = await canvas.findByLabelText('Phone Number', {}, { timeout: 15000 })
     
     // Verify default value is set
     await expect(input).toHaveValue('(555) 987-6543')
@@ -136,7 +137,7 @@ export const Required: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number *')
+    const input = await canvas.findByLabelText('Phone Number *', {}, { timeout: 15000 })
     
     // Verify required attribute
     await expect(input).toBeRequired()
@@ -155,7 +156,7 @@ export const Disabled: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number')
+    const input = await canvas.findByLabelText('Phone Number', {}, { timeout: 15000 })
     
     // Verify disabled state
     await expect(input).toBeDisabled()
@@ -176,7 +177,7 @@ export const WithError: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number *')
+    const input = await canvas.findByLabelText('Phone Number *', {}, { timeout: 15000 })
     
     // Test error styling is applied
     await expect(input).toBeRequired()
@@ -200,7 +201,7 @@ export const ReadOnlyValue: Story = {
     const canvas = within(canvasElement)
     
     // Should display as plain text, not an input
-    const valueDisplay = canvas.getByText('(555) 777-8888')
+    const valueDisplay = await canvas.findByText('(555) 777-8888', {}, { timeout: 15000 })
     await expect(valueDisplay).toBeInTheDocument()
     
     // Should not have a textbox input
@@ -217,7 +218,7 @@ export const ReadOnlyDisabled: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number')
+    const input = await canvas.findByLabelText('Phone Number', {}, { timeout: 15000 })
     
     // Should display as disabled input
     await expect(input).toBeDisabled()
@@ -234,7 +235,7 @@ export const WithHelpText: Story = {
     const helpText = canvas.getByText('Enter your phone number including area code')
     await expect(helpText).toBeInTheDocument()
     
-    const input = canvas.getByLabelText('Phone Number')
+    const input = await canvas.findByLabelText('Phone Number', {}, { timeout: 15000 })
     await userEvent.type(input, '(555) 123-4567')
     await expect(input).toHaveValue('(555) 123-4567')
   },
@@ -266,7 +267,7 @@ export const FormReadOnlyDisabled: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number')
+    const input = await canvas.findByLabelText('Phone Number', {}, { timeout: 15000 })
     
     // Should display as disabled input due to form-level read-only
     await expect(input).toBeDisabled()
@@ -280,7 +281,7 @@ export const ValidationDemo: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number')
+    const input = await canvas.findByLabelText('Phone Number', {}, { timeout: 15000 })
     
     // Test valid phone number formats
     await userEvent.clear(input)

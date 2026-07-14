@@ -1,6 +1,7 @@
 import { TextInput, View, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
+import { useTextFieldDefault } from '../hooks/use-text-field-default'
 
 export function NumberField({
   form,
@@ -16,6 +17,8 @@ export function NumberField({
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''
+
+  const initialValue = useTextFieldDefault(form, field)
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {
@@ -40,8 +43,10 @@ export function NumberField({
   }
 
   const handleChangeText = (text: string) => {
+    // Treat a single trailing comma-decimal as a decimal point (European input, e.g. '1,5')
+    const normalized = text.includes('.') ? text : text.replace(/,(\d{1,2})$/, '.$1')
     // Filter to allow only numeric input (digits, decimal point, negative sign)
-    const filtered = text.replaceAll(/[^0-9.-]/g, '')
+    const filtered = normalized.replaceAll(/[^0-9.-]/g, '')
 
     // Parse to number
     const numValue = filtered === '' || filtered === '-' ? filtered : Number.parseFloat(filtered)
@@ -74,7 +79,7 @@ export function NumberField({
         editable={!field.options.disabled}
         placeholder={field.options.placeholder}
         placeholderTextColor="#9ca3af"
-        defaultValue={field.options.defaultValue === undefined ? undefined : String(field.options.defaultValue)}
+        defaultValue={initialValue === '' ? '' : String(initialValue)}
         keyboardType="decimal-pad"
         onChangeText={handleChangeText}
         onBlur={handleBlur}

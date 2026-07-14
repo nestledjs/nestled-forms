@@ -30,7 +30,7 @@ export function SelectFieldSearch({
       searchDebounceMs={field.options.searchDebounceMs}
       value={selectedOption}
       onChange={(option) => {
-        form.setValue(field.key, option?.value || null)
+        form.setValue(field.key, option?.value || null, { shouldDirty: true, shouldTouch: true })
         // Trigger form validation/dirty state
         if (form.trigger) {
           form.trigger(field.key)

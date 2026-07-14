@@ -268,6 +268,7 @@ export function SearchSelectBase<TValue>({
               {renderSelectedItems?.(fieldValue, onFieldChange)}
               <input
                 ref={inputRef}
+                id={field.key}
                 type="text"
                 className={clsx(theme.input, !multiple && value && theme.inputWithClear)}
                 value={getInputValue(fieldValue)}
@@ -298,8 +299,8 @@ export function SearchSelectBase<TValue>({
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
                 aria-autocomplete="list"
-                aria-controls={`${field.name}-listbox`}
-                aria-activedescendant={highlightedIndex >= 0 ? `${field.name}-option-${highlightedIndex}` : undefined}
+                aria-controls={`${field.key}-listbox`}
+                aria-activedescendant={highlightedIndex >= 0 ? `${field.key}-option-${highlightedIndex}` : undefined}
                 role="combobox"
               />
               {/* Clear button for single select */}
@@ -370,7 +371,7 @@ export function SearchSelectBase<TValue>({
                 {/* Options list - semantic ul/li with explicit ARIA roles for listbox pattern */}
                 {filteredOptions.length > 0 && (
                   <ul
-                    id={`${field.name}-listbox`}
+                    id={`${field.key}-listbox`}
                     role="listbox"
                     aria-label="Options"
                     style={{ listStyle: 'none', margin: 0, padding: 0 }}
@@ -382,7 +383,7 @@ export function SearchSelectBase<TValue>({
                       return (
                         <li
                           key={option.value}
-                          id={`${field.name}-option-${index}`}
+                          id={`${field.key}-option-${index}`}
                           role="option"
                           className={clsx(
                             theme.option,

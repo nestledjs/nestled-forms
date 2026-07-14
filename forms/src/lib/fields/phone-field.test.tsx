@@ -25,9 +25,10 @@ describe('PhoneField Validation', () => {
       />
     )
 
-    // Wait for effects to settle — this is the key step.
-    // Before the fix, the RenderFormField useEffect would re-register the field
-    // with only { required: ... }, stripping the phone validation.
+    // Wait for the lazy-loaded PhoneField to mount and register its validator.
+    // (Also guards the original bug: a re-register effect used to strip the
+    // phone validation after mount.)
+    await screen.findByLabelText('Phone', {}, { timeout: 15000 })
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
@@ -35,10 +36,13 @@ describe('PhoneField Validation', () => {
     const submitButton = screen.getByRole('button', { name: 'Submit' })
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
-      expect(handleSubmit).not.toHaveBeenCalled()
-      expect(screen.getByText('Please enter a valid phone number')).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(handleSubmit).not.toHaveBeenCalled()
+        expect(screen.getByText('Please enter a valid phone number')).toBeInTheDocument()
+      },
+      { timeout: 5000 },
+    )
   })
 
   it('should accept valid phone numbers', async () => {
@@ -61,6 +65,7 @@ describe('PhoneField Validation', () => {
       />
     )
 
+    await screen.findByLabelText('Phone', {}, { timeout: 15000 })
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
@@ -93,6 +98,7 @@ describe('PhoneField Validation', () => {
       />
     )
 
+    await screen.findByLabelText('Phone', {}, { timeout: 15000 })
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
@@ -124,6 +130,7 @@ describe('PhoneField Validation', () => {
       />
     )
 
+    await screen.findByLabelText('Phone', {}, { timeout: 15000 })
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
@@ -158,6 +165,7 @@ describe('PhoneField defaultCountry', () => {
       />
     )
 
+    await screen.findByLabelText('Phone', {}, { timeout: 15000 })
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
@@ -190,6 +198,7 @@ describe('PhoneField defaultCountry', () => {
       />
     )
 
+    await screen.findByLabelText('Phone', {}, { timeout: 15000 })
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
@@ -222,6 +231,7 @@ describe('PhoneField defaultCountry', () => {
       />
     )
 
+    await screen.findByLabelText('Phone', {}, { timeout: 15000 })
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
@@ -254,15 +264,19 @@ describe('PhoneField defaultCountry', () => {
       />
     )
 
+    await screen.findByLabelText('Phone', {}, { timeout: 15000 })
     await act(async () => {
       await new Promise((r) => setTimeout(r, 50))
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
 
-    await waitFor(() => {
-      expect(handleSubmit).not.toHaveBeenCalled()
-      expect(screen.getByText('Please enter a valid phone number')).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(handleSubmit).not.toHaveBeenCalled()
+        expect(screen.getByText('Please enter a valid phone number')).toBeInTheDocument()
+      },
+      { timeout: 5000 },
+    )
   })
 })

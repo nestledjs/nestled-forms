@@ -106,6 +106,7 @@ export function CheckboxGroupField({
       <div className={clsx(groupTheme.checkboxContainer)}>
         <input
           type="checkbox"
+          id={`${field.key}_${option.key}`}
           checked={isChecked}
           disabled={true}
           className={clsx(
@@ -115,7 +116,7 @@ export function CheckboxGroupField({
           )}
           readOnly
         />
-        <label className={clsx(groupTheme.label)}>
+        <label htmlFor={`${field.key}_${option.key}`} className={clsx(groupTheme.label)}>
           {option.label}
         </label>
       </div>
@@ -182,18 +183,20 @@ export function CheckboxGroupField({
 
           return (
             <div className={clsx(groupTheme.wrapper)}>
-              <div className={clsx(
-                groupTheme.container,
-                options.checkboxDirection === 'row'
-                  ? groupTheme.containerRow
-                  : groupTheme.containerColumn
-              )}>
+              <fieldset
+                aria-label={options.label || undefined}
+                className={clsx(
+                  groupTheme.container,
+                  options.checkboxDirection === 'row'
+                    ? groupTheme.containerRow
+                    : groupTheme.containerColumn
+                )}>
                 {options.checkboxOptions.map((option: CheckboxGroupOption) => {
                   const isChecked = selectedValues.includes(String(option.value))
                   const isDisabled = options.disabled
                   return renderOption(option, isChecked, !!isDisabled, handleCheckboxChange)
                 })}
-              </div>
+              </fieldset>
             </div>
           )
         }}

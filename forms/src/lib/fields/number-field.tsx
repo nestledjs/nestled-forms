@@ -2,6 +2,7 @@
 
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
+import { fieldA11yProps } from './field-a11y'
 
 export function NumberField({
   form,
@@ -63,10 +64,16 @@ export function NumberField({
         max={field.options.max}
         step={field.options.step}
         defaultValue={field.options.defaultValue}
-        {...form.register(field.key, { ...validationRules, valueAsNumber: true, valueAsDate: false, pattern: undefined })}
+        {...form.register(field.key, {
+          ...validationRules,
+          setValueAs: (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
+          valueAsDate: false,
+          pattern: undefined,
+        })}
+        {...fieldA11yProps(field.key, hasError, field.options.helpText)}
       />
       {field.options.helpText && (
-        <div className="text-xs text-gray-500">{field.options.helpText}</div>
+        <div id={`${field.key}-help`} className="text-xs text-gray-500">{field.options.helpText}</div>
       )}
     </div>
   )

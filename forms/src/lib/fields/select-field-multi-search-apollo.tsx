@@ -1,9 +1,15 @@
 'use client'
 
-import { FormField, FormFieldProps, FormFieldType, SearchSelectOption, useFormTheme } from '@nestledjs/forms-core'
+import {
+  FormField,
+  FormFieldProps,
+  FormFieldType,
+  SearchSelectOption,
+  useFormTheme,
+  useSearchSelect,
+} from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { multiSelectDisplayValue, SelectedItems } from './search-select-helpers'
-import { useApolloSearch } from './use-apollo-search'
 import { useWatch } from 'react-hook-form'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -32,31 +38,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
  * const transformedValues = multiSelectSubmitTransform(formValues.selectedItems)
  * ```
  */
-export function multiSelectSubmitTransform(value: any): string[] {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return value.map((item) => {
-    // If it's already a string (ID), return it
-    if (typeof item === 'string') {
-      return item
-    }
-
-    // If it's an option object, extract the value
-    if (item && typeof item === 'object' && 'value' in item) {
-      return item.value
-    }
-
-    // Fallback: convert to string
-    return String(item)
-  })
-}
+export { multiSelectSubmitTransform } from '@nestledjs/forms-core'
 
 /**
  * @deprecated Use multiSelectSubmitTransform instead. This alias is kept for backward compatibility.
  */
-export const apolloMultiSelectSubmitTransform = multiSelectSubmitTransform
+export { multiSelectSubmitTransform as apolloMultiSelectSubmitTransform } from '@nestledjs/forms-core'
 
 type RequiredItemShape = { id: string; name?: string; firstName?: string; lastName?: string }
 
@@ -71,13 +58,8 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
   formReadOnlyStyle?: 'value' | 'disabled'
 }) {
   const theme = useFormTheme()
-  
-  // Ensure the field has submit transformation for form submission
-  // The Form component looks for field.options.submitTransform during submission
-   
-  field.options.submitTransform ??= multiSelectSubmitTransform
-  
-  const { options, loading: apolloLoading, handleSearchChange } = useApolloSearch<TDataItem>(field.options)
+
+  const { options, loading: apolloLoading, handleSearchChange } = useSearchSelect<TDataItem>(field.options)
 
   // Cache for selected options to preserve labels when they're not in current search results
   const [selectedOptionsCache, setSelectedOptionsCache] = useState<Map<string, SearchSelectOption>>(new Map())
@@ -193,7 +175,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
       })
 
       // Store full option objects in form (like regular multi-search) instead of just IDs
-      form.setValue(field.key, itemsArray)
+      form.setValue(field.key, itemsArray, { shouldDirty: true, shouldTouch: true })
       // Trigger form validation/dirty state
       if (form.trigger) {
         form.trigger(field.key)
