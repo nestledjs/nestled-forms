@@ -113,8 +113,6 @@ function renderControlledInput(props: CheckboxFieldProps, theme: any, inputRef: 
             options.indeterminate && theme.indeterminate
           )}
           aria-invalid={hasError}
-          aria-checked={!!controllerField.value}
-          aria-disabled={options.disabled}
         />
       )}
     />

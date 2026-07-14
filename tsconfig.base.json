@@ -16,6 +16,7 @@
     "paths": {
       "@nestledjs/forms": ["forms/src/index.ts"],
       "@nestledjs/forms-core": ["forms-core/src/index.ts"],
+      "@nestledjs/forms-core/apollo": ["forms-core/src/apollo.ts"],
       "@nestledjs/forms-native": ["forms-native/src/index.ts"]
     }
   },

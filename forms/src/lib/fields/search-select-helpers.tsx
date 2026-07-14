@@ -24,6 +24,7 @@ export function SelectedItems({
             type="button"
             className={theme.selectedItemRemoveButton}
             onClick={() => onChange(items.filter((v: SearchSelectOption) => v.value !== item.value))}
+            aria-label={`Remove ${item.label}`}
           >
             <svg
               className={theme.selectedItemRemoveIcon}
@@ -51,15 +52,8 @@ export function multiSelectDisplayValue(value: SearchSelectOption[]): string {
   return ''
 }
 
-// Option mapping functions
-export function defaultOptionsMap<TDataItem extends { id: string; name?: string; firstName?: string; lastName?: string }>(
-  items: TDataItem[],
-): SearchSelectOption[] {
-  return items.map((option) => ({
-    value: `${option.id}`,
-    label: option.name ?? `${option.firstName} ${option.lastName}`,
-  }))
-}
+// Option mapping functions (implementation lives in forms-core, shared with forms-native)
+export { defaultOptionsMap } from '@nestledjs/forms-core'
 
 // Custom placeholder logic
 export function getPlaceholder(

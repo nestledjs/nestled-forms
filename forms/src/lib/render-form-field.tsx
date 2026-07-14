@@ -10,7 +10,6 @@ import { TextAreaField } from './fields/textarea-field'
 import { EmailField } from './fields/email-field'
 import { PasswordField } from './fields/password-field'
 import { UrlField } from './fields/url-field'
-import { PhoneField } from './fields/phone-field'
 import { NumberField } from './fields/number-field'
 import { MoneyField } from './fields/money-field'
 import { CheckboxField } from './fields/checkbox-field'
@@ -34,6 +33,11 @@ import { FormLabel } from './fields/label'
 // Lazy load MarkdownEditor to avoid SSR issues with MDX Editor dependencies
 const MarkdownEditor = React.lazy(() =>
   import('./fields/markdown-editor').then(m => ({ default: m.MarkdownEditor }))
+)
+// Lazy load PhoneField so libphonenumber's ~150 KB metadata is only downloaded
+// by forms that actually render a phone field
+const PhoneField = React.lazy(() =>
+  import('./fields/phone-field').then(m => ({ default: m.PhoneField }))
 )
 
 // This function remains internal to the renderer
@@ -110,13 +114,15 @@ function renderComponent(
       )
     case FormFieldType.Phone:
       return (
-        <PhoneField
-          form={form}
-          field={field}
-          hasError={hasError}
-          formReadOnly={formReadOnly}
-          formReadOnlyStyle={formReadOnlyStyle}
-        />
+        <React.Suspense fallback={<div aria-live="polite">Loading phone field...</div>}>
+          <PhoneField
+            form={form}
+            field={field}
+            hasError={hasError}
+            formReadOnly={formReadOnly}
+            formReadOnlyStyle={formReadOnlyStyle}
+          />
+        </React.Suspense>
       )
     case FormFieldType.Number:
       return (
@@ -377,19 +383,38 @@ function renderComponent(
  * />
  * ```
  */
-export function RenderFormField({
-  field,
-  formReadOnly = false,
-  formReadOnlyStyle = 'value',
-  className,
-}: Readonly<{
+interface RenderFormFieldProps {
   field: FormField
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
   className?: string
-}>) {
+}
+
+interface ConditionalState {
+  isVisible: boolean
+  isDynamicallyRequired: boolean
+  isDynamicallyDisabled: boolean
+}
+
+const STATIC_CONDITIONAL_STATE: ConditionalState = {
+  isVisible: true,
+  isDynamicallyRequired: false,
+  isDynamicallyDisabled: false,
+}
+
+export function RenderFormField(props: Readonly<RenderFormFieldProps>) {
+  // Only fields with conditional logic pay for a whole-form value subscription;
+  // everything else skips it so a keystroke doesn't re-render every field.
+  const { showWhen, requiredWhen, disabledWhen } = props.field.options
+  if (showWhen || requiredWhen || disabledWhen) {
+    return <ConditionalFormField {...props} />
+  }
+  return <RenderFormFieldInner {...props} conditionalState={STATIC_CONDITIONAL_STATE} />
+}
+
+function ConditionalFormField(props: Readonly<RenderFormFieldProps>) {
   const form = useFormContext()
-  const { labelDisplay } = useFormConfig()
+  const { field } = props
 
   // Watch all form values for conditional logic.
   // useWatch creates an explicit subscription to the form's control, so it reliably
@@ -398,17 +423,12 @@ export function RenderFormField({
   const formValues = useWatch({ control: form.control })
 
   // Evaluate conditional logic
-  const conditionalState = useMemo(() => {
+  const conditionalState = useMemo<ConditionalState>(() => {
     const { showWhen, requiredWhen, disabledWhen } = field.options
 
     try {
-      // Evaluate visibility condition
       const isVisible = showWhen ? showWhen(formValues) : true
-      
-      // Evaluate required condition  
       const isDynamicallyRequired = requiredWhen ? requiredWhen(formValues) : false
-      
-      // Evaluate disabled condition
       const isDynamicallyDisabled = disabledWhen ? disabledWhen(formValues) : false
 
       return {
@@ -426,6 +446,19 @@ export function RenderFormField({
       }
     }
   }, [formValues, field.options, field.key])
+
+  return <RenderFormFieldInner {...props} conditionalState={conditionalState} />
+}
+
+function RenderFormFieldInner({
+  field,
+  formReadOnly = false,
+  formReadOnlyStyle = 'value',
+  className,
+  conditionalState,
+}: Readonly<RenderFormFieldProps & { conditionalState: ConditionalState }>) {
+  const form = useFormContext()
+  const { labelDisplay } = useFormConfig()
 
   // Note: We intentionally do NOT re-register fields here to update required state.
   // In react-hook-form v7, calling register() again replaces all validation rules,
@@ -454,7 +487,8 @@ export function RenderFormField({
     showLabel = false
   } else {
     // labelDisplay === 'default' or unset
-    showLabel = field.type !== FormFieldType.Checkbox
+    // Checkbox and Switch render their own inline labels, so skip the outer FormLabel
+    showLabel = field.type !== FormFieldType.Checkbox && field.type !== FormFieldType.Switch
   }
 
   // Determine final required state (static OR dynamic)
@@ -490,7 +524,11 @@ export function RenderFormField({
         {layout === 'horizontal' && labelComponent}
         <div className={clsx(layout === 'horizontal' && 'flex-1')}>
           {component}
-          {error && field.type !== FormFieldType.Checkbox && <span className="text-red-700 text-sm">{errorMessage}</span>}
+          {error && field.type !== FormFieldType.Checkbox && (
+            <span id={`${field.key}-error`} role="alert" className="text-red-700 text-sm">
+              {errorMessage}
+            </span>
+          )}
         </div>
       </div>
     </>

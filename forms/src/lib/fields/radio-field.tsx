@@ -61,7 +61,7 @@ function RadioOptionItem({
       <div className={clsx('flex grow', directionClass)}>
         <div className={clsx(theme.radioContainer, options.fancyStyle && theme.optionContainerFancy)}>
           {options?.fullWidthLabel ? (
-            <label htmlFor={option.key} className={clsx(theme.labelFullWidth)}>
+            <label htmlFor={`${fieldKey}-${option.key}`} className={clsx(theme.labelFullWidth)}>
               {option.label}
             </label>
           ) : null}
@@ -69,7 +69,7 @@ function RadioOptionItem({
             onChange={onRadioInputChange}
             type="radio"
             className={getInputClassName(option, isChecked)}
-            id={option.key}
+            id={`${fieldKey}-${option.key}`}
             name={fieldKey}
             value={String(option.value ?? '')}
             checked={isChecked}
@@ -78,7 +78,7 @@ function RadioOptionItem({
           />
           {options?.fullWidthLabel ? null : (
             <label
-              htmlFor={option.key}
+              htmlFor={`${fieldKey}-${option.key}`}
               className={clsx(
                 theme.label,
                 options.radioDirection === 'row' ? theme.labelRow : theme.labelColumn
@@ -120,7 +120,8 @@ export function RadioField(
     const currentValue = props.form.getValues(props.field.key)
     if (options?.defaultValue !== undefined && (currentValue === undefined || currentValue === '')) {
       const defaultOption = options?.radioOptions?.find((o: RadioOption) => o.value === options?.defaultValue)
-      if (defaultOption?.value) {
+      // Use a null/undefined check so falsy defaults like `false` or `0` are still applied
+      if (defaultOption != null && defaultOption.value !== undefined) {
         props.form.setValue(props.field.key, defaultOption.value)
       }
       if (options?.defaultSubValue !== undefined && defaultOption?.checkedSubOption) {
@@ -163,7 +164,7 @@ export function RadioField(
           <div key={option.key + '_container'} className={clsx(theme.radioField.radioContainer)}>
             <input
               type="radio"
-              id={option.key}
+              id={`${props.field.key}-${option.key}`}
               name={props.field.key}
               checked={option.value === value}
               disabled={true}
@@ -175,7 +176,7 @@ export function RadioField(
               )}
               readOnly
             />
-            <label htmlFor={option.key} className={clsx(theme.radioField.label)}>
+            <label htmlFor={`${props.field.key}-${option.key}`} className={clsx(theme.radioField.label)}>
               {option.label}
             </label>
           </div>
@@ -252,10 +253,14 @@ export function RadioField(
           control={props.form.control}
           defaultValue={options?.defaultValue}
           render={({ field: { value: controllerValue, onChange } }) => (
-            <div className={clsx(
-              theme.radioField.container,
-              options.radioDirection === 'row' ? theme.radioField.containerRow : theme.radioField.containerColumn
-            )}>
+            <div
+              role="radiogroup"
+              aria-label={options.label || undefined}
+              aria-invalid={props.hasError || undefined}
+              className={clsx(
+                theme.radioField.container,
+                options.radioDirection === 'row' ? theme.radioField.containerRow : theme.radioField.containerColumn
+              )}>
               {options?.radioOptions?.map((option: RadioOption) => (
                 <RadioOptionItem
                   key={option.key + '_container'}

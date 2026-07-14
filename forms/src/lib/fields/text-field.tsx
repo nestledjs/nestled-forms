@@ -2,6 +2,7 @@
 
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
+import { fieldA11yProps } from './field-a11y'
 
 export function TextField({
   form,
@@ -41,7 +42,7 @@ export function TextField({
             value={value}
           />
           {field.options.helpText && (
-            <div className={clsx(theme.textField.helpText)}>{field.options.helpText}</div>
+            <div id={`${field.key}-help`} className={clsx(theme.textField.helpText)}>{field.options.helpText}</div>
           )}
         </>
       )
@@ -51,7 +52,7 @@ export function TextField({
       <>
         <div className={theme.textField.readOnly}>{value || '—'}</div>
         {field.options.helpText && (
-          <div className={clsx(theme.textField.helpText)}>{field.options.helpText}</div>
+          <div id={`${field.key}-help`} className={clsx(theme.textField.helpText)}>{field.options.helpText}</div>
         )}
       </>
     )
@@ -63,11 +64,12 @@ export function TextField({
         id={field.key}
         type="text"
         disabled={field.options.disabled}
-        autoComplete="true"
+        autoComplete="on"
         placeholder={field.options.placeholder}
         defaultValue={field.options.defaultValue}
         required={field.options.required}
         {...form.register(field.key, validationRules)}
+        {...fieldA11yProps(field.key, hasError, field.options.helpText)}
         className={clsx(
           theme.textField.input,
           field.options.disabled && theme.textField.disabled,
@@ -75,7 +77,7 @@ export function TextField({
         )}
       />
       {field.options.helpText && (
-        <div className={clsx(theme.textField.helpText)}>{field.options.helpText}</div>
+        <div id={`${field.key}-help`} className={clsx(theme.textField.helpText)}>{field.options.helpText}</div>
       )}
     </>
   )

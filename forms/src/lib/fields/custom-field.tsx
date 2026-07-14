@@ -61,7 +61,7 @@ export function CustomField<T = unknown>({
   const renderProps: CustomFieldRenderProps<T> = {
     value: value as T,
     onChange: (newValue: T) => {
-      form.setValue(field.key, newValue)
+      form.setValue(field.key, newValue, { shouldDirty: true, shouldTouch: true })
       // Trigger validation if the field has validation rules
       form.trigger(field.key)
     },

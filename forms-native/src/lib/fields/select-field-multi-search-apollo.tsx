@@ -1,7 +1,14 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { View, Text } from 'react-native'
 import { Controller, useWatch } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType, SearchSelectOption } from '@nestledjs/forms-core'
+import {
+  FormField,
+  FormFieldProps,
+  FormFieldType,
+  SearchSelectOption,
+  multiSelectSubmitTransform,
+  useSearchSelect,
+} from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 let MultiSelect: any = null
@@ -11,15 +18,11 @@ try {
   // not installed
 }
 
-export function multiSelectSubmitTransform(value: any): string[] {
-  if (!Array.isArray(value)) return []
-  return value.map((item: any) => {
-    if (typeof item === 'string') return item
-    if (item && typeof item === 'object' && 'value' in item) return item.value
-    return String(item)
-  })
-}
+export { multiSelectSubmitTransform }
 
+/**
+ * @deprecated Use multiSelectSubmitTransform instead. This alias is kept for backward compatibility.
+ */
 export const apolloMultiSelectSubmitTransform = multiSelectSubmitTransform
 
 type RequiredItemShape = { id: string; name?: string; firstName?: string; lastName?: string }
@@ -37,11 +40,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
   const theme = useNativeTheme().multiSelect
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-
-  field.options.submitTransform ??= multiSelectSubmitTransform
-
-  // Use initial options as fallback when Apollo is not available
-  const apolloOptions: SearchSelectOption[] = field.options.initialOptions ?? []
+  const { options: apolloOptions, handleSearchChange } = useSearchSelect<TDataItem>(field.options)
   const [selectedOptionsCache, setSelectedOptionsCache] = useState<Map<string, SearchSelectOption>>(new Map())
 
   const watchedValue = useWatch({ control: form.control, name: field.key })
@@ -134,6 +133,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
             value={processedValue}
             search
             searchPlaceholder="Search..."
+            onChangeText={handleSearchChange}
             onChange={(items: string[]) => {
               const itemObjects = items.map(item => findOrCreateOption(item))
               controllerField.onChange(itemObjects)

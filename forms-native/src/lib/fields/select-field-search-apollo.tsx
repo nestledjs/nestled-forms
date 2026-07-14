@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { View, Text } from 'react-native'
 import { Controller, useWatch } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useSearchSelect } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 let Dropdown: any = null
@@ -11,15 +11,8 @@ try {
   // not installed
 }
 
-function singleSelectSubmitTransform(value: any): string | null {
-  if (!value) return null
-  if (typeof value === 'string') return value
-  if (value && typeof value === 'object' && 'value' in value) return value.value
-  return String(value)
-}
-
 export function SelectFieldSearchApollo<
-  TDataItem extends { id: string; name?: string }
+  TDataItem extends { id: string; name?: string; firstName?: string; lastName?: string }
 >({
   form,
   field,
@@ -33,21 +26,7 @@ export function SelectFieldSearchApollo<
   const theme = useNativeTheme().searchSelect
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-
-  field.options.submitTransform ??= singleSelectSubmitTransform
-
-  // Try to use Apollo search — this requires @apollo/client to be installed
-  let apolloOptions: any[] = []
-  let apolloLoading = false
-  let handleSearchChange: (search: string) => void = () => {}
-
-  try {
-    // Dynamic import of useApolloSearch from forms web or consumer's implementation
-    // For now, provide a fallback that uses initialOptions
-    apolloOptions = field.options.initialOptions ?? []
-  } catch {
-    // Apollo not available
-  }
+  const { options: apolloOptions, handleSearchChange } = useSearchSelect<TDataItem>(field.options)
 
   const watchedValue = useWatch({
     control: form.control,

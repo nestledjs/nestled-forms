@@ -2,6 +2,7 @@
 
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
+import { fieldA11yProps } from './field-a11y'
 
 export function PasswordField({
   form,
@@ -63,9 +64,10 @@ export function PasswordField({
         required={field.options.required}
         defaultValue={field.options.defaultValue}
         {...form.register(field.key, validationRules)}
+        {...fieldA11yProps(field.key, hasError, field.options.helpText)}
       />
       {field.options.helpText && (
-        <div className="text-xs text-gray-500">{field.options.helpText}</div>
+        <div id={`${field.key}-help`} className="text-xs text-gray-500">{field.options.helpText}</div>
       )}
     </>
   )

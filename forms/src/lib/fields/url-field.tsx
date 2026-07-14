@@ -2,6 +2,7 @@
 
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
+import { fieldA11yProps } from './field-a11y'
 
 export function UrlField({
   form,
@@ -35,7 +36,7 @@ export function UrlField({
             value={value}
           />
           {field.options.helpText && (
-            <div className={clsx(theme.urlField.helpText)}>{field.options.helpText}</div>
+            <div id={`${field.key}-help`} className={clsx(theme.urlField.helpText)}>{field.options.helpText}</div>
           )}
         </>
       )
@@ -45,7 +46,7 @@ export function UrlField({
       <>
         <div className={theme.urlField.readOnlyValue}>{value || '—'}</div>
         {field.options.helpText && (
-          <div className={clsx(theme.urlField.helpText)}>{field.options.helpText}</div>
+          <div id={`${field.key}-help`} className={clsx(theme.urlField.helpText)}>{field.options.helpText}</div>
         )}
       </>
     )
@@ -61,6 +62,7 @@ export function UrlField({
         defaultValue={field.options.defaultValue}
         required={field.options.required}
         {...form.register(field.key, validationRules)}
+        {...fieldA11yProps(field.key, hasError, field.options.helpText)}
         className={clsx(
           theme.urlField.input,
           field.options.disabled && theme.urlField.disabled,
@@ -68,7 +70,7 @@ export function UrlField({
         )}
       />
       {field.options.helpText && (
-        <div className={clsx(theme.urlField.helpText)}>{field.options.helpText}</div>
+        <div id={`${field.key}-help`} className={clsx(theme.urlField.helpText)}>{field.options.helpText}</div>
       )}
     </>
   )

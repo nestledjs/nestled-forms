@@ -357,7 +357,24 @@ FormFieldClass.custom('field', {
 
 ## 🚀 Apollo GraphQL Integration
 
-For applications using Apollo Client, the forms library provides specialized search components that integrate with your GraphQL API:
+For applications using Apollo Client, the forms library provides specialized search components that integrate with your GraphQL API.
+
+### Setup
+
+Search select fields fetch options through a pluggable adapter, so the main `@nestledjs/forms` bundle never imports `@apollo/client` — apps without GraphQL pay nothing for it. To enable the Apollo-powered fields, wrap your app once (inside your `ApolloProvider`):
+
+```tsx
+import { ApolloProvider } from '@apollo/client/react'
+import { ApolloSearchProvider } from '@nestledjs/forms/apollo' // requires @apollo/client v3 or v4
+
+<ApolloProvider client={client}>
+  <ApolloSearchProvider>
+    <App />
+  </ApolloSearchProvider>
+</ApolloProvider>
+```
+
+Using urql, TanStack Query, or plain fetch instead? Provide your own hook via `<SearchQueryProvider>` from `@nestledjs/forms-core` — any implementation of its `UseSearchQuery` type works, and `@apollo/client` never needs to be installed.
 
 ### SearchSelectApollo
 

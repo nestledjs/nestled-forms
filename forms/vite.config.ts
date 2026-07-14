@@ -31,12 +31,14 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
     lib: {
-      // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
+      entry: {
+        index: 'src/index.ts',
+        markdown: 'src/markdown.ts',
+        apollo: 'src/apollo.ts',
+        phone: 'src/phone.ts',
+      },
       name: 'forms',
-      fileName: 'index',
-      // Change this to the formats you want to support.
-      // Don't forget to update your package.json as well.
+      fileName: (_format, entryName) => `${entryName}.js`,
       formats: ['es' as const],
     },
     rollupOptions: {
@@ -50,8 +52,19 @@ export default defineConfig({
         '@hookform/resolvers',
         '@hookform/resolvers/zod',
         '@mdxeditor/editor',
+        '@apollo/client',
+        '@apollo/client/react',
+        'graphql',
+        'react-phone-number-input',
+        'date-fns',
         '@nestledjs/forms-core',
+        '@nestledjs/forms-core/apollo',
       ],
+      output: {
+        // Vite lib mode strips 'use client'; Next.js App Router needs it on
+        // every chunk of this client-only library
+        banner: `'use client';`,
+      },
     },
   },
   test: {

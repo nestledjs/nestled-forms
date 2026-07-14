@@ -23,9 +23,12 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
     lib: {
-      entry: 'src/index.ts',
+      entry: {
+        index: 'src/index.ts',
+        apollo: 'src/apollo.ts',
+      },
       name: 'forms-native',
-      fileName: 'index',
+      fileName: (_format, entryName) => `${entryName}.js`,
       formats: ['es' as const],
     },
     rollupOptions: {
@@ -38,13 +41,20 @@ export default defineConfig({
         '@hookform/resolvers',
         '@hookform/resolvers/zod',
         '@apollo/client',
+        '@apollo/client/react',
+        'graphql',
+        '@nestledjs/forms-core',
+        '@nestledjs/forms-core/apollo',
         'dayjs',
         'expo-checkbox',
         '@react-native-community/datetimepicker',
-        'react-native-phone-number-input',
         'react-native-element-dropdown',
         '@ronradtke/react-native-markdown-display',
       ],
+      output: {
+        // Vite lib mode strips 'use client'; keep it for RSC-aware bundlers
+        banner: `'use client';`,
+      },
     },
   },
 })

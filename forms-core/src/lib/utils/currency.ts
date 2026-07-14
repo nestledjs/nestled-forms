@@ -405,12 +405,37 @@ export function parseCurrency(value: string, config: CurrencyConfig): number | n
   // Remove currency symbol and code
   let cleanValue = value.replace(config.symbol, '').replace(config.code, '').trim()
 
-  // Replace thousands separators
-  cleanValue = cleanValue.replaceAll(config.thousandsSeparator, '')
+  const hasDot = cleanValue.includes('.')
+  const hasComma = cleanValue.includes(',')
 
-  // Replace decimal separator with standard dot
-  if (config.decimalSeparator !== '.') {
-    cleanValue = cleanValue.replace(config.decimalSeparator, '.')
+  if (hasDot && hasComma) {
+    // Both separators present: the last-occurring one is the decimal separator,
+    // the other is a grouping separator (e.g. '1.234,56' -> 1234.56)
+    const decimalSep = cleanValue.lastIndexOf('.') > cleanValue.lastIndexOf(',') ? '.' : ','
+    const groupSep = decimalSep === '.' ? ',' : '.'
+    cleanValue = cleanValue.replaceAll(groupSep, '')
+    if (decimalSep !== '.') {
+      cleanValue = cleanValue.replace(decimalSep, '.')
+    }
+  } else if (hasDot || hasComma) {
+    const sep = hasDot ? '.' : ','
+    const parts = cleanValue.split(sep)
+    // A single separator followed by 1-2 trailing digits is a decimal separator
+    // regardless of the currency config (e.g. '1.5' or '1,5' -> 1.5). A single
+    // occurrence of the configured decimal separator is also treated as decimal.
+    if (parts.length === 2 && (/^\d{1,2}$/.test(parts[1]) || sep === config.decimalSeparator)) {
+      if (sep !== '.') {
+        cleanValue = cleanValue.replace(sep, '.')
+      }
+    } else {
+      // Grouping separator(s) (followed by exactly 3 digits or repeated): strip them
+      cleanValue = cleanValue.replaceAll(sep, '')
+    }
+  }
+
+  // Strip any non '.'/',' thousands separators (e.g. spaces, apostrophes)
+  if (config.thousandsSeparator !== '.' && config.thousandsSeparator !== ',') {
+    cleanValue = cleanValue.replaceAll(config.thousandsSeparator, '')
   }
 
   const parsed = Number.parseFloat(cleanValue)

@@ -1,43 +1,21 @@
 'use client'
 
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useSearchSelect } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { singleSelectDisplayValue } from './search-select-helpers'
-import { useApolloSearch } from './use-apollo-search'
 import { useWatch } from 'react-hook-form'
 import { useMemo } from 'react'
 
 /**
- * Submit transformation for single Apollo search - converts option object to ID string
+ * Submit transformation for single Apollo search - converts option object to ID string.
+ * Implementation lives in forms-core and is applied automatically by the Form submit path.
  */
-export function singleSelectSubmitTransform(value: any): string | null {
-  if (!value) {
-    return null
-  }
-  
-  // If it's already a string (ID), return it
-  if (typeof value === 'string') {
-    return value
-  }
-  
-  // If it's an option object, extract the value
-  if (value && typeof value === 'object' && 'value' in value) {
-    return value.value
-  }
-  
-  // Fallback: convert to string
-  return String(value)
-}
+export { singleSelectSubmitTransform } from '@nestledjs/forms-core'
 
 export function SelectFieldSearchApollo<
   TDataItem extends { id: string; name?: string; firstName?: string; lastName?: string }
 >({ form, field, hasError, formReadOnly = false, formReadOnlyStyle = 'value' }: FormFieldProps<Extract<FormField, { type: FormFieldType.SearchSelectApollo }>> & { formReadOnly?: boolean, formReadOnlyStyle?: 'value' | 'disabled' }) {
-  // Ensure the field has submit transformation for form submission
-  // The Form component looks for field.options.submitTransform during submission
-   
-  field.options.submitTransform ??= singleSelectSubmitTransform
-  
-  const { options, loading: apolloLoading, handleSearchChange } = useApolloSearch<TDataItem>(field.options)
+  const { options, loading: apolloLoading, handleSearchChange } = useSearchSelect<TDataItem>(field.options)
 
   // Use useWatch to get reactive form value updates
   const watchedValue = useWatch({
@@ -93,7 +71,7 @@ export function SelectFieldSearchApollo<
       onChange={(option) => {
         // Store the full option object (like multi-search) instead of just the ID
         // Submit transformation will convert back to ID for API submission
-        form.setValue(field.key, option || null)
+        form.setValue(field.key, option || null, { shouldDirty: true, shouldTouch: true })
         // Trigger form validation/dirty state
         if (form.trigger) {
           form.trigger(field.key)

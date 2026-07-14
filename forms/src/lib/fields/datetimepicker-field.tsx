@@ -1,8 +1,18 @@
 'use client'
 
 import clsx from 'clsx'
+import { useEffect } from 'react'
 import { Controller } from 'react-hook-form'
-import { useFormTheme, FormField, FormFieldProps, FormFieldType, formatDateTimeFromValue, getDateTimeFromValue } from '@nestledjs/forms-core'
+import {
+  useFormTheme,
+  FormField,
+  FormFieldProps,
+  FormFieldType,
+  formatDateTimeFromValue,
+  formatLocalDateTime,
+  getDateTimeFromValue,
+  parseLocalDateTime,
+} from '@nestledjs/forms-core'
 
 export function DateTimePickerField({
   form,
@@ -17,6 +27,21 @@ export function DateTimePickerField({
 }>) {
   const theme = useFormTheme().dateTimePicker
   const options = field.options
+
+  // Normalize a full ISO default (e.g. with 'Z' or an offset) into the input's
+  // local YYYY-MM-DDTHH:mm format. A datetime is a real instant, so conversion
+  // to the viewer's local wall time is the correct behavior — and without this
+  // the input renders blank while form state keeps the raw string.
+  useEffect(() => {
+    const current = form.getValues(field.key)
+    if (typeof current === 'string' && current && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(current)) {
+      const parsed = parseLocalDateTime(current)
+      if (parsed) {
+        form.setValue(field.key, formatLocalDateTime(parsed))
+      }
+    }
+  }, [form, field.key])
+
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''

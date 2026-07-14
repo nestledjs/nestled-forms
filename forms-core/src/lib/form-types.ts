@@ -1,4 +1,5 @@
-import { DocumentNode, TypedDocumentNode } from '@apollo/client'
+import type { DocumentNode } from 'graphql'
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import { JSX, ReactNode } from 'react'
 import { UseFormReturn } from 'react-hook-form'
 import { ZodTypeAny } from 'zod'

@@ -4,6 +4,7 @@ export * from '@nestledjs/forms-core'
 // Native-specific exports
 export { NativeForm } from './lib/form'
 export type { NativeFormProps } from './lib/form'
+export { useNativeFormSubmit, NativeFormSubmitContext } from './lib/native-form-submit-context'
 export { RenderFormField } from './lib/render-form-field'
 
 // Native theme system

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { TextInput, View, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
@@ -16,6 +17,16 @@ export function NumberField({
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''
+
+  // Reflect form-level values / field defaults in the uncontrolled TextInput,
+  // and seed form state with the default so untouched forms submit it (web parity)
+  const initialValue = form.getValues(field.key) ?? field.options.defaultValue ?? ''
+  useEffect(() => {
+    const currentValue = form.getValues(field.key)
+    if ((currentValue === undefined || currentValue === null) && field.options.defaultValue !== undefined) {
+      form.setValue(field.key, field.options.defaultValue)
+    }
+  }, [form, field.key, field.options.defaultValue])
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {
@@ -40,8 +51,10 @@ export function NumberField({
   }
 
   const handleChangeText = (text: string) => {
+    // Treat a single trailing comma-decimal as a decimal point (European input, e.g. '1,5')
+    const normalized = text.includes('.') ? text : text.replace(/,(\d{1,2})$/, '.$1')
     // Filter to allow only numeric input (digits, decimal point, negative sign)
-    const filtered = text.replaceAll(/[^0-9.-]/g, '')
+    const filtered = normalized.replaceAll(/[^0-9.-]/g, '')
 
     // Parse to number
     const numValue = filtered === '' || filtered === '-' ? filtered : Number.parseFloat(filtered)
@@ -74,7 +87,7 @@ export function NumberField({
         editable={!field.options.disabled}
         placeholder={field.options.placeholder}
         placeholderTextColor="#9ca3af"
-        defaultValue={field.options.defaultValue === undefined ? undefined : String(field.options.defaultValue)}
+        defaultValue={initialValue === '' ? '' : String(initialValue)}
         keyboardType="decimal-pad"
         onChangeText={handleChangeText}
         onBlur={handleBlur}

@@ -2,6 +2,7 @@
 
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme } from '@nestledjs/forms-core'
+import { fieldA11yProps } from './field-a11y'
 
 export function TextAreaField({
   form,
@@ -34,7 +35,7 @@ export function TextAreaField({
             value={value}
           />
           {field.options.helpText && (
-            <div className={clsx(theme.textAreaField.helpText)}>{field.options.helpText}</div>
+            <div id={`${field.key}-help`} className={clsx(theme.textAreaField.helpText)}>{field.options.helpText}</div>
           )}
         </>
       )
@@ -44,7 +45,7 @@ export function TextAreaField({
       <>
         <div className={theme.textAreaField.readOnlyValue}>{value || '—'}</div>
         {field.options.helpText && (
-          <div className={clsx(theme.textAreaField.helpText)}>{field.options.helpText}</div>
+          <div id={`${field.key}-help`} className={clsx(theme.textAreaField.helpText)}>{field.options.helpText}</div>
         )}
       </>
     )
@@ -65,9 +66,10 @@ export function TextAreaField({
           hasError && theme.textAreaField.error
         )}
         {...form.register(field.key, { required: field.options.required })}
+        {...fieldA11yProps(field.key, hasError, field.options.helpText)}
       />
       {field.options.helpText && (
-        <div className={clsx(theme.textAreaField.helpText)}>{field.options.helpText}</div>
+        <div id={`${field.key}-help`} className={clsx(theme.textAreaField.helpText)}>{field.options.helpText}</div>
       )}
     </>
   )

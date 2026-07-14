@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { TextInput, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
@@ -19,6 +19,16 @@ export function TextAreaField({
   const value = form.getValues(field.key) ?? ''
   const rows = field.options.rows ?? 4
   const [height, setHeight] = useState(rows * 20)
+
+  // Reflect form-level values / field defaults in the uncontrolled TextInput,
+  // and seed form state with the default so untouched forms submit it (web parity)
+  const initialValue = form.getValues(field.key) ?? field.options.defaultValue ?? ''
+  useEffect(() => {
+    const currentValue = form.getValues(field.key)
+    if ((currentValue === undefined || currentValue === null) && field.options.defaultValue !== undefined) {
+      form.setValue(field.key, field.options.defaultValue)
+    }
+  }, [form, field.key, field.options.defaultValue])
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {
@@ -54,7 +64,7 @@ export function TextAreaField({
         editable={!field.options.disabled}
         placeholder={field.options.placeholder}
         placeholderTextColor="#9ca3af"
-        defaultValue={field.options.defaultValue}
+        defaultValue={initialValue}
         onChangeText={(text) => form.setValue(field.key, text, { shouldValidate: true })}
         onBlur={() => form.trigger(field.key)}
         onContentSizeChange={(e) => {

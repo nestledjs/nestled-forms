@@ -3,7 +3,6 @@
 import { FormFieldProps, FormField, FormFieldType, useFormTheme } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { SelectedItems } from './search-select-helpers'
-import { multiSelectSubmitTransform } from './select-field-multi-search-apollo'
 
 export function SelectFieldMulti({
   form,
@@ -16,12 +15,7 @@ export function SelectFieldMulti({
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const theme = useFormTheme()
-  
-  // Ensure the field has submit transformation for form submission
-  // The Form component looks for field.options.submitTransform during submission
-   
-  field.options.submitTransform ??= multiSelectSubmitTransform
-  
+
   const value = form.getValues(field.key) ?? []
 
   // Convert SelectOption[] to SearchSelectOption[] by ensuring values are strings
@@ -40,7 +34,9 @@ export function SelectFieldMulti({
       options={searchOptions}
       // No search functionality - just client-side filtering handled by SearchSelectBase
       value={value}
-      onChange={(newValue) => form.setValue(field.key, newValue)}
+      onChange={(newValue) =>
+        form.setValue(field.key, newValue, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+      }
       displayValue={() => ''} // Always empty for multi-select
       multiple={true}
       themeKey="multiSelect"

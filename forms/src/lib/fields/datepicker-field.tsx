@@ -1,6 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
+import { useEffect } from 'react'
 import { Controller } from 'react-hook-form'
 import { useFormTheme, FormField, FormFieldProps, FormFieldType, formatDateFromDateTime, getDateFromDateTime } from '@nestledjs/forms-core'
 
@@ -19,6 +20,18 @@ export function DatePickerField({
 }>) {
   const theme = useFormTheme().datePicker
   const options = field.options
+
+  // Normalize a full ISO default (e.g. '2024-01-15T00:00:00.000Z' from a server)
+  // to the input's YYYY-MM-DD format — otherwise the input renders blank while
+  // form state silently keeps (and submits) the raw string. The date part is
+  // preserved as-is: calendar dates must never timezone-shift.
+  useEffect(() => {
+    const current = form.getValues(field.key)
+    if (typeof current === 'string' && current.includes('T')) {
+      form.setValue(field.key, current.split('T')[0])
+    }
+  }, [form, field.key])
+
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key) ?? ''

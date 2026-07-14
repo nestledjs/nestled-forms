@@ -100,8 +100,9 @@ export const Default: Story = {
   args: { showState: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Phone Number')
-    
+    // findBy: PhoneField is lazy-loaded, so wait for the Suspense fallback to resolve
+    const input = await canvas.findByLabelText('Phone Number')
+
     // Verify it's a tel input
     await expect(input).toHaveAttribute('type', 'tel')
     await expect(input).toBeEnabled()

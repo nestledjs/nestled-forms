@@ -10,6 +10,7 @@ import {
   ThemeContext,
   FormConfigContext,
   createFormResolver,
+  resolveSubmitTransform,
 } from '@nestledjs/forms-core'
 import type { FormTheme, FormConfig } from '@nestledjs/forms-core'
 import clsx from 'clsx'
@@ -103,6 +104,12 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
   validationGroups?: string[]
 }
 
+// Module-level defaults keep identity stable across renders: an inline `{}`
+// default parameter would recompute the theme and re-render every
+// ThemeContext consumer on each Form render
+const EMPTY_THEME = {}
+const DEFAULT_FINAL_THEME = createFinalTheme(EMPTY_THEME)
+
 function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true
   if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false
@@ -177,7 +184,7 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
   className,
   readOnly = false,
   readOnlyStyle = 'value',
-  theme: userTheme = {},
+  theme: userTheme = EMPTY_THEME,
   labelDisplay = 'default',
   schema,
   validationGroup,
@@ -185,11 +192,13 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
 }: Readonly<FormProps<T>>) {
   // Create resolver for validation if needed
   const resolver = useMemo(() => {
-    // Check if any field needs validation that requires a resolver (excluding buttons)
+    // Check if any field needs validation that requires a resolver (excluding buttons).
+    // required/requiredWhen must go through the resolver too: react-hook-form
+    // ignores register rules once any resolver exists.
     const needsResolver = schema || fields?.some(f => {
       if (f?.type === FormFieldType.Button) return false // Never validate buttons
       const opts = f?.options as InputFieldOptions
-      return opts?.schema || opts?.validateWithForm || opts?.validate
+      return opts?.schema || opts?.validateWithForm || opts?.validate || opts?.required || opts?.requiredWhen
     })
 
     if (needsResolver) {
@@ -224,7 +233,10 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
     }
   }, [defaultValues, form])
 
-  const finalTheme = useMemo(() => createFinalTheme(userTheme), [userTheme])
+  const finalTheme = useMemo(
+    () => (userTheme === EMPTY_THEME ? DEFAULT_FINAL_THEME : createFinalTheme(userTheme)),
+    [userTheme],
+  )
   // Create the value for our new context
   const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
 
@@ -248,15 +260,17 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
         return submit(filteredValues as T)
       }
 
-      // Apply submitTransform functions to each field that has one
+      // Apply submitTransform functions: explicit per-field transforms win,
+      // otherwise the per-type default (e.g. option objects -> ID strings)
       const transformedValues: Record<string, unknown> = { ...filteredValues }
 
       fields
         .filter((field): field is FormField => field !== null)
         .filter(field => field.type !== FormFieldType.Button) // Skip button fields
         .forEach((field) => {
-          if (field.options.submitTransform && field.key in transformedValues) {
-            transformedValues[field.key] = field.options.submitTransform(transformedValues[field.key])
+          const transform = resolveSubmitTransform(field)
+          if (transform && field.key in transformedValues) {
+            transformedValues[field.key] = transform(transformedValues[field.key])
           }
         })
 
@@ -268,7 +282,7 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
     <FormConfigContext.Provider value={formConfig}>
       <ThemeContext.Provider value={finalTheme}>
         <FormContext.Provider value={form as unknown as import('react-hook-form').UseFormReturn<import('react-hook-form').FieldValues>}>
-          <form id={id} className={clsx('space-y-6', className)} onSubmit={form.handleSubmit(handleSubmitWithTransform)}>
+          <form id={id} noValidate className={clsx('space-y-6', className)} onSubmit={form.handleSubmit(handleSubmitWithTransform)}>
             {/* Render fields from the declarative array */}
             {fields
               ?.filter((field): field is FormField => field !== null)
