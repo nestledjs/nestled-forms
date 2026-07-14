@@ -70,11 +70,20 @@ export function SearchSelectBase<TValue>({
     setSearchTerm(search)
   }
 
-  // Call onSearchChange with debounced term for server-side search
+  // Call onSearchChange with debounced term for server-side search.
+  // Skip the very first empty-term emission: data sources (Apollo,
+  // loadOptions) already fetch their initial result set on mount, so firing
+  // here too would double-hit the backend. Later clears ('' after typing)
+  // still fire normally.
+  const hasEmittedSearchRef = useRef(false)
   useEffect(() => {
-    if (onSearchChange) {
-      onSearchChange(debouncedSearchTerm)
+    if (!onSearchChange) return
+    if (!hasEmittedSearchRef.current && debouncedSearchTerm === '') {
+      hasEmittedSearchRef.current = true
+      return
     }
+    hasEmittedSearchRef.current = true
+    onSearchChange(debouncedSearchTerm)
   }, [debouncedSearchTerm, onSearchChange])
 
   // Filter options for client-side search

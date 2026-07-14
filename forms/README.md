@@ -326,6 +326,15 @@ FormFieldClass.searchSelect('field', {
   options: [{ value: 'a', label: 'Option A' }],
   placeholder: 'Search or select...'
 })
+// Async options from any backend (REST, tRPC, fetch) — no GraphQL required.
+// Called with '' on mount, then with each (debounced) search term:
+FormFieldClass.searchSelect('user', {
+  label: 'User',
+  options: [],
+  loadOptions: async (search) =>
+    (await fetch(`/api/users?q=${encodeURIComponent(search)}`).then(r => r.json()))
+      .map((u) => ({ value: u.id, label: u.name })),
+})
 FormFieldClass.searchSelectApollo('field', { 
   label: 'Apollo Search Select',
   document: MY_GRAPHQL_QUERY,

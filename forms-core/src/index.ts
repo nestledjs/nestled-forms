@@ -41,6 +41,7 @@ export type { SearchQueryResult, UseSearchQuery } from './lib/search-query-conte
 // Hooks
 export { useFieldValidation } from './lib/hooks/use-field-validation'
 export { useSearchSelect, defaultOptionsMap } from './lib/hooks/use-search-select'
+export { useLoadOptions } from './lib/hooks/use-load-options'
 export { useDebounce } from './lib/utils/debounce'
 export { deepEqual } from './lib/utils/deep-equal'
 

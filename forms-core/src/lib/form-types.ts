@@ -396,6 +396,13 @@ export interface SearchSelectOptions extends BaseFieldOptions {
   onSearchChange?: (search: string) => void
   loading?: boolean
   searchDebounceMs?: number
+  /**
+   * Async option source for any backend (REST, tRPC, fetch). Called with the
+   * current search term ('' on mount); resolved options replace the list.
+   * When set, `options` acts as the initial list and `onSearchChange`/`loading`
+   * are managed for you.
+   */
+  loadOptions?: (search: string) => Promise<SearchSelectOption[]>
 }
 
 export interface SearchSelectApolloOptions<TDataItem = any> extends BaseFieldOptions {
@@ -419,6 +426,13 @@ export interface SearchSelectMultiOptions extends BaseFieldOptions {
   onSearchChange?: (search: string) => void
   loading?: boolean
   searchDebounceMs?: number
+  /**
+   * Async option source for any backend (REST, tRPC, fetch). Called with the
+   * current search term ('' on mount); resolved options replace the list.
+   * When set, `options` acts as the initial list and `onSearchChange`/`loading`
+   * are managed for you.
+   */
+  loadOptions?: (search: string) => Promise<SearchSelectOption[]>
 }
 
 export interface ContentOptions extends BaseFieldOptions {

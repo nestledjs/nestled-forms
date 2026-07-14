@@ -1,6 +1,6 @@
 'use client'
 
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useLoadOptions } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { singleSelectDisplayValue } from './search-select-helpers'
 
@@ -15,7 +15,13 @@ export function SelectFieldSearch({
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const value = form.getValues(field.key)
-  const selectedOption = field.options.options.find(o => o.value === value) ?? null
+
+  // loadOptions mode: the hook manages options/loading/search; the input's own
+  // debounce (SearchSelectBase) already paces calls, so debounceMs is 0
+  const asyncSearch = useLoadOptions(field.options.loadOptions, field.options.options)
+  const usingLoadOptions = !!field.options.loadOptions
+  const options = usingLoadOptions ? asyncSearch.options : field.options.options
+  const selectedOption = options.find(o => o.value === value) ?? null
 
   return (
     <SearchSelectBase
@@ -24,9 +30,9 @@ export function SelectFieldSearch({
       hasError={hasError}
       formReadOnly={formReadOnly}
       formReadOnlyStyle={formReadOnlyStyle}
-      options={field.options.options}
-      loading={field.options.loading}
-      onSearchChange={field.options.onSearchChange}
+      options={options}
+      loading={usingLoadOptions ? asyncSearch.loading : field.options.loading}
+      onSearchChange={usingLoadOptions ? asyncSearch.handleSearchChange : field.options.onSearchChange}
       searchDebounceMs={field.options.searchDebounceMs}
       value={selectedOption}
       onChange={(option) => {

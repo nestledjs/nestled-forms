@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text } from 'react-native'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType, useFormConfig } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormConfig, useLoadOptions } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 let Dropdown: any = null
@@ -23,7 +23,13 @@ export function SelectFieldSearch({
 }>) {
   const theme = useNativeTheme().searchSelect
   const { strings } = useFormConfig()
-  const options = field.options.options || []
+  const staticOptions = field.options.options || []
+  // loadOptions mode: async source with internal debounce (native dropdowns
+  // don't debounce their search input themselves)
+  const asyncSearch = useLoadOptions(field.options.loadOptions, staticOptions, field.options.searchDebounceMs ?? 300)
+  const usingLoadOptions = !!field.options.loadOptions
+  const options = usingLoadOptions ? asyncSearch.options : staticOptions
+  const onSearchText = usingLoadOptions ? asyncSearch.handleSearchChange : field.options.onSearchChange
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = form.getValues(field.key)
@@ -77,6 +83,7 @@ export function SelectFieldSearch({
             value={controllerField.value}
             search
             searchPlaceholder={strings.searchPlaceholder}
+            onChangeText={onSearchText}
             onChange={(item: { value: string }) => {
               controllerField.onChange(item.value)
               if (form.trigger) form.trigger(field.key)
