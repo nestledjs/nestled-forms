@@ -1,7 +1,17 @@
 import React, { useMemo } from 'react'
 import { View, Text, ViewStyle } from 'react-native'
 import { useWatch } from 'react-hook-form'
-import { FormField, FormFieldType, useFormContext, useFormConfig, DEFAULT_REQUIRED_ERROR_MESSAGE } from '@nestledjs/forms-core'
+import {
+  FormField,
+  FormFieldType,
+  useFormContext,
+  useFormConfig,
+  DEFAULT_REQUIRED_ERROR_MESSAGE,
+  STATIC_CONDITIONAL_STATE,
+  hasConditionalLogic,
+  evaluateConditionalState,
+} from '@nestledjs/forms-core'
+import type { ConditionalState } from '@nestledjs/forms-core'
 import { useNativeTheme } from './native-theme-context'
 
 import { TextField } from './fields/text-field'
@@ -118,23 +128,10 @@ interface RenderFormFieldProps {
   className?: string
 }
 
-interface ConditionalState {
-  isVisible: boolean
-  isDynamicallyRequired: boolean
-  isDynamicallyDisabled: boolean
-}
-
-const STATIC_CONDITIONAL_STATE: ConditionalState = {
-  isVisible: true,
-  isDynamicallyRequired: false,
-  isDynamicallyDisabled: false,
-}
-
 export function RenderFormField(props: Readonly<RenderFormFieldProps>) {
   // Only fields with conditional logic pay for a whole-form value subscription;
   // everything else skips it so a keystroke doesn't re-render every field.
-  const { showWhen, requiredWhen, disabledWhen } = props.field.options
-  if (showWhen || requiredWhen || disabledWhen) {
+  if (hasConditionalLogic(props.field)) {
     return <ConditionalFormField {...props} />
   }
   return <RenderFormFieldInner {...props} conditionalState={STATIC_CONDITIONAL_STATE} />
@@ -150,21 +147,10 @@ function ConditionalFormField(props: Readonly<RenderFormFieldProps>) {
   // unregistered custom fields — in all environments (dev, prod, SSR).
   const formValues = useWatch({ control: form.control })
 
-  // Evaluate conditional logic
-  const conditionalState = useMemo<ConditionalState>(() => {
-    const { showWhen, requiredWhen, disabledWhen } = field.options
-
-    try {
-      const isVisible = showWhen ? showWhen(formValues) : true
-      const isDynamicallyRequired = requiredWhen ? requiredWhen(formValues) : false
-      const isDynamicallyDisabled = disabledWhen ? disabledWhen(formValues) : false
-
-      return { isVisible, isDynamicallyRequired, isDynamicallyDisabled }
-    } catch (error) {
-      console.warn(`Error evaluating conditional logic for field ${field.key}:`, error)
-      return { isVisible: true, isDynamicallyRequired: false, isDynamicallyDisabled: false }
-    }
-  }, [formValues, field.options, field.key])
+  const conditionalState = useMemo<ConditionalState>(
+    () => evaluateConditionalState(field, formValues),
+    [formValues, field],
+  )
 
   return <RenderFormFieldInner {...props} conditionalState={conditionalState} />
 }

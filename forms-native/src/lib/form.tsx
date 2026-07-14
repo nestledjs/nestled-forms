@@ -10,7 +10,7 @@ import {
   FormConfigContext,
   FormThemeSchema,
   createFormResolver,
-  resolveSubmitTransform,
+  createSubmitHandler,
   deepEqual,
 } from '@nestledjs/forms-core'
 import { NativeFormSubmitContext } from './native-form-submit-context'
@@ -113,36 +113,9 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
     }
   }, [defaultValues, form])
 
-  // Validated submit pipeline: filter button keys, apply per-field submit
-  // transforms (explicit or per-type default), then call the submit prop
-  const handleSubmitWithTransform = useMemo(() => {
-    return (values: T) => {
-      const filteredValues: Record<string, unknown> = {}
-      for (const [key, value] of Object.entries(values as Record<string, unknown>)) {
-        const isButtonField = fields?.some((f) => f?.key === key && f.type === FormFieldType.Button)
-        if (!isButtonField) {
-          filteredValues[key] = value
-        }
-      }
-
-      if (!fields) {
-        return submit(filteredValues as T)
-      }
-
-      const transformedValues: Record<string, unknown> = { ...filteredValues }
-      fields
-        .filter((field): field is FormField => field !== null)
-        .filter((field) => field.type !== FormFieldType.Button)
-        .forEach((field) => {
-          const transform = resolveSubmitTransform(field)
-          if (transform && field.key in transformedValues) {
-            transformedValues[field.key] = transform(transformedValues[field.key])
-          }
-        })
-
-      return submit(transformedValues as T)
-    }
-  }, [fields, submit])
+  // Shared pipeline: strips button keys and applies submit transforms
+  // (explicit per-field transforms win, otherwise the per-type default)
+  const handleSubmitWithTransform = useMemo(() => createSubmitHandler<T>(fields, submit), [fields, submit])
 
   const submitForm = useMemo(
     () => form.handleSubmit(handleSubmitWithTransform as Parameters<typeof form.handleSubmit>[0]),
