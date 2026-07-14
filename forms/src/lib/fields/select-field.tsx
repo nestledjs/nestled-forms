@@ -1,7 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
-import { FormField, FormFieldProps, FormFieldType, SelectOption } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, SelectOption, useFormConfig } from '@nestledjs/forms-core'
 import { BaseSelectField } from './base-select-field'
 
 export function SelectField({ 
@@ -14,8 +14,9 @@ export function SelectField({
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
+  const { strings } = useFormConfig()
   const options: SelectOption[] = field.options.options || []
-  
+
   // Function to render read-only value
   const renderReadOnlyValue = (value: any) => {
     const selectedOption = options.find((o) => o.value === value)
@@ -54,7 +55,7 @@ export function SelectField({
             >
               {/* Empty option for placeholder */}
               <option value="" disabled hidden>
-                {field.options.placeholder || 'Select an option...'}
+                {field.options.placeholder || strings.selectPlaceholder}
               </option>
               {options.map((option) => (
                 <option

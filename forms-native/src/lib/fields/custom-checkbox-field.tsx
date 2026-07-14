@@ -1,6 +1,6 @@
 import { View, Text, Pressable } from 'react-native'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, useFormConfig } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 export function CustomCheckboxField({
@@ -15,6 +15,7 @@ export function CustomCheckboxField({
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const theme = useNativeTheme().customCheckbox
+  const { strings } = useFormConfig()
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
@@ -50,7 +51,7 @@ export function CustomCheckboxField({
     }
     return (
       <View style={theme.wrapper}>
-        <Text style={theme.readOnly}>{value ? 'Yes' : 'No'}</Text>
+        <Text style={theme.readOnly}>{value ? strings.readOnlyYes : strings.readOnlyNo}</Text>
       </View>
     )
   }

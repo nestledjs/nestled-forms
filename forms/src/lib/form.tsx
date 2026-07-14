@@ -10,8 +10,11 @@ import {
   buildFieldsResolver,
   createSubmitHandler,
   deepEqual,
+  resolveFormStrings,
+  type FormTheme,
+  type FormConfig,
+  type FormStrings,
 } from '@nestledjs/forms-core'
-import type { FormTheme, FormConfig } from '@nestledjs/forms-core'
 import clsx from 'clsx'
 import { RenderFormField } from './render-form-field'
 import { createFinalTheme } from './utils/resolve-theme'
@@ -41,6 +44,13 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
    * - 'none': Hides all labels.
    */
   labelDisplay?: 'all' | 'default' | 'none'
+
+  /**
+   * Override any of the library's user-facing strings (loading, "No results
+   * found", the default required error, aria-labels, ...) for localization.
+   * Merged over the English defaults.
+   */
+  strings?: Partial<FormStrings>
 
   /**
    * Optional Zod schema for form-level validation.
@@ -168,14 +178,16 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
   readOnlyStyle = 'value',
   theme: userTheme = EMPTY_THEME,
   labelDisplay = 'default',
+  strings,
   schema,
   validationGroup,
   validationGroups,
 }: Readonly<FormProps<T>>) {
+  const formStrings = useMemo(() => resolveFormStrings(strings), [strings])
   // Create resolver for validation if needed
   const resolver = useMemo(
-    () => buildFieldsResolver<T>({ schema, fields, validationGroup }),
-    [schema, fields, validationGroup, validationGroups],
+    () => buildFieldsResolver<T>({ schema, fields, validationGroup, defaultRequiredMessage: formStrings.requiredError }),
+    [schema, fields, validationGroup, validationGroups, formStrings.requiredError],
   )
 
   const form = useForm<T>({
@@ -200,7 +212,10 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
     [userTheme],
   )
   // Create the value for our new context
-  const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
+  const formConfig = useMemo<FormConfig>(
+    () => ({ labelDisplay, strings: formStrings }),
+    [labelDisplay, formStrings],
+  )
 
   // Shared pipeline: strips button keys and applies submit transforms
   // (explicit per-field transforms win, otherwise the per-type default)

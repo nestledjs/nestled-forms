@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { FormContext, FormConfigContext, ThemeContext } from '@nestledjs/forms-core'
+import { FormContext, FormConfigContext, ThemeContext, DEFAULT_FORM_STRINGS } from '@nestledjs/forms-core'
 import type { FormField, FormTheme, SelectOption, SearchSelectOption } from '@nestledjs/forms-core'
 import { RenderFormField } from '../src/lib/render-form-field'
 import { createFinalTheme } from '../src/lib/utils/resolve-theme'
@@ -93,7 +93,7 @@ export const StorybookFieldWrapper: React.FC<StorybookFieldWrapperProps> = ({
 
   return (
     <div className="max-w-md p-4 bg-white rounded-lg shadow">
-      <FormConfigContext.Provider value={{ labelDisplay }}>
+      <FormConfigContext.Provider value={{ labelDisplay, strings: DEFAULT_FORM_STRINGS }}>
         <ThemeContext.Provider value={finalTheme}>
           <FormContext.Provider value={form as any}>
             <RenderFormField field={field} formReadOnly={formReadOnly} formReadOnlyStyle={formReadOnlyStyle} />

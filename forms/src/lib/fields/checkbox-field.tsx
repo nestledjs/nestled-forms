@@ -3,7 +3,7 @@
 import clsx from 'clsx'
 import React from 'react'
 import { Controller } from 'react-hook-form'
-import { useFormTheme, FormField, FormFieldProps, FormFieldType, DEFAULT_REQUIRED_ERROR_MESSAGE } from '@nestledjs/forms-core'
+import { useFormTheme, useFormConfig, FormField, FormFieldProps, FormFieldType, FormStrings } from '@nestledjs/forms-core'
 
 type CheckboxFieldType = Extract<FormField, { type: FormFieldType.Checkbox }>
 
@@ -43,7 +43,7 @@ function renderHelpText(options: any, theme: any) {
   return <div className={clsx(theme.helpText)}>{options.helpText}</div>
 }
 
-function renderReadOnlyInput(field: CheckboxFieldType, options: any, theme: any, value: any, effectiveReadOnlyStyle = 'value') {
+function renderReadOnlyInput(field: CheckboxFieldType, options: any, theme: any, value: any, strings: FormStrings, effectiveReadOnlyStyle = 'value') {
   if (effectiveReadOnlyStyle === 'disabled') {
     return (
       <input
@@ -60,20 +60,20 @@ function renderReadOnlyInput(field: CheckboxFieldType, options: any, theme: any,
 
   // For 'value' style, always render visible text 'Yes' or 'No' (no icon)
   if (effectiveReadOnlyStyle === 'value') {
-    return <div className={theme.readOnly}>{value ? 'Yes' : 'No'}</div>
+    return <div className={theme.readOnly}>{value ? strings.readOnlyYes : strings.readOnlyNo}</div>
   }
 
   // fallback: if you ever add more styles, handle them here
-  return <div className={theme.readOnly}>{value ? 'Yes' : 'No'}</div>
+  return <div className={theme.readOnly}>{value ? strings.readOnlyYes : strings.readOnlyNo}</div>
 }
 
-function renderReadOnlyState(props: CheckboxFieldProps, theme: any, value: any) {
+function renderReadOnlyState(props: CheckboxFieldProps, theme: any, value: any, strings: FormStrings) {
   const { field, formReadOnlyStyle } = props
   const options = field.options
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle ?? 'value'
   const labelNode = renderLabel(field, options, theme)
   const helpTextNode = renderHelpText(options, theme)
-  const inputNode = renderReadOnlyInput(field, options, theme, value, effectiveReadOnlyStyle)
+  const inputNode = renderReadOnlyInput(field, options, theme, value, strings, effectiveReadOnlyStyle)
 
   return (
     <div className={clsx(theme.wrapper, options.wrapperClassNames)}>
@@ -86,7 +86,7 @@ function renderReadOnlyState(props: CheckboxFieldProps, theme: any, value: any) 
   )
 }
 
-function renderControlledInput(props: CheckboxFieldProps, theme: any, inputRef: React.RefObject<HTMLInputElement | null>) {
+function renderControlledInput(props: CheckboxFieldProps, theme: any, inputRef: React.RefObject<HTMLInputElement | null>, strings: FormStrings) {
   const { field, form, hasError } = props
   const options = field.options
 
@@ -95,7 +95,7 @@ function renderControlledInput(props: CheckboxFieldProps, theme: any, inputRef: 
       name={field.key}
       control={form.control}
       defaultValue={options.defaultValue}
-      rules={{ required: options.required ? DEFAULT_REQUIRED_ERROR_MESSAGE : false }}
+      rules={{ required: options.required ? (options.errorMessages?.required || strings.requiredError) : false }}
       render={({ field: controllerField }) => (
         <input
           id={field.key}
@@ -143,6 +143,7 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
   const { field, form, formReadOnly = false } = props
   const options = field.options
   const theme = useFormTheme().checkbox
+  const { strings } = useFormConfig()
   const isReadOnly = options.readOnly ?? formReadOnly
   const value = form.getValues(field.key)
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -150,10 +151,10 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
   useIndeterminateEffect(inputRef, options.indeterminate ?? false)
 
   if (isReadOnly) {
-    return renderReadOnlyState(props, theme, value)
+    return renderReadOnlyState(props, theme, value, strings)
   }
 
-  const inputNode = renderControlledInput(props, theme, inputRef)
+  const inputNode = renderControlledInput(props, theme, inputRef, strings)
 
   return renderStandardLayout(props, inputNode, theme)
 }

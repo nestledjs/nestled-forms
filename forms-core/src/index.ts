@@ -30,8 +30,8 @@ export { FieldConditionalWrapper } from './lib/conditional-field-wrapper'
 
 // Contexts
 export { FormContext, useFormContext } from './lib/form-context'
-export { FormConfigContext, useFormConfig } from './lib/form-config-context'
-export type { FormConfig } from './lib/form-config-context'
+export { FormConfigContext, useFormConfig, DEFAULT_FORM_STRINGS, resolveFormStrings } from './lib/form-config-context'
+export type { FormConfig, FormStrings } from './lib/form-config-context'
 export { ThemeContext, useFormTheme } from './lib/theme-context'
 
 // Search query adapter contract (Apollo adapter lives in '@nestledjs/forms-core/apollo')

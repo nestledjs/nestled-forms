@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native'
 import { Controller } from 'react-hook-form'
-import { FormField, FormFieldProps, FormFieldType, SelectOption } from '@nestledjs/forms-core'
+import { FormField, FormFieldProps, FormFieldType, SelectOption, useFormConfig } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
 let Dropdown: any = null
@@ -21,6 +21,7 @@ export function SelectField({
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const theme = useNativeTheme().selectField
+  const { strings } = useFormConfig()
   const options: SelectOption[] = field.options.options || []
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
@@ -47,7 +48,7 @@ export function SelectField({
             valueField="value"
             value={value ? String(value) : null}
             disable={true}
-            placeholder={field.options.placeholder || 'Select...'}
+            placeholder={field.options.placeholder || strings.selectPlaceholder}
             style={[theme.container, theme.disabled, hasError && theme.error]}
             placeholderStyle={theme.placeholder}
             selectedTextStyle={theme.selectedText}
@@ -85,7 +86,7 @@ export function SelectField({
             }}
             onBlur={controllerField.onBlur}
             disable={field.options.disabled}
-            placeholder={field.options.placeholder || 'Select...'}
+            placeholder={field.options.placeholder || strings.selectPlaceholder}
             style={[theme.container, field.options.disabled && theme.disabled, hasError && theme.error]}
             placeholderStyle={theme.placeholder}
             selectedTextStyle={theme.selectedText}

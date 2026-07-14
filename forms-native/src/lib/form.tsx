@@ -9,10 +9,12 @@ import {
   FormThemeSchema,
   buildFieldsResolver,
   createSubmitHandler,
+  resolveFormStrings,
   deepEqual,
+  type FormStrings,
+  type FormConfig,
 } from '@nestledjs/forms-core'
 import { NativeFormSubmitContext } from './native-form-submit-context'
-import type { FormConfig } from '@nestledjs/forms-core'
 import { ZodTypeAny } from 'zod'
 import { NativeThemeContext } from './native-theme-context'
 import { NativeTheme } from './themes/default'
@@ -40,6 +42,8 @@ export interface NativeFormProps<T extends FieldValues = Record<string, unknown>
   readOnlyStyle?: 'value' | 'disabled'
   nativeTheme?: DeepPartial<NativeTheme>
   labelDisplay?: 'all' | 'default' | 'none'
+  /** Override any user-facing strings (localization). Merged over English defaults. */
+  strings?: Partial<FormStrings>
   schema?: ZodTypeAny
   validationGroup?: string
   validationGroups?: string[]
@@ -64,13 +68,15 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
   readOnlyStyle: formReadOnlyStyle = 'value',
   nativeTheme: userNativeTheme = EMPTY_NATIVE_THEME,
   labelDisplay = 'default',
+  strings,
   schema,
   validationGroup,
   validationGroups,
 }: Readonly<NativeFormProps<T>>) {
+  const formStrings = useMemo(() => resolveFormStrings(strings), [strings])
   const resolver = useMemo(
-    () => buildFieldsResolver<T>({ schema, fields, validationGroup }),
-    [schema, fields, validationGroup, validationGroups],
+    () => buildFieldsResolver<T>({ schema, fields, validationGroup, defaultRequiredMessage: formStrings.requiredError }),
+    [schema, fields, validationGroup, validationGroups, formStrings.requiredError],
   )
 
   const form = useForm<T>({
@@ -107,7 +113,10 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
     () => (userNativeTheme === EMPTY_NATIVE_THEME ? DEFAULT_FINAL_NATIVE_THEME : createFinalNativeTheme(userNativeTheme)),
     [userNativeTheme],
   )
-  const formConfig = useMemo<FormConfig>(() => ({ labelDisplay }), [labelDisplay])
+  const formConfig = useMemo<FormConfig>(
+    () => ({ labelDisplay, strings: formStrings }),
+    [labelDisplay, formStrings],
+  )
 
   return (
     <FormConfigContext.Provider value={formConfig}>

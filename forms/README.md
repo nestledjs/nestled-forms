@@ -317,6 +317,10 @@ FormFieldClass.dateTimePicker('field', { label: 'Date & Time' })
 FormFieldClass.timePicker('field', { label: 'Time' })
 
 // Search and select fields (v0.4.17+ with enhanced clear functionality)
+FormFieldClass.multiSelect('field', {
+  label: 'Multi Select',
+  options: [{ value: 'a', label: 'Option A' }, { value: 'b', label: 'Option B' }]
+})
 FormFieldClass.searchSelect('field', { 
   label: 'Search Select',
   options: [{ value: 'a', label: 'Option A' }],
@@ -354,6 +358,27 @@ FormFieldClass.custom('field', {
   )
 })
 ```
+
+## 🌍 Localization (strings)
+
+Every user-facing string the library renders — loading indicators, "No results found", the default required error, aria-labels — can be overridden per form via the `strings` prop. Untouched keys keep their English defaults:
+
+```tsx
+<Form
+  id="fr-form"
+  strings={{
+    requiredError: 'Ce champ est requis',
+    loading: 'Chargement...',
+    noResults: 'Aucun résultat',
+    selectPlaceholder: 'Sélectionnez une option...',
+    removeItem: (label) => `Supprimer ${label}`,
+  }}
+  fields={fields}
+  submit={handleSubmit}
+/>
+```
+
+See the `FormStrings` type in `@nestledjs/forms-core` for the full key list. Per-field `errorMessages.required` still wins over `strings.requiredError`. The same prop exists on `NativeForm`.
 
 ## 🚀 Apollo GraphQL Integration
 

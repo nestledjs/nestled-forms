@@ -2,6 +2,7 @@ import { ZodTypeAny, ZodError } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FieldValues, RegisterOptions, Resolver } from 'react-hook-form'
 import { BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
+import { DEFAULT_FORM_STRINGS } from '../form-config-context'
 
 // Helper function to create Zod validator
 function createZodValidator(schema: ZodTypeAny, errorMessages?: Record<string, string | undefined>) {
@@ -69,7 +70,8 @@ function isEmptyValue(value: any): boolean {
 async function validateField(
   field: { key: string; options: InputFieldOptions },
   value: any,
-  values: any
+  values: any,
+  defaultRequiredMessage = DEFAULT_FORM_STRINGS.requiredError
 ): Promise<{ type: string; message: string } | null> {
   const { options: fieldOptions } = field
 
@@ -83,7 +85,7 @@ async function validateField(
   if (isRequired && isEmptyValue(value)) {
     return {
       type: 'required',
-      message: fieldOptions.errorMessages?.required || 'This field is required'
+      message: fieldOptions.errorMessages?.required || defaultRequiredMessage
     }
   }
 
@@ -198,13 +200,15 @@ function createConditionalWrapper(
 export function createFieldValidation(
   field: InputFieldOptions,
   isRequired: boolean,
-  currentValidationGroup?: string
+  currentValidationGroup?: string,
+  defaultRequiredMessage = DEFAULT_FORM_STRINGS.requiredError
 ): RegisterOptions {
   const rules: RegisterOptions = {}
 
-  // Add required validation
+  // Add required validation (per-field errorMessages.required wins over the
+  // form-level/localized default)
   if (isRequired) {
-    rules.required = field.errorMessages?.required || 'This field is required'
+    rules.required = field.errorMessages?.required || defaultRequiredMessage
   }
 
   // Add Zod schema validation if present
@@ -244,7 +248,8 @@ export function createFieldValidation(
 export function createFormResolver<TFieldValues extends FieldValues = FieldValues>(
   schema?: ZodTypeAny,
   fields?: Array<{ key: string; options: InputFieldOptions }>,
-  currentValidationGroup?: string
+  currentValidationGroup?: string,
+  defaultRequiredMessage?: string
 ): Resolver<TFieldValues> | undefined {
   // Every field with any validation-relevant option must go through the
   // resolver: react-hook-form ignores register/Controller rules entirely once
@@ -282,7 +287,7 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
       Object.assign(errors, schemaResult.errors)
     }
 
-    await collectFieldErrors(fieldsNeedingValidation, values, currentValidationGroup, errors)
+    await collectFieldErrors(fieldsNeedingValidation, values, currentValidationGroup, errors, defaultRequiredMessage)
     await collectRegisteredRuleErrors(options.fields ?? {}, values, errors)
 
     return {
@@ -296,7 +301,8 @@ async function collectFieldErrors(
   fields: Array<{ key: string; options: InputFieldOptions }>,
   values: any,
   currentValidationGroup: string | undefined,
-  errors: Record<string, any>
+  errors: Record<string, any>,
+  defaultRequiredMessage?: string
 ): Promise<void> {
   for (const field of fields) {
     // Respect validateWhen and the active validation group (multi-step forms)
@@ -304,7 +310,7 @@ async function collectFieldErrors(
       continue
     }
 
-    const error = await validateField(field, values[field.key], values)
+    const error = await validateField(field, values[field.key], values, defaultRequiredMessage)
     if (error) {
       errors[field.key] = error
     }
@@ -361,8 +367,10 @@ export function buildFieldsResolver<TFieldValues extends FieldValues = FieldValu
   schema?: ZodTypeAny
   fields?: (FormFieldLike | null)[]
   validationGroup?: string
+  /** Localized fallback for required errors (per-field errorMessages.required wins) */
+  defaultRequiredMessage?: string
 }): Resolver<TFieldValues> | undefined {
-  const { schema, fields, validationGroup } = options
+  const { schema, fields, validationGroup, defaultRequiredMessage } = options
 
   const needsResolver = schema || fields?.some(f => {
     if (f?.type === FormFieldType.Button) return false // Never validate buttons
@@ -382,7 +390,8 @@ export function buildFieldsResolver<TFieldValues extends FieldValues = FieldValu
         key: f.key,
         options: f.options
       })),
-    validationGroup
+    validationGroup,
+    defaultRequiredMessage
   )
 }
 

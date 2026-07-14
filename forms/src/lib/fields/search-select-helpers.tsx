@@ -1,6 +1,6 @@
 'use client'
 
-import { SearchSelectOption } from '@nestledjs/forms-core'
+import { SearchSelectOption, useFormConfig } from '@nestledjs/forms-core'
 
 // Selected items component for multi-select
 export function SelectedItems({
@@ -12,6 +12,7 @@ export function SelectedItems({
   onChange: (items: SearchSelectOption[]) => void
   theme: any
 }>) {
+  const { strings } = useFormConfig()
   // Defensive check for undefined or null values
   const items = value ?? []
 
@@ -24,7 +25,7 @@ export function SelectedItems({
             type="button"
             className={theme.selectedItemRemoveButton}
             onClick={() => onChange(items.filter((v: SearchSelectOption) => v.value !== item.value))}
-            aria-label={`Remove ${item.label}`}
+            aria-label={strings.removeItem(item.label)}
           >
             <svg
               className={theme.selectedItemRemoveIcon}

@@ -5,7 +5,6 @@ import {
   FormFieldType,
   useFormContext,
   useFormConfig,
-  DEFAULT_REQUIRED_ERROR_MESSAGE,
   STATIC_CONDITIONAL_STATE,
   hasConditionalLogic,
   FieldConditionalWrapper,
@@ -47,6 +46,7 @@ function renderComponent(
   field: FormField,
   formReadOnly: boolean,
   formReadOnlyStyle: 'value' | 'disabled',
+  requiredError: string,
 ) {
   const hasError = !!form.formState.errors[field.key]
 
@@ -81,7 +81,7 @@ function renderComponent(
           form={form}
           field={field}
           hasError={hasError}
-          errorMessage={hasError ? (form.formState.errors[field.key]?.message as string) ?? DEFAULT_REQUIRED_ERROR_MESSAGE : undefined}
+          errorMessage={hasError ? (form.formState.errors[field.key]?.message as string) ?? requiredError : undefined}
           formReadOnly={formReadOnly}
           formReadOnlyStyle={formReadOnlyStyle}
         />
@@ -153,7 +153,7 @@ function RenderFormFieldInner({
   conditionalState,
 }: Readonly<RenderFormFieldProps & { conditionalState: ConditionalState }>) {
   const form = useFormContext()
-  const { labelDisplay } = useFormConfig()
+  const { labelDisplay, strings } = useFormConfig()
   const theme = useNativeTheme()
 
   if (!conditionalState.isVisible) {
@@ -161,7 +161,7 @@ function RenderFormFieldInner({
   }
 
   const error = form.formState.errors[field.key]
-  const errorMessage = (error?.message as string) ?? (error ? DEFAULT_REQUIRED_ERROR_MESSAGE : null)
+  const errorMessage = (error?.message as string) ?? (error ? strings.requiredError : null)
 
   // Label logic
   const hasLabelProp = !!field.options.label
@@ -189,7 +189,7 @@ function RenderFormFieldInner({
     }
   } as FormField
 
-  const component = renderComponent(form, modifiedField, formReadOnly, formReadOnlyStyle)
+  const component = renderComponent(form, modifiedField, formReadOnly, formReadOnlyStyle, strings.requiredError)
 
   const labelComponent = showLabel && (
     <FormLabel fieldKey={field.key} label={field.options.label ?? ''} required={finalRequired} />

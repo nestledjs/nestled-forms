@@ -3,7 +3,7 @@
 import clsx from 'clsx'
 import React from 'react'
 import { Controller } from 'react-hook-form'
-import { useFormTheme, FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
+import { useFormTheme, useFormConfig, FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 
 // Helper to render the disabled style checkbox
 function renderDisabledCheckbox(
@@ -31,18 +31,18 @@ function renderDisabledCheckbox(
 }
 
 // Helper to render the icon-based read-only display
-function renderReadOnlyIcon(icon: React.ReactNode, value: any) {
+function renderReadOnlyIcon(icon: React.ReactNode, value: any, yes: string, no: string) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center' }}>
       {icon}
-      <span className="sr-only">{value ? 'Yes' : 'No'}</span>
+      <span className="sr-only">{value ? yes : no}</span>
     </span>
   )
 }
 
 // Helper to render plain text read-only value
-function renderReadOnlyText(theme: any, value: any) {
-  return <div className={theme.readOnly}>{value ? 'Yes' : 'No'}</div>
+function renderReadOnlyText(theme: any, value: any, yes: string, no: string) {
+  return <div className={theme.readOnly}>{value ? yes : no}</div>
 }
 
 // Icons config for read-only rendering
@@ -59,27 +59,28 @@ function getReadOnlyContent(
   theme: any,
   hasError: boolean | undefined,
   value: any,
-  icons: ReadOnlyIcons
+  icons: ReadOnlyIcons,
+  strings: { readOnlyYes: string; readOnlyNo: string }
 ) {
   if (effectiveReadOnlyStyle === 'disabled') {
     return renderDisabledCheckbox(theme, hasError, value, icons.checked, icons.unchecked)
   }
 
   if (effectiveReadOnlyStyle === 'value') {
-    return renderReadOnlyText(theme, value)
+    return renderReadOnlyText(theme, value, strings.readOnlyYes, strings.readOnlyNo)
   }
 
   // Icon-based display
   if (value && icons.readonlyChecked) {
-    return renderReadOnlyIcon(icons.readonlyChecked, value)
+    return renderReadOnlyIcon(icons.readonlyChecked, value, strings.readOnlyYes, strings.readOnlyNo)
   }
 
   if (!value && icons.readonlyUnchecked) {
-    return renderReadOnlyIcon(icons.readonlyUnchecked, value)
+    return renderReadOnlyIcon(icons.readonlyUnchecked, value, strings.readOnlyYes, strings.readOnlyNo)
   }
 
   // Fallback to text
-  return renderReadOnlyText(theme, value)
+  return renderReadOnlyText(theme, value, strings.readOnlyYes, strings.readOnlyNo)
 }
 
 export function CustomCheckboxField({
@@ -94,6 +95,7 @@ export function CustomCheckboxField({
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
   const theme = useFormTheme().customCheckbox
+  const { strings } = useFormConfig()
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
@@ -123,7 +125,8 @@ export function CustomCheckboxField({
       theme,
       hasError,
       value,
-      { checked: checkedIcon, unchecked: uncheckedIcon, readonlyChecked: readonlyCheckedIcon, readonlyUnchecked: readonlyUncheckedIcon }
+      { checked: checkedIcon, unchecked: uncheckedIcon, readonlyChecked: readonlyCheckedIcon, readonlyUnchecked: readonlyUncheckedIcon },
+      strings
     )
 
     return (

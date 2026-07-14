@@ -302,6 +302,10 @@ export class FormFieldClass {
     return this.field(FormFieldType.EnumSelect, key, options)
   }
 
+  static multiSelect(key: string, options: SelectOptions): FormField {
+    return this.field(FormFieldType.MultiSelect, key, options)
+  }
+
   static searchSelect(key: string, options: SearchSelectOptions): FormField {
     return this.field(FormFieldType.SearchSelect, key, options)
   }
