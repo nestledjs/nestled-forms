@@ -10,9 +10,11 @@ import {
   buildFieldsResolver,
   createSubmitHandler,
   deepEqual,
+  resolveFormStrings,
+  type FormTheme,
+  type FormConfig,
+  type FormStrings,
 } from '@nestledjs/forms-core'
-import type { FormTheme, FormConfig, FormStrings } from '@nestledjs/forms-core'
-import { resolveFormStrings } from '@nestledjs/forms-core'
 import clsx from 'clsx'
 import { RenderFormField } from './render-form-field'
 import { createFinalTheme } from './utils/resolve-theme'

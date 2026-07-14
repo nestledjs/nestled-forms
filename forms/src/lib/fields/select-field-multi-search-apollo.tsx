@@ -5,7 +5,6 @@ import {
   FormFieldProps,
   FormFieldType,
   SearchSelectOption,
-  multiSelectSubmitTransform,
   useFormTheme,
   useSearchSelect,
 } from '@nestledjs/forms-core'
@@ -39,12 +38,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
  * const transformedValues = multiSelectSubmitTransform(formValues.selectedItems)
  * ```
  */
-export { multiSelectSubmitTransform }
+export { multiSelectSubmitTransform } from '@nestledjs/forms-core'
 
 /**
  * @deprecated Use multiSelectSubmitTransform instead. This alias is kept for backward compatibility.
  */
-export const apolloMultiSelectSubmitTransform = multiSelectSubmitTransform
+export { multiSelectSubmitTransform as apolloMultiSelectSubmitTransform } from '@nestledjs/forms-core'
 
 type RequiredItemShape = { id: string; name?: string; firstName?: string; lastName?: string }
 
