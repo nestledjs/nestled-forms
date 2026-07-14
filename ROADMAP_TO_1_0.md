@@ -1,6 +1,6 @@
 # Roadmap to 1.0 — working plan
 
-_Last updated: 2026-07-14. This file is local/untracked; commit it if you want it in the repo._
+_Last updated: 2026-07-14. Committed on develop; update it as tasks complete._
 
 ## Where things stand
 
