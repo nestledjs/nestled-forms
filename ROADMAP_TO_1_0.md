@@ -1,25 +1,22 @@
 # Roadmap to 1.0 — working plan
 
-_Last updated: 2026-07-14. Committed on develop; update it as tasks complete._
+_Last updated: 2026-07-14 (late). Committed on develop; update it as tasks complete._
 
 ## Where things stand
 
-Four PRs are open, all fully green (CI, SonarCloud gate **and** zero open Sonar issues, GitGuardian):
+**All four PRs are MERGED** into their repos' `develop` branches (each was fully green: CI, SonarCloud gate, zero open Sonar issues, GitGuardian). Feature branches deleted, local repos synced.
 
-| PR | Branch | Contents | Base |
-|---|---|---|---|
-| [nestled-forms #4](https://github.com/nestledjs/nestled-forms/pull/4) | `jbh/apollo-adapter-and-audit-hardening` | Apollo optional via adapter subpaths; all critical audit fixes (native submit, submitTransform defaults, resolver required-enforcement, timezone bugs, 414→114 KB bundle, markdown XSS, a11y errors); review-feedback + dedup + Sonar-smell fixes | `develop` |
-| [nestled-forms #5](https://github.com/nestledjs/nestled-forms/pull/5) | `jbh/i18n-strings-and-multiselect-factory` | Localization (`strings` prop on Form/NativeForm, `FormStrings` in forms-core) + `FormFieldClass.multiSelect` | #4 branch |
-| [nestled-forms #6](https://github.com/nestledjs/nestled-forms/pull/6) | `jbh/async-combobox-load-options` | `loadOptions` async search selects (REST/tRPC/fetch) + double-initial-fetch fix in SearchSelectBase | #5 branch |
-| [nestledforms.com #2](https://github.com/nestledjs/nestledforms.com/pull/2) | `jbh/docs-apollo-adapter-sync` | 9 doc pages synced to the new APIs | `develop` |
+Merged work, for reference:
+- [nestled-forms #4](https://github.com/nestledjs/nestled-forms/pull/4) — Apollo optional via adapter subpaths; all critical audit fixes (native submit, submitTransform defaults, resolver required-enforcement, timezone bugs, 414→114 KB bundle, markdown XSS, a11y errors); dedup shared helpers in forms-core.
+- [nestled-forms #5](https://github.com/nestledjs/nestled-forms/pull/5) — Localization (`strings` prop on Form/NativeForm, `FormStrings` in forms-core) + `FormFieldClass.multiSelect`.
+- [nestled-forms #6](https://github.com/nestledjs/nestled-forms/pull/6) — `loadOptions` async search selects (REST/tRPC/fetch) + double-initial-fetch fix in SearchSelectBase.
+- [nestledforms.com #2](https://github.com/nestledjs/nestledforms.com/pull/2) — 9 doc pages synced to the new APIs.
 
-### First action next session: merge day
+### First actions next session
 
-1. Merge **#4**, then **#5** (GitHub auto-retargets it to `develop`), then **#6**.
-2. Merge **nestledforms.com #2** (it documents #4's APIs — after the library PRs).
-3. Delete the three `jbh/` branches; `git checkout develop && git pull`.
-4. Verify develop CI is green.
-5. Note: docs for the **#5/#6 features** (strings prop, loadOptions) are in the library READMEs but **not yet on nestledforms.com** — fold into the next docs batch (see "docs cadence" below).
+1. Verify develop CI is green post-merge in both repos.
+2. Start **#13 Slider field** (list below), branching off fresh `develop`.
+3. Docs debt: the **strings prop and loadOptions** features are documented in the library READMEs but **not yet on nestledforms.com** — fold into the next docs batch.
 
 ## Remaining feature tasks (session task list #13–#20)
 
