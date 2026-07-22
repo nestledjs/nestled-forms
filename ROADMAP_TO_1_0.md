@@ -1,8 +1,10 @@
 # Roadmap to 1.0 — working plan
 
-_Last updated: 2026-07-14 (late). Committed on develop; update it as tasks complete._
+_Last updated: 2026-07-22. Committed on develop; update it as tasks complete._
 
 ## Where things stand
+
+**🚀 0.8.0 SHIPPED (2026-07-22).** All three packages published to npm at **0.8.0** together (forms-core, forms, forms-native), carrying the merged breaking changes below. Used the two-phase publish (forms-core first, then flip pins + regen lockfile for forms/forms-native). Root `CHANGELOG.md` added; nestledforms.com now has the localization, async-select, and changelog pages (docs debt cleared). CI green on both repos.
 
 **All four PRs are MERGED** into their repos' `develop` branches (each was fully green: CI, SonarCloud gate, zero open Sonar issues, GitGuardian). Feature branches deleted, local repos synced.
 
@@ -14,9 +16,9 @@ Merged work, for reference:
 
 ### First actions next session
 
-1. Verify develop CI is green post-merge in both repos.
-2. Start **#13 Slider field** (list below), branching off fresh `develop`.
-3. Docs debt: the **strings prop and loadOptions** features are documented in the library READMEs but **not yet on nestledforms.com** — fold into the next docs batch.
+1. ~~Verify develop CI is green post-merge in both repos.~~ ✅ Done. 0.8.0 published.
+2. ~~Docs debt: strings prop and loadOptions not yet on nestledforms.com.~~ ✅ Done — `/docs/localization`, `/docs/web/async-select`, `/docs/changelog` live.
+3. Start **#13 Slider field** (list below), branching off fresh `develop`. Next published release would be 0.9.0 (or the 1.0 line per #20).
 
 ## Remaining feature tasks (session task list #13–#20)
 
