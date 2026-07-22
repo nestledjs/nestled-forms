@@ -1229,7 +1229,18 @@ MIT License - see LICENSE file for details.
 
 ## 📝 Changelog
 
-### v0.4.17 (Latest)
+See the repository [CHANGELOG.md](../CHANGELOG.md) for the full history.
+
+### v0.8.0 (Latest)
+- ⚠️ **Breaking: Apollo is no longer bundled.** Search selects use a pluggable adapter; wrap your app in `<ApolloSearchProvider>` from `@nestledjs/forms/apollo` (or provide your own via `<SearchQueryProvider>` from `@nestledjs/forms-core`). Bundle dropped ~414 KB → ~114 KB.
+- ⚠️ **Breaking: phone field moved to the `@nestledjs/forms/phone` subpath.**
+- ⚠️ **Breaking: required-only fields now enforce validation**, and native/`noValidate` error display now routes through the theme.
+- ✨ **Localization** via the `strings` prop on `Form`/`NativeForm` (`FormStrings` in `@nestledjs/forms-core`).
+- ✨ **`FormFieldClass.multiSelect(...)`** factory.
+- ✨ **`loadOptions` async search selects** (REST/tRPC/fetch — no GraphQL required).
+- 🐛 Markdown XSS hardening, timezone fixes, a11y fixes, double-initial-fetch fix.
+
+### v0.4.17
 - ✨ **Enhanced Search Select Clear Functionality**
   - Added clear button (X icon) for single select fields
   - Implemented manual text deletion to clear selections
