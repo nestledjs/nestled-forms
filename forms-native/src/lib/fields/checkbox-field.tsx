@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, useFormConfig } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -60,7 +60,7 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
   const checkboxTheme = theme.checkbox
   const isReadOnly = options.readOnly ?? formReadOnly
   const readOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key)
+  const value = useWatch({ control: form.control, name: field.key })
 
   const CheckboxComponent = ExpoCheckbox || FallbackCheckbox
 

@@ -2,7 +2,7 @@
 
 import clsx from 'clsx'
 import React from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { useFormTheme, useFormConfig, FormField, FormFieldProps, FormFieldType, FormStrings } from '@nestledjs/forms-core'
 
 type CheckboxFieldType = Extract<FormField, { type: FormFieldType.Checkbox }>
@@ -145,7 +145,7 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
   const theme = useFormTheme().checkbox
   const { strings } = useFormConfig()
   const isReadOnly = options.readOnly ?? formReadOnly
-  const value = form.getValues(field.key)
+  const value = useWatch({ control: form.control, name: field.key })
   const inputRef = React.useRef<HTMLInputElement>(null)
 
   useIndeterminateEffect(inputRef, options.indeterminate ?? false)

@@ -187,7 +187,7 @@ Create the actual React component that renders your field:
 
 ```typescript
 import React from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType } from '../form-types'
 import { useFormTheme } from '../theme-context'
@@ -208,9 +208,15 @@ export function YourNewField({
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
 
+  // Read the value with useWatch, never form.getValues(). getValues() is a
+  // one-shot read that creates no subscription, so anything rendered from it
+  // goes stale the moment something else calls setValue on this field. Note the
+  // hook is called unconditionally, above the read-only branch — hooks must not
+  // sit behind a condition or an early return.
+  const value = useWatch({ control: form.control, name: field.key })
+
   // Handle read-only rendering
   if (isReadOnly) {
-    const value = form.getValues(field.key)
     const displayValue = value || '—'
 
     if (readOnlyStyle === 'disabled') {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import PhoneInput, { isPossiblePhoneNumber, type Country } from 'react-phone-number-input'
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
@@ -44,7 +44,7 @@ export function PhoneField({
 
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {

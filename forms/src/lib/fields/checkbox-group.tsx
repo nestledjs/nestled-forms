@@ -1,6 +1,6 @@
 'use client'
 
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, CheckboxGroupOption, CheckboxGroupOptions, useFormTheme, useFormConfig } from '@nestledjs/forms-core'
 
@@ -33,6 +33,7 @@ export function CheckboxGroupField({
   // Determine read-only state with field-level precedence
   const isReadOnly = options.readOnly ?? formReadOnly
   const readOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
+  const watchedValue = useWatch({ control: form.control, name: field.key })
 
   // Get separator for value parsing (default: comma)
   const separator = options.valueSeparator ?? ','
@@ -126,7 +127,7 @@ export function CheckboxGroupField({
 
   // Handle read-only rendering
   function renderReadOnly() {
-    const value = form.getValues(field.key)
+    const value = watchedValue
     const selectedValues = stringToArray(value, separator)
     const selectedOptions = options.checkboxOptions.filter(opt => 
       selectedValues.includes(String(opt.value))

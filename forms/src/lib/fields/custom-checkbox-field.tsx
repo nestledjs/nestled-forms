@@ -2,7 +2,7 @@
 
 import clsx from 'clsx'
 import React from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { useFormTheme, useFormConfig, FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 
 // Helper to render the disabled style checkbox
@@ -99,7 +99,7 @@ export function CustomCheckboxField({
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key)
+  const value = useWatch({ control: form.control, name: field.key })
 
   const labelNode = options.label ? (
     <label

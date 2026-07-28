@@ -3,6 +3,7 @@
 import { FormFieldProps, FormField, FormFieldType, useFormTheme } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { SelectedItems } from './search-select-helpers'
+import { useWatch } from 'react-hook-form'
 
 export function SelectFieldMulti({
   form,
@@ -16,7 +17,7 @@ export function SelectFieldMulti({
 }>) {
   const theme = useFormTheme()
 
-  const value = form.getValues(field.key) ?? []
+  const value = useWatch({ control: form.control, name: field.key }) ?? []
 
   // Convert SelectOption[] to SearchSelectOption[] by ensuring values are strings
   const searchOptions = (field.options?.options ?? []).map((option) => ({

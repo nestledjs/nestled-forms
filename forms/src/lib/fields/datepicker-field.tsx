@@ -2,7 +2,7 @@
 
 import clsx from 'clsx'
 import { useEffect } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { useFormTheme, FormField, FormFieldProps, FormFieldType, formatDateFromDateTime, getDateFromDateTime } from '@nestledjs/forms-core'
 
 export function DatePickerField({
@@ -34,7 +34,7 @@ export function DatePickerField({
 
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
   const helpText = (options as any).helpText
   const helpTextClass = useFormTheme().checkbox.helpText
   const describedByIds = []

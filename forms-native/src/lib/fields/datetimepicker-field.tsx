@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View, Text, Pressable, Platform } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import {
   FormField,
   FormFieldProps,
@@ -34,7 +34,7 @@ export function DateTimePickerField({
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
   const [tempDate, setTempDate] = useState<Date | null>(null)

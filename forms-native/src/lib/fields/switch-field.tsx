@@ -1,5 +1,5 @@
 import { View, Text, Switch } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -16,7 +16,7 @@ export function SwitchField({
   const theme = useNativeTheme()
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key)
+  const value = useWatch({ control: form.control, name: field.key })
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {

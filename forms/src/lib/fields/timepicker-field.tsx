@@ -2,6 +2,7 @@
 
 import clsx from 'clsx'
 import { FormFieldProps, FormFieldType, BaseFieldOptions, useFormTheme } from '@nestledjs/forms-core'
+import { useWatch } from 'react-hook-form'
 
 interface TimePickerFieldType {
   key: string
@@ -13,7 +14,7 @@ export function TimePickerField({ form, field, hasError, formReadOnly = false, f
   const theme = useFormTheme()
   const isReadOnly = field.options.readOnly ?? formReadOnly;
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle;
-  const value = form.getValues(field.key) ?? '';
+  const value = useWatch({ control: form.control, name: field.key }) ?? '';
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {

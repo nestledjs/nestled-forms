@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Text } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, useFormConfig, useLoadOptions } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -32,7 +32,7 @@ export function SelectFieldSearch({
   const onSearchText = usingLoadOptions ? asyncSearch.handleSearchChange : field.options.onSearchChange
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key)
+  const value = useWatch({ control: form.control, name: field.key })
 
   if (!Dropdown) {
     return (

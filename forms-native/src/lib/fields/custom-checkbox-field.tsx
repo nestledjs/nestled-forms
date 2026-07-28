@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, useFormConfig } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -19,7 +19,7 @@ export function CustomCheckboxField({
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key)
+  const value = useWatch({ control: form.control, name: field.key })
 
   const checkedIcon = options.checkedIcon ?? <Text style={{ fontSize: 20 }}>☑</Text>
   const uncheckedIcon = options.uncheckedIcon ?? <Text style={{ fontSize: 20 }}>☐</Text>

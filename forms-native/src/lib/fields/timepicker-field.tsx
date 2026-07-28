@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View, Text, Pressable, Platform } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormFieldProps, FormFieldType, BaseFieldOptions } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -30,7 +30,7 @@ export function TimePickerField({
   const theme = useNativeTheme().timePicker
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
   const [showPicker, setShowPicker] = useState(false)
 
   if (!DateTimePicker) {

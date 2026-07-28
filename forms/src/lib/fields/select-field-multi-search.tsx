@@ -3,6 +3,7 @@
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useLoadOptions } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { SelectedItems, multiSelectDisplayValue } from './search-select-helpers'
+import { useWatch } from 'react-hook-form'
 
 export function SelectFieldMultiSearch({
   form,
@@ -16,7 +17,7 @@ export function SelectFieldMultiSearch({
 }>) {
   const theme = useFormTheme()
 
-  const value = form.getValues(field.key) ?? []
+  const value = useWatch({ control: form.control, name: field.key }) ?? []
 
   // loadOptions mode: the hook manages options/loading/search; the input's own
   // debounce (SearchSelectBase) already paces calls, so debounceMs is 0

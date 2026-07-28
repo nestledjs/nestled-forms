@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import clsx from 'clsx'
 import { FormFieldProps, FormField, FormFieldType, RadioOption, RadioFormFieldOptions, useFormTheme } from '@nestledjs/forms-core'
 
@@ -138,7 +138,7 @@ export function RadioField(
 
   const isReadOnly = options.readOnly ?? props.formReadOnly
   const readOnlyStyle = options.readOnlyStyle ?? props.formReadOnlyStyle
-  const value = props.form.getValues(props.field.key)
+  const value = useWatch({ control: props.form.control, name: props.field.key })
   const selectedOption = options.radioOptions?.find((o) => o.value === value)
 
   function getInputClassName(option: RadioOption, isChecked: boolean) {

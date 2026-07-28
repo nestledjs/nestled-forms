@@ -3,6 +3,7 @@
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme } from '@nestledjs/forms-core'
 import { fieldA11yProps } from './field-a11y'
+import { useWatch } from 'react-hook-form'
 
 export function TextAreaField({
   form,
@@ -17,7 +18,7 @@ export function TextAreaField({
   const theme = useFormTheme()
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {

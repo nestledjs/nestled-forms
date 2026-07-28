@@ -18,11 +18,11 @@ export function MoneyField({
   const currencyConfig = resolveCurrencyConfig(field.options.currency, field.options.customCurrency)
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
-
   const hideSymbolWhenEmpty = field.options.hideSymbolWhenEmpty ?? true
-  // useWatch keeps the symbol visibility in sync with the form state, including reset()/setValue
+  // useWatch keeps the value and symbol visibility in sync with the form state,
+  // including reset()/setValue
   const watchedValue = useWatch({ control: form.control, name: field.key })
+  const value = watchedValue ?? ''
   const hasContent = watchedValue !== '' && watchedValue !== null && watchedValue !== undefined
 
   const initialValue = useTextFieldDefault(form, field)

@@ -3,6 +3,7 @@ import { TextInput, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 import { useTextFieldDefault } from '../hooks/use-text-field-default'
+import { useWatch } from 'react-hook-form'
 
 export function TextAreaField({
   form,
@@ -17,7 +18,7 @@ export function TextAreaField({
   const theme = useNativeTheme()
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
   const rows = field.options.rows ?? 4
   const [height, setHeight] = useState(rows * 20)
 

@@ -3,6 +3,7 @@
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
 import { fieldA11yProps } from './field-a11y'
+import { useWatch } from 'react-hook-form'
 
 export function EmailField({
   form,
@@ -21,7 +22,7 @@ export function EmailField({
   // Determine read-only state with field-level precedence
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
 
   // Get validation rules including Zod schema and cross-field validation
   const validationRules = useFieldValidation(

@@ -3,6 +3,7 @@
 import { FormField, FormFieldProps, FormFieldType, useLoadOptions } from '@nestledjs/forms-core'
 import { SearchSelectBase } from './search-select-base'
 import { singleSelectDisplayValue } from './search-select-helpers'
+import { useWatch } from 'react-hook-form'
 
 export function SelectFieldSearch({
   form,
@@ -14,7 +15,7 @@ export function SelectFieldSearch({
   formReadOnly?: boolean
   formReadOnlyStyle?: 'value' | 'disabled'
 }>) {
-  const value = form.getValues(field.key)
+  const value = useWatch({ control: form.control, name: field.key })
 
   // loadOptions mode: the hook manages options/loading/search; the input's own
   // debounce (SearchSelectBase) already paces calls, so debounceMs is 0

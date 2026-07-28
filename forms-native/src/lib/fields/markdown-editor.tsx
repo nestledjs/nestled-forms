@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TextInput, Pressable, ScrollView } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -37,9 +37,10 @@ export function MarkdownEditor({
   const [mode, setMode] = useState<'edit' | 'preview'>('edit')
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
+  const watchedValue = useWatch({ control: form.control, name: field.key })
 
   if (isReadOnly) {
-    const value = form.getValues(field.key) ?? ''
+    const value = watchedValue ?? ''
 
     if (readOnlyStyle === 'disabled') {
       return (

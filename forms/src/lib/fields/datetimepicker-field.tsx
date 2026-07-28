@@ -2,7 +2,7 @@
 
 import clsx from 'clsx'
 import { useEffect } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import {
   useFormTheme,
   FormField,
@@ -44,7 +44,7 @@ export function DateTimePickerField({
 
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
 
   if (isReadOnly) {
     if (effectiveReadOnlyStyle === 'disabled') {

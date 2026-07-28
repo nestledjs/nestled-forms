@@ -2,6 +2,7 @@ import { TextInput, View, Text } from 'react-native'
 import { FormField, FormFieldProps, FormFieldType } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 import { useTextFieldDefault } from '../hooks/use-text-field-default'
+import { useWatch } from 'react-hook-form'
 
 export function UrlField({
   form,
@@ -16,7 +17,7 @@ export function UrlField({
   const theme = useNativeTheme()
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
 
   const initialValue = useTextFieldDefault(form, field)
 

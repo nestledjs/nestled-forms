@@ -24,6 +24,20 @@
           "mode": "production"
         }
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "options": {
+        "command": "jest --config forms-native/jest.config.cjs --passWithNoTests",
+        "cwd": "{workspaceRoot}"
+      },
+      "configurations": {
+        "ci": {
+          "command": "jest --config forms-native/jest.config.cjs --passWithNoTests --ci"
+        }
+      }
     }
   }
 }

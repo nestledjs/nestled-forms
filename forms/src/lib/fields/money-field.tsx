@@ -30,12 +30,12 @@ export function MoneyField({
   // Determine read-only state with field-level precedence
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? ''
 
   // Track if input has content (to show/hide currency symbol).
   // useWatch keeps this in sync with the form state, including reset()/setValue.
   const hideSymbolWhenEmpty = field.options.hideSymbolWhenEmpty ?? true
   const watchedValue = useWatch({ control: form.control, name: field.key })
+  const value = watchedValue ?? ''
   const hasContent = watchedValue !== '' && watchedValue !== null && watchedValue !== undefined
 
   // Determine if symbol should be shown

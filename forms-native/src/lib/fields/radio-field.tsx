@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { View, Text, Pressable, TextInput } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormFieldProps, FormField, FormFieldType, RadioOption, RadioFormFieldOptions } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -32,7 +32,7 @@ export function RadioField(
 
   const isReadOnly = options.readOnly ?? props.formReadOnly
   const readOnlyStyle = options.readOnlyStyle ?? props.formReadOnlyStyle
-  const value = props.form.getValues(props.field.key)
+  const value = useWatch({ control: props.form.control, name: props.field.key })
   const selectedOption = options.radioOptions?.find(o => o.value === value)
   const radioTheme = theme.radioField
 

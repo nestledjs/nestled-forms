@@ -1,7 +1,7 @@
 'use client'
 
 import React, { lazy, Suspense, useCallback, useEffect } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme } from '@nestledjs/forms-core'
 import type { MDXEditorMethods } from '@mdxeditor/editor'
@@ -451,10 +451,11 @@ export function MarkdownEditor({
   // Determine the read-only state with field-level precedence
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
+  const watchedValue = useWatch({ control: form.control, name: field.key })
 
   // Handle read-only rendering
   if (isReadOnly) {
-    const value = form.getValues(field.key) ?? ''
+    const value = watchedValue ?? ''
 
     if (readOnlyStyle === 'disabled') {
       return (

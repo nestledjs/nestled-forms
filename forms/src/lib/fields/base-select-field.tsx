@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactElement, JSXElementConstructor } from 'react'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import clsx from 'clsx'
 import { ClientOnly } from '../utils/client-only'
 import { useFormTheme } from '@nestledjs/forms-core'
@@ -48,7 +48,9 @@ export function BaseSelectField({
   // Determine read-only state with field-level precedence
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key)
+  // `any` to match the previous getValues() typing: a select's form value can be
+  // a scalar or a whole option object depending on the field
+  const value: any = useWatch({ control: form.control, name: field.key })
   
   // Handle read-only rendering
   if (isReadOnly) {

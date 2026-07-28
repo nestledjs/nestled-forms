@@ -1,7 +1,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { Form } from './form'
-import { FormField, FormFieldClass, FormFieldType, CURRENCY_CONFIGS, parseCurrency } from '@nestledjs/forms-core'
+import {
+  FormField,
+  FormFieldClass,
+  FormFieldType,
+  CURRENCY_CONFIGS,
+  parseCurrency,
+  useFormContext,
+} from '@nestledjs/forms-core'
 
 // Note: fix 8 (native comma-decimal sanitizing in forms-native number/money fields)
 // is inline component logic in react-native TextInput handlers and is not exported,
@@ -198,5 +205,97 @@ describe('parseCurrency: ambiguous separators', () => {
   it('returns null for invalid input', () => {
     expect(parseCurrency('', USD)).toBeNull()
     expect(parseCurrency('abc', USD)).toBeNull()
+  })
+})
+
+describe('CustomField: render prop value stays in sync with form state', () => {
+  it('re-renders with the new value after the render prop calls onChange', () => {
+    render(
+      <Form
+        id="custom-onchange"
+        submit={vi.fn()}
+        fields={[
+          FormFieldClass.custom<string>('nickname', {
+            label: 'Nickname',
+            defaultValue: 'start',
+            customField: ({ value, onChange }) => (
+              <div>
+                <span data-testid="custom-value">{String(value)}</span>
+                <button type="button" onClick={() => onChange('changed')}>
+                  set
+                </button>
+              </div>
+            ),
+          }),
+        ]}
+      />,
+    )
+
+    expect(screen.getByTestId('custom-value').textContent).toBe('start')
+    fireEvent.click(screen.getByText('set'))
+    expect(screen.getByTestId('custom-value').textContent).toBe('changed')
+  })
+
+  it('re-renders when a sibling component writes to the custom field key', () => {
+    function SiblingWriter() {
+      const form = useFormContext()
+      return (
+        <button type="button" onClick={() => form.setValue('mirror', 'from-sibling')}>
+          write mirror
+        </button>
+      )
+    }
+
+    render(
+      <Form
+        id="custom-external-write"
+        submit={vi.fn()}
+        defaultValues={{ mirror: '' }}
+        fields={[
+          FormFieldClass.custom('writer', {
+            label: 'Writer',
+            customField: () => <SiblingWriter />,
+          }),
+          FormFieldClass.custom<string>('mirror', {
+            label: 'Mirror',
+            customField: ({ value }) => <span data-testid="mirror-value">{value || 'empty'}</span>,
+          }),
+        ]}
+      />,
+    )
+
+    expect(screen.getByTestId('mirror-value').textContent).toBe('empty')
+    fireEvent.click(screen.getByText('write mirror'))
+    expect(screen.getByTestId('mirror-value').textContent).toBe('from-sibling')
+  })
+
+  it('submits the value written through the render prop onChange', async () => {
+    const submit = vi.fn()
+    render(
+      <Form
+        id="custom-submit"
+        submit={submit}
+        fields={[
+          FormFieldClass.custom<string>('nickname', {
+            label: 'Nickname',
+            customField: ({ value, onChange }) => (
+              <div>
+                <span data-testid="submit-value">{String(value ?? '')}</span>
+                <button type="button" onClick={() => onChange('typed')}>
+                  set
+                </button>
+              </div>
+            ),
+          }),
+        ]}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('set'))
+    expect(screen.getByTestId('submit-value').textContent).toBe('typed')
+
+    fireEvent.submit(document.getElementById('custom-submit') as HTMLFormElement)
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
+    expect(submit.mock.calls[0][0].nickname).toBe('typed')
   })
 })

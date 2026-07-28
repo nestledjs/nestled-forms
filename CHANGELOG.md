@@ -4,6 +4,52 @@ All notable changes to the `@nestledjs/*` form packages are documented here.
 The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 `@nestledjs/forms-native` — are versioned together.
 
+## 0.8.1 — 2026-07-28
+
+Bug-fix release for `@nestledjs/forms` and `@nestledjs/forms-native`.
+`@nestledjs/forms-core` is unchanged and stays at 0.8.0.
+
+### 🐛 Fixes & hardening
+
+- **Field render paths are now reactive to `setValue`.** Fields read their value
+  with `form.getValues(field.key)` — a one-shot read that creates no
+  subscription — so anything rendered from it froze at first render. A write
+  from a sibling component (or any `setValue` that doesn't otherwise disturb
+  `formState`) updated form state but not the UI. `reset()` was never affected,
+  because it perturbs `formState` and re-renders the whole form, which is why
+  this mostly went unnoticed. Every render-path read in `@nestledjs/forms` and
+  `@nestledjs/forms-native` now goes through
+  `useWatch({ control: form.control, name: field.key })`. Reads inside
+  `useEffect` bodies and blur/change handlers are deliberately left as
+  `getValues` — those want a snapshot, not a subscription. Three concrete
+  symptoms fixed:
+  - **Custom fields were effectively write-only.** The `value` handed to the
+    `customField` render prop never changed, so a field that called its own
+    `onChange` could not display what the user had just entered. Any
+    `useWatch`/`useFormValue` workaround inside a custom field's own component is
+    now redundant (harmless to keep); watches for *other* fields' values are
+    still required.
+  - **Read-only fields showed stale values** after a sibling wrote to them.
+  - **Search-selects didn't show the new selection** when it was set externally.
+
+- **Read-only search-selects rendered blank.** Separately from the above, the
+  read-only path handed the raw form value (a scalar, e.g. `'x'`) to
+  `displayValue`, which expects a whole option object (`value?.label`) — so the
+  label resolved to `undefined` and nothing was displayed. Labels are now
+  resolved from `options`, and read-only multi-selects list their selected
+  labels instead of always rendering an empty string.
+
+### 🏗️ Internal
+
+- **`forms-native` now has a test suite.** It previously had no test target at
+  all. React Native ships Flow-typed source that Vite cannot parse, so the
+  package is tested with jest + React Native Testing Library
+  (`forms-native/jest.config.cjs`, wired up as its nx `test` target) while the
+  web packages stay on vitest. `nx affected -t test` — what CI runs — picks it
+  up automatically. Note this adds jest, `@testing-library/react-native`,
+  `test-renderer`, and `@react-native/babel-preset` as root devDependencies, so
+  the lockfile changes and CI's `--frozen-lockfile` install needs it committed.
+
 ## 0.8.0 — 2026-07-22
 
 First release since 0.7.8 (April 2026). This is a **breaking** release: the

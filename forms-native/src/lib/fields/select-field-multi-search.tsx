@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Text } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, useFormConfig, useLoadOptions } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -38,6 +38,8 @@ export function SelectFieldMultiSearch({
   const options = (usingLoadOptions ? asyncSearch.options : staticOptions).map(o => ({ label: o.label, value: o.value }))
   const isReadOnly = field.options.readOnly ?? formReadOnly
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
+  // hoisted above the early return below so the hook order stays stable
+  const watchedValue = useWatch({ control: form.control, name: field.key })
   if (!MultiSelect) {
     return (
       <View style={theme.container}>
@@ -49,7 +51,7 @@ export function SelectFieldMultiSearch({
   }
 
   if (isReadOnly) {
-    const value = form.getValues(field.key) ?? []
+    const value = watchedValue ?? []
     const selectedValues = Array.isArray(value) ? value.map(normalizeToString) : []
     const selectedLabels = options.filter(o => selectedValues.includes(o.value)).map(o => o.label)
 

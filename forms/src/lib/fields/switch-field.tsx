@@ -1,7 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, BaseFieldOptions, useFormTheme } from '@nestledjs/forms-core'
 
 type SwitchOptions = {
@@ -13,7 +13,7 @@ export function SwitchField({ form, field, hasError, formReadOnly = false, formR
   const theme = useFormTheme()
   const isReadOnly = field.options.readOnly ?? formReadOnly;
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle;
-  const value = form.getValues(field.key);
+  const value = useWatch({ control: form.control, name: field.key });
 
   if (isReadOnly) {
     if (readOnlyStyle === 'disabled') {

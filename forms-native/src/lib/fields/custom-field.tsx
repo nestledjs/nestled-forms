@@ -1,4 +1,5 @@
 import { View, Text, TextInput } from 'react-native'
+import { useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, CustomFieldRenderProps } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -17,7 +18,10 @@ export function CustomField<T = unknown>({
   const options = field.options
   const isReadOnly = options.readOnly ?? formReadOnly
   const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
-  const value = form.getValues(field.key) ?? options.defaultValue
+  // useWatch subscribes to this field, so the render prop receives the current value
+  // after onChange/setValue/reset. getValues() is a one-shot read and never re-renders.
+  const watchedValue = useWatch({ control: form.control, name: field.key })
+  const value = watchedValue ?? options.defaultValue
 
   if (isReadOnly) {
     let displayValue: string

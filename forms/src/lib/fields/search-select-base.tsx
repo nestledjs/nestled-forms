@@ -95,9 +95,24 @@ export function SearchSelectBase<TValue>({
     filteredOptions = options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()))
   }
 
-  // Custom read-only value renderer
+  // Custom read-only value renderer.
+  // The read-only path hands us the raw form value (a scalar, or an array of
+  // scalars when multiple), not the option object `displayValue` expects — so
+  // resolve labels from `options` here instead. Values that are already option
+  // objects are passed through, since some callers store the whole option.
+  const optionLabel = (raw: any): string => {
+    if (raw === null || raw === undefined || raw === '') return ''
+    if (typeof raw === 'object' && 'label' in raw) return String(raw.label)
+    const match = options.find((o) => String(o.value) === String(raw))
+    return match ? match.label : String(raw)
+  }
+
   const renderReadOnlyValue = (formValue: any) => {
-    return displayValue(formValue)
+    if (multiple) {
+      const items = Array.isArray(formValue) ? formValue : []
+      return items.map(optionLabel).filter(Boolean).join(', ')
+    }
+    return optionLabel(formValue)
   }
 
   // Single select handler

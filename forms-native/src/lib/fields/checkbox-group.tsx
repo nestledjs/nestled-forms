@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from 'react-native'
-import { Controller } from 'react-hook-form'
+import { Controller, useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, CheckboxGroupOption, CheckboxGroupOptions } from '@nestledjs/forms-core'
 import { useNativeTheme } from '../native-theme-context'
 
@@ -66,9 +66,10 @@ export function CheckboxGroupField({
   const readOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
   const separator = options.valueSeparator ?? ','
   const CheckboxComponent = ExpoCheckbox || FallbackCheckbox
+  const watchedValue = useWatch({ control: form.control, name: field.key })
 
   if (isReadOnly) {
-    const value = form.getValues(field.key)
+    const value = watchedValue
     const selectedValues = stringToArray(value, separator)
     const selectedOptions = options.checkboxOptions.filter(opt =>
       selectedValues.includes(String(opt.value))
