@@ -328,8 +328,8 @@ importers:
         specifier: ^3.39.1
         version: 3.48.0(@codemirror/language@6.11.3)(@lezer/highlight@1.2.3)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(yjs@13.6.27)
       '@nestledjs/forms-core':
-        specifier: 0.8.0
-        version: 0.8.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.21.1))(graphql@16.12.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(@hookform/resolvers@3.10.0(react-hook-form@7.66.0(react@19.2.8)))(dayjs@1.11.19)(react-hook-form@7.66.0(react@19.2.8))(react@19.2.8)(zod@3.25.76)
+        specifier: 0.9.0
+        version: 0.9.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.21.1))(graphql@16.12.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(@hookform/resolvers@3.10.0(react-hook-form@7.66.0(react@19.2.8)))(dayjs@1.11.19)(react-hook-form@7.66.0(react@19.2.8))(react@19.2.8)(zod@3.25.76)
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -382,8 +382,8 @@ importers:
         specifier: ^3.0.0
         version: 3.10.0(react-hook-form@7.66.0(react@19.2.8))
       '@nestledjs/forms-core':
-        specifier: 0.8.0
-        version: 0.8.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.21.1))(graphql@16.12.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(@hookform/resolvers@3.10.0(react-hook-form@7.66.0(react@19.2.8)))(dayjs@1.11.19)(react-hook-form@7.66.0(react@19.2.8))(react@19.2.8)(zod@3.25.76)
+        specifier: 0.9.0
+        version: 0.9.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.21.1))(graphql@16.12.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(@hookform/resolvers@3.10.0(react-hook-form@7.66.0(react@19.2.8)))(dayjs@1.11.19)(react-hook-form@7.66.0(react@19.2.8))(react@19.2.8)(zod@3.25.76)
       '@react-native-community/datetimepicker':
         specifier: '>=8.0.0'
         version: 9.1.0(react-native@0.84.1(@babel/core@7.29.7)(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)
@@ -2202,8 +2202,8 @@ packages:
   '@napi-rs/wasm-runtime@1.0.7':
     resolution: {integrity: sha512-SeDnOO0Tk7Okiq6DbXmmBODgOAb9dp9gjlphokTUxmt8U3liIP1ZsozBahH69j/RJv+Rfs6IwUKHTgQYJ/HBAw==}
 
-  '@nestledjs/forms-core@0.8.0':
-    resolution: {integrity: sha512-LVeIf/fRRSBM2NWKMSW7PcZAtI41/nV8p6K+an3/bXlSRKv3nK0tnlDJaN6NFN+ELMEl/gN30fFaoYf6h4Kqmg==}
+  '@nestledjs/forms-core@0.9.0':
+    resolution: {integrity: sha512-Vjte6OHKX8bbMm68Gf2sfN09d8VEOxSHOVlXpzulu5YmSm9u2SCh2vVuiUdUoqdzyCLT7bogmdkXYY/beLB1cg==}
     peerDependencies:
       '@apollo/client': ^3.0.0 || ^4.0.0
       '@hookform/resolvers': ^3.0.0
@@ -12539,7 +12539,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@nestledjs/forms-core@0.8.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.21.1))(graphql@16.12.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(@hookform/resolvers@3.10.0(react-hook-form@7.66.0(react@19.2.8)))(dayjs@1.11.19)(react-hook-form@7.66.0(react@19.2.8))(react@19.2.8)(zod@3.25.76)':
+  '@nestledjs/forms-core@0.9.0(@apollo/client@4.0.9(graphql-ws@6.0.6(graphql@16.12.0)(ws@8.21.1))(graphql@16.12.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)(subscriptions-transport-ws@0.11.0(graphql@16.12.0)))(@hookform/resolvers@3.10.0(react-hook-form@7.66.0(react@19.2.8)))(dayjs@1.11.19)(react-hook-form@7.66.0(react@19.2.8))(react@19.2.8)(zod@3.25.76)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.12.0)
       '@hookform/resolvers': 3.10.0(react-hook-form@7.66.0(react@19.2.8))
