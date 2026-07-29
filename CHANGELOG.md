@@ -4,6 +4,41 @@ All notable changes to the `@nestledjs/*` form packages are documented here.
 The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 `@nestledjs/forms-native` — are versioned together.
 
+## Unreleased
+
+Committed but deliberately **not published** — there is no consumer-facing
+reason to cut a release for these, so they ride along with the next feature
+release. Nothing here changes runtime behaviour.
+
+### 🏗️ Internal
+
+- **Dependency audit hardening.** `pnpm audit` went from 96 advisories
+  (5 critical, 38 high) to 3, via minimum patched versions pinned through
+  `pnpm.overrides` rather than by churning declared ranges. Every advisory was
+  in build/test tooling — nx, storybook, vite, vitest, eslint, the react-native
+  toolchain — never in anything the packages ship, so consumers were never
+  exposed. Of the 3 remaining, two are false positives (the workspace directory
+  `forms` is matched against the unrelated public npm package `forms`; ours is
+  `@nestledjs/forms`) and one is a build-time-only ReDoS in `brace-expansion`
+  reached through eslint's and `@nx/devkit`'s own `minimatch`, with no upgrade
+  path that keeps the toolchain working.
+- **React updated to 19.2.8** (with `@types/react` 19.2.17). React is a
+  peerDependency, so this is a dev/test concern; the motivation is that
+  react-native 0.84 and RNTL's `test-renderer` both require ~19.2, so the
+  native test suite had been running against an unsupported React.
+
+  This does change emitted declarations from
+  `import("react/jsx-runtime").JSX.Element` to `import("react").JSX.Element`
+  — runtime `.js` output is byte-identical, only `.d.ts` differs. Whenever
+  these ship, that is the one consumer-visible difference. It resolves on
+  `@types/react` 18.3, so the `>=18.0.0` peer range still holds.
+
+> ⚠️ Do not run a blanket `pnpm update -r` in this repo. It drags react-native
+> 0.84 → 0.86, which pulls a second copy of React alongside the pinned
+> react-dom and nulls the hooks dispatcher, failing most of the suite.
+> `react`, `react-dom` and `react-native` are pinned in `pnpm.overrides` to
+> prevent exactly that; prefer targeted overrides for security bumps.
+
 ## 0.8.1 — 2026-07-28
 
 Bug-fix release for `@nestledjs/forms` and `@nestledjs/forms-native`.
