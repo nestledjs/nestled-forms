@@ -16,11 +16,16 @@
       "!{projectRoot}/.storybook/**/*",
       "!{projectRoot}/tsconfig.storybook.json"
     ],
-    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
+    "sharedGlobals": [
+      "{workspaceRoot}/.github/workflows/ci.yml",
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/pnpm-lock.yaml"
+    ]
   },
   "nxCloudId": "69977345aa98a7b8ccf6b3cc",
   "targetDefaults": {
     "@nx/js:tsc": { "cache": true, "dependsOn": ["^build"], "inputs": ["production", "^production"] },
+    "@nx/vite:build": { "cache": true, "inputs": ["production", "^production"] },
     "@nx/eslint:lint": {
       "cache": true,
       "inputs": [

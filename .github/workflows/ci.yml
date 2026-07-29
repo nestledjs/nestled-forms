@@ -54,5 +54,21 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
+      # `build` is deliberately not in this step. The publish gate below needs
+      # every package's dist, so build runs as `run-many --all` instead. Doing
+      # both left the run-many with nothing new to distribute, and Nx Cloud
+      # fails a distributed execution that detects no additional tasks.
       - name: Run affected commands
-        run: pnpm exec nx affected -t lint test build
+        run: pnpm exec nx affected -t lint test
+
+      # Supplies dist/ for the publish gate, and is the only build invocation,
+      # so it owns the tasks the agents distribute. --stop-agents-after="build"
+      # then tears them down at the right point.
+      - name: Build all packages
+        run: pnpm exec nx run-many -t build --all
+
+      # Catches declaration bugs that are invisible in-workspace: emitted paths
+      # resolve here but not once installed. Exactly how the 0.8.1 type break
+      # passed lint, test and build and still shipped broken to npm.
+      - name: Verify published package types
+        run: pnpm verify-types
