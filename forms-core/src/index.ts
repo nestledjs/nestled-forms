@@ -39,6 +39,7 @@ export { SearchQueryContext, SearchQueryProvider, useSearchQueryAdapter } from '
 export type { SearchQueryResult, UseSearchQuery } from './lib/search-query-context'
 
 // Hooks
+export { useFormValue, useFormValues } from './lib/hooks/use-form-value'
 export { useFieldValidation } from './lib/hooks/use-field-validation'
 export { useSearchSelect, defaultOptionsMap } from './lib/hooks/use-search-select'
 export { useLoadOptions } from './lib/hooks/use-load-options'
@@ -87,3 +88,11 @@ export {
 
 // Re-export react-hook-form's FieldValues for consumers
 export type { FieldValues } from 'react-hook-form'
+
+// Re-export useWatch so consumers can subscribe through the *same* react-hook-form
+// instance <Form> uses. react-hook-form is a peerDependency, and under pnpm's
+// isolated node_modules an app that doesn't depend on it directly cannot resolve
+// it at all — so without this there is no supported way to read a form value
+// reactively from a component that doesn't own the form. Prefer useFormValue.
+export { useWatch } from 'react-hook-form'
+export type { UseFormReturn } from 'react-hook-form'

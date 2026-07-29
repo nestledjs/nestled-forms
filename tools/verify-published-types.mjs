@@ -156,13 +156,14 @@ try {
   writeFileSync(
     path.join(tmp, 'index.ts'),
     [
-      `import { Form, FormFieldType } from '@nestledjs/forms'`,
+      `import { Form, FormFieldType, useFormValue, useFormValues, useWatch } from '@nestledjs/forms'`,
       `import type { FormField, FormTheme } from '@nestledjs/forms'`,
       `import { ApolloSearchProvider, useApolloSearchQuery } from '@nestledjs/forms/apollo'`,
       ``,
       `const field: FormField = { key: 'name', type: FormFieldType.Text, options: {} }`,
       `const theme: Partial<FormTheme> = {}`,
       `export const used = [Form, field, theme, ApolloSearchProvider, useApolloSearchQuery]`,
+      `export const reactiveReads = [useFormValue, useFormValues, useWatch]`,
       ``,
     ].join('\n'),
   )

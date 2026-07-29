@@ -6,6 +6,55 @@ The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 
 ## Unreleased
 
+### ✨ Features
+
+- **`useFormValue` / `useFormValues` — a supported way to read form values reactively.**
+  A component inside `<Form>` that doesn't own the form had no way to reactively read a
+  field. The documented route — `useFormContext()` then `form.watch(name)` — compiles,
+  returns the right value on first render, and then silently never updates: no error,
+  no warning, no type-level signal.
+
+  `watch()` during render re-renders only the component that owns `useForm()`, which is
+  `<Form>` itself. `<Form>` passes `children` straight through, so React sees an
+  identical element reference and skips reconciling that subtree — the subscription
+  fires and the caller is never reached.
+
+  The idiomatic fix, `useWatch`, was unreachable: `forms-core` didn't export it, and
+  `react-hook-form` is a peerDependency that under pnpm's isolated `node_modules` an app
+  cannot resolve unless it depends on it directly — which risks a second copy at a
+  different version. So consumers had to hand-roll a subscription hook.
+
+  Now exported from `@nestledjs/forms-core`, and therefore from `@nestledjs/forms` and
+  `@nestledjs/forms-native` too:
+
+  ```tsx
+  import { useFormValue } from '@nestledjs/forms'
+
+  function Mirror() {
+    const answer = useFormValue<string>('answer')
+    return <p>You picked: {answer}</p>
+  }
+  ```
+
+  `useFormValues()` reads the whole form, and `useWatch` is re-exported for direct use —
+  importing it from the package guarantees you subscribe through the same react-hook-form
+  instance `<Form>` uses.
+
+  Distinct from the 0.8.1 fix, which made a field reactive to its *own* value. This covers
+  a component reading a field owned by something else. Both cases are now under test.
+
+  Reported by Moceanic, with a reproduction and root-cause analysis that were correct in
+  full — thank you.
+
+### 📚 Documentation
+
+- **`useFormContext` now warns about the `form.watch()` trap.** Its TSDoc previously
+  demonstrated `register()`, which invited the assumption that every `UseFormReturn`
+  method behaves normally in a consumer component. It now states plainly that
+  `watch(name)` during render will not re-render the caller, and points at `useFormValue`.
+  The same warning is in the README and on the docs site under Core Concepts and the API
+  reference.
+
 ### 🏗️ Internal
 
 - **`pnpm pre-publish` now gates on what consumers actually see.** The 0.8.1
@@ -37,6 +86,12 @@ The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 
 Bug-fix release for `@nestledjs/forms` and `@nestledjs/forms-native`.
 `@nestledjs/forms-core` is unchanged and stays at 0.8.0.
+
+**This release is types-only.** Every shipped `.js` bundle is byte-identical to
+0.8.1 — verified by diffing the published tarballs (`index.js` md5
+`227aa2f11dba69f32e643777832cf165` in both). Only `.d.ts` files changed. Worth
+stating plainly, since a patch bump usually implies a behaviour change; if you
+are on 0.8.1 and not using TypeScript, there is nothing here for you.
 
 ### 🐛 Fixes & hardening
 

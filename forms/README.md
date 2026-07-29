@@ -775,6 +775,43 @@ function ReadOnlyForm() {
 }
 ```
 
+## 👀 Reading Form Values Reactively
+
+To read a field's value from a component inside `<Form>` — a custom field, a summary
+panel, a conditionally rendered section — use `useFormValue`:
+
+```tsx
+import { Form, useFormValue } from '@nestledjs/forms'
+
+function Mirror() {
+  const answer = useFormValue<string>('answer')
+  return <p>You picked: {answer}</p>
+}
+
+<Form id="quiz" submit={handleSubmit} defaultValues={{ answer: '' }} fields={fields}>
+  <Mirror />
+</Form>
+```
+
+Use `useFormValues()` for the whole form, or the re-exported `useWatch` directly if you
+need its other options.
+
+> ⚠️ **Do not use `form.watch(name)` to read a value during render.** It compiles,
+> returns the right value on first render, and then silently never updates — no error,
+> no warning, no type error. `watch()` re-renders only the component that owns
+> `useForm()`, which is `<Form>` itself; because `<Form>` passes `children` straight
+> through, React reuses that element reference and skips reconciling the subtree, so
+> your component never re-renders.
+>
+> `form.watch(callback)` is fine — the callback form returns a real subscription.
+> `getValues`, `setValue` and `register` all behave normally; the caveat is specific
+> to reading reactively during render.
+
+`react-hook-form` is a peer dependency, so importing `useWatch` from it directly is not
+reliable — under pnpm's isolated `node_modules` an app that doesn't depend on it cannot
+resolve it, and adding it risks a second copy. Import from `@nestledjs/forms` instead
+and you subscribe through the same instance `<Form>` uses.
+
 ## 🧩 Custom Field Components
 
 Create custom field components using the provided hooks:
@@ -1167,6 +1204,9 @@ const field = FormFieldClass.text('name', {
 ### Hooks
 
 - **`useFormContext<T>()`**: Access form state and methods
+- **`useFormValue<T>(name)`**: Reactively read one field's value from any component inside `<Form>`
+- **`useFormValues<T>()`**: Reactively read all form values
+- **`useWatch()`**: react-hook-form's primitive, re-exported so you subscribe through the same instance `<Form>` uses
 - **`useFormConfig()`**: Access form configuration (label display, etc.)
 - **`useFormTheme()`**: Access current theme configuration
 
