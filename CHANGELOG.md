@@ -4,7 +4,13 @@ All notable changes to the `@nestledjs/*` form packages are documented here.
 The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 `@nestledjs/forms-native` — are versioned together.
 
-## Unreleased
+## 0.9.0 — 2026-07-29
+
+Minor release across all three packages. `@nestledjs/forms-core` moves to 0.9.0
+after sitting at 0.8.0 through the 0.8.1 and 0.8.2 releases, so `@nestledjs/forms`
+and `@nestledjs/forms-native` bump their pin to match.
+
+Additive only — nothing here changes existing behaviour or removes an API.
 
 ### ✨ Features
 
