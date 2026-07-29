@@ -4,6 +4,35 @@ All notable changes to the `@nestledjs/*` form packages are documented here.
 The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 `@nestledjs/forms-native` — are versioned together.
 
+## Unreleased
+
+### 🏗️ Internal
+
+- **`pnpm pre-publish` now gates on what consumers actually see.** The 0.8.1
+  declaration bug was invisible to lint, test and build: inside the workspace
+  those emitted paths resolve, so everything was green. `tools/verify-published-types.mjs`
+  checks the built output the way an installed consumer would — every specifier
+  in `dist/**/*.d.ts` must stay inside its package and not point at `.ts`
+  source, and every bare specifier must be a declared dependency or peer; then
+  the web packages are packed, unpacked outside the workspace and type-checked
+  under `strict` with `skipLibCheck: false`. Verified to fail on the 0.8.1
+  output and pass on 0.8.2. It runs offline in ~2s by linking peers out of the
+  workspace install rather than hitting the registry. `forms-native` is
+  static-only — its React Native peers are too heavy to install per publish,
+  and the static layer already covers this failure mode.
+
+  `pre-publish` is `test-suite && verify-types`. The name matches the 11 other
+  repos in the workspace that already define it, so the shared `/pre-publish`
+  command works here unchanged.
+
+- **Storybook test helpers are no longer published.** `storybookTestUtils.d.ts`
+  shipped in `@nestledjs/forms` through 0.8.2 with a top-level import of
+  `storybook/test`, a devDependency. Nothing reachable from the public entry
+  points referenced it, so it never broke a consumer type-check, but a deep
+  import would have failed. `forms/tsconfig.lib.json` now excludes
+  `**/storybook*.ts(x)` alongside the existing `*.stories.*` patterns. Found by
+  the new gate.
+
 ## 0.8.2 — 2026-07-28
 
 Bug-fix release for `@nestledjs/forms` and `@nestledjs/forms-native`.

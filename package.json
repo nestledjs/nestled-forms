@@ -12,6 +12,8 @@
     "lint-all": "nx run-many -t lint --all",
     "lint-all:fix": "nx run-many -t lint --all --fix",
     "test-suite": "nx run-many -t lint test build --all",
+    "verify-types": "node tools/verify-published-types.mjs",
+    "pre-publish": "pnpm test-suite && pnpm verify-types",
     "postinstall": "if [ \"$CI\" = \"true\" ]; then pnpm exec playwright install --with-deps; fi"
   },
   "private": true,
