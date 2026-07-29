@@ -56,3 +56,15 @@ jobs:
 
       - name: Run affected commands
         run: pnpm exec nx affected -t lint test build
+
+      # The publish gate needs every package's dist, but the step above is
+      # `affected`, so a PR touching one package leaves the others unbuilt.
+      # Build all three explicitly — mostly Nx Cloud cache hits in practice.
+      - name: Build all packages for publish verification
+        run: pnpm exec nx run-many -t build --all
+
+      # Catches declaration bugs that are invisible in-workspace: emitted paths
+      # resolve here but not once installed. Exactly how the 0.8.1 type break
+      # passed lint, test and build and still shipped broken to npm.
+      - name: Verify published package types
+        run: pnpm verify-types
