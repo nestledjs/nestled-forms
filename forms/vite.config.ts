@@ -14,7 +14,14 @@ export default defineConfig({
     react(),
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
-    dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') }),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+      // Keep workspace aliases as bare specifiers in the emitted .d.ts. Without
+      // this they resolve to ../../forms-core/src/*.ts — paths that escape the
+      // published package and point at sources that aren't shipped.
+      aliasesExclude: [/^@nestledjs\//],
+    }),
     tailwindcss(),
   ],
   // Uncomment this if you are using workers.

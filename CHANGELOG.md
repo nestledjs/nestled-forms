@@ -4,13 +4,34 @@ All notable changes to the `@nestledjs/*` form packages are documented here.
 The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 `@nestledjs/forms-native` — are versioned together.
 
-## Unreleased
+## 0.8.2 — 2026-07-28
 
-Committed but deliberately **not published** — there is no consumer-facing
-reason to cut a release for these, so they ride along with the next feature
-release. Nothing here changes runtime behaviour.
+Bug-fix release for `@nestledjs/forms` and `@nestledjs/forms-native`.
+`@nestledjs/forms-core` is unchanged and stays at 0.8.0.
+
+### 🐛 Fixes & hardening
+
+- **Published type declarations no longer point outside the package.**
+  `vite-plugin-dts` was resolving the workspace `tsconfig.base.json` path
+  aliases when emitting `.d.ts`, so every cross-package import was rewritten to
+  a relative path into source that is never shipped — `@nestledjs/forms`
+  0.8.1 shipped `index.d.ts` as `export * from '../../forms-core/src/index.ts'`,
+  across 34 declaration files (`@nestledjs/forms-native` likewise). Both escape
+  the package root and reference `.ts` files absent from every published
+  tarball, so TypeScript consumers got no types at all from the main entry.
+  The `.js` output was always correct — Rollup externalised `@nestledjs/forms-core`
+  properly — so this was types-only, and invisible to plain-JS consumers.
+  Fixed with `aliasesExclude: [/^@nestledjs\//]` on the `dts()` plugin in
+  `forms/vite.config.ts` and `forms-native/vite.config.ts`, which keeps the bare
+  specifier. `@nestledjs/forms-core` is a declared dependency of both and
+  exports the `./apollo` subpath, so the emitted specifiers resolve for
+  consumers. `@nestledjs/forms-core` itself was never affected — it has no
+  cross-package alias imports.
 
 ### 🏗️ Internal
+
+Nothing in this section changes runtime behaviour; none of it would have
+justified a release on its own, and it rides along with the fix above.
 
 - **Dependency audit hardening.** `pnpm audit` went from 96 advisories
   (5 critical, 38 high) to 3, via minimum patched versions pinned through
@@ -29,9 +50,10 @@ release. Nothing here changes runtime behaviour.
 
   This does change emitted declarations from
   `import("react/jsx-runtime").JSX.Element` to `import("react").JSX.Element`
-  — runtime `.js` output is byte-identical, only `.d.ts` differs. Whenever
-  these ship, that is the one consumer-visible difference. It resolves on
-  `@types/react` 18.3, so the `>=18.0.0` peer range still holds.
+  — runtime `.js` output is byte-identical, only `.d.ts` differs. That ships
+  in 0.8.2, and alongside the declaration fix above it is the other
+  consumer-visible difference. It resolves on `@types/react` 18.3, so the
+  `>=18.0.0` peer range still holds.
 
 > ⚠️ Do not run a blanket `pnpm update -r` in this repo. It drags react-native
 > 0.84 → 0.86, which pulls a second copy of React alongside the pinned
