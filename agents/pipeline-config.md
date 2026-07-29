@@ -31,7 +31,7 @@
 | `source_system` | `linear` |
 | Canonical lifecycle | `https://raw.githubusercontent.com/pirateandfox/qalatra-prompts/develop/linear-pipeline.md` — state IDs, GraphQL patterns, turn-taking, identity |
 | `linear_project_id` | `5de2da9a-9b50-4287-bc29-aa8c4dfd2b5a` (Nestled Forms) |
-| API token | `~/.config/qalatra/secrets.md` → `SHI_LINEAR=` (authors as Shi) |
+| API token | `secret get SHI_LINEAR` (authors as Shi) |
 | FD task reference | the issue's `FlightDesk` attachment |
 
 This pipeline only processes issues whose Linear project is `5de2da9a-9b50-4287-bc29-aa8c4dfd2b5a`. Never mutate issues
