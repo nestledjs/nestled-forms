@@ -2,6 +2,7 @@
   "name": "@nestledjs/source",
   "version": "0.0.0",
   "license": "MIT",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "test": "nx affected -t test --base=develop",
     "test-all": "nx run-many -t test --all",
