@@ -37,7 +37,7 @@ New projects clone `nestled-template` rather than being scaffolded command by
 command, then run the setup generator once against the fresh clone:
 
 ```sh
-nx g @nestledjs/generators:workspace-setup --name my-project
+pnpm nx g @nestledjs/generators:workspace-setup --name my-project
 ```
 
 That renames the project throughout, ensures `.env` and Docker, applies the
@@ -48,11 +48,11 @@ Prisma migrations, generates models and seeds.
 The remaining generators run against the Prisma schema as the app grows:
 
 ```sh
-nx g @nestledjs/generators:models           # GraphQL ObjectTypes and enums from the Prisma schema
-nx g @nestledjs/generators:crud             # CRUD libraries for Prisma models
-nx g @nestledjs/generators:sdk              # the GraphQL SDK
-nx g @nestledjs/generators:custom           # create or maintain the custom API library shell
-nx g @nestledjs/generators:model-extension  # an additive model-specific API resolver module
+pnpm nx g @nestledjs/generators:models           # GraphQL ObjectTypes and enums from the Prisma schema
+pnpm nx g @nestledjs/generators:crud             # CRUD libraries for Prisma models
+pnpm nx g @nestledjs/generators:sdk              # the GraphQL SDK
+pnpm nx g @nestledjs/generators:custom           # create or maintain the custom API library shell
+pnpm nx g @nestledjs/generators:model-extension  # an additive model-specific API resolver module
 ```
 
 ## Forms
