@@ -37,6 +37,12 @@ import { isBuiltin } from 'node:module'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const PACKAGES = ['forms-core', 'forms', 'forms-native']
 const CONSUMER_TYPECHECK = ['forms-core', 'forms']
+const NPM_CLI_CANDIDATES = [
+  path.resolve(path.dirname(process.execPath), '..', 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js'),
+  path.resolve(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js'),
+]
+const NPM_CLI = NPM_CLI_CANDIDATES.find((candidate) => existsSync(candidate))
+const SYSTEM_TAR = process.platform === 'win32' ? 'C:\\Windows\\System32\\tar.exe' : '/usr/bin/tar'
 
 const problems = []
 const note = (s) => console.log(s)
@@ -127,11 +133,19 @@ note('  ✓ all specifiers resolvable by an installed consumer\n')
 note('Consumer type-check (packed tarballs, installed outside the workspace):')
 const tmp = mkdtempSync(path.join(tmpdir(), 'nestled-verify-'))
 try {
+  if (!NPM_CLI) {
+    throw new Error(`Could not locate npm's CLI next to Node (${process.execPath})`)
+  }
+
   const tarballs = CONSUMER_TYPECHECK.map((pkg) => {
-    const out = execFileSync('npm', ['pack', `./dist/${pkg}`, '--pack-destination', tmp, '--silent'], {
-      cwd: ROOT,
-      encoding: 'utf8',
-    })
+    const out = execFileSync(
+      process.execPath,
+      [NPM_CLI, 'pack', `./dist/${pkg}`, '--pack-destination', tmp, '--silent'],
+      {
+        cwd: ROOT,
+        encoding: 'utf8',
+      },
+    )
     const name = JSON.parse(readFileSync(path.join(ROOT, 'dist', pkg, 'package.json'), 'utf8')).name
     return { name, tgz: path.join(tmp, out.trim().split('\n').pop().trim()) }
   })
@@ -179,7 +193,7 @@ try {
   for (const { name, tgz } of tarballs) {
     const dest = path.join(nm, name)
     mkdirSync(dest, { recursive: true })
-    execFileSync('tar', ['-xzf', tgz, '-C', dest, '--strip-components=1'])
+    execFileSync(SYSTEM_TAR, ['-xzf', tgz, '-C', dest, '--strip-components=1'])
   }
 
   // Link every declared dependency/peer of the packages under test, resolved out
