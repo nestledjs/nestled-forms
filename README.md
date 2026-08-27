@@ -31,30 +31,28 @@ To test the NestledJS libraries in your local projects, you can use [YALC](https
 
 The `@nestledjs/generators` library is designed to quickly scaffold a full-stack application. While it is still under development, it provides a solid foundation for new projects.
 
-### Full Stack Generation
+### Starting a new project
 
-To generate a complete project, run the following commands in order:
+New projects clone `nestled-template` rather than being scaffolded command by
+command, then run the setup generator once against the fresh clone:
 
 ```sh
-nx g @nestledjs/config:setup
-nx g @nestledjs/config:init
-nx g @nestledjs/api:setup
-nx g @nestledjs/api:app
-nx g @nestledjs/api:prisma
-nx g @nestledjs/api:config
-nx g @nestledjs/api:core
-nx g @nestledjs/api:custom
-nx g @nestledjs/api:smtp-mailer
-nx g @nestledjs/api:generate-crud
-nx g @nestledjs/api:utils
-nx g @nestledjs/api:custom
-nx g @nestledjs/shared:sdk
-nx g @nestledjs/shared:styles
-nx g @nestledjs/plugins:auth
-nx g @nestledjs/api:workspace-setup
-nx g @nestledjs/web:setup
-nx g @nestledjs/web:app
-nx g @nestledjs/shared:apollo
+nx g @nestledjs/generators:workspace-setup --name my-project
+```
+
+That renames the project throughout, ensures `.env` and Docker, applies the
+Prisma migrations, generates models and seeds.
+
+### Code generation
+
+The remaining generators run against the Prisma schema as the app grows:
+
+```sh
+nx g @nestledjs/generators:models           # GraphQL ObjectTypes and enums from the Prisma schema
+nx g @nestledjs/generators:crud             # CRUD libraries for Prisma models
+nx g @nestledjs/generators:sdk              # the GraphQL SDK
+nx g @nestledjs/generators:custom           # create or maintain the custom API library shell
+nx g @nestledjs/generators:model-extension  # an additive model-specific API resolver module
 ```
 
 ## Forms
