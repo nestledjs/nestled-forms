@@ -1,0 +1,510 @@
+'use client'
+
+import React from 'react'
+import clsx from 'clsx'
+import {
+  FormField,
+  FormFieldType,
+  useFormContext,
+  useFormConfig,
+  STATIC_CONDITIONAL_STATE,
+  hasConditionalLogic,
+  FieldConditionalWrapper,
+} from '@nestledjs/forms-core'
+import type { ConditionalState } from '@nestledjs/forms-core'
+
+import { TextField } from './fields/text-field'
+import { TextAreaField } from './fields/textarea-field'
+import { EmailField } from './fields/email-field'
+import { PasswordField } from './fields/password-field'
+import { UrlField } from './fields/url-field'
+import { NumberField } from './fields/number-field'
+import { MoneyField } from './fields/money-field'
+import { CheckboxField } from './fields/checkbox-field'
+import { SwitchField } from './fields/switch-field'
+import { ButtonField } from './fields/button-field'
+import { DatePickerField } from './fields/datepicker-field'
+import { DateTimePickerField } from './fields/datetimepicker-field'
+import { TimePickerField } from './fields/timepicker-field'
+import { SelectField } from './fields/select-field'
+import { SelectFieldEnum } from './fields/select-field-enum'
+import { SelectFieldMulti } from './fields/select-field-multi'
+import { RadioField } from './fields/radio-field'
+import { CheckboxGroupField } from './fields/checkbox-group'
+import { SelectFieldSearch } from './fields/select-field-search'
+import { SelectFieldSearchApollo } from './fields/select-field-search-apollo'
+import { SelectFieldMultiSearch } from './fields/select-field-multi-search'
+import { SelectFieldMultiSearchApollo } from './fields/select-field-multi-search-apollo'
+import { CustomField } from './fields/custom-field'
+import { CustomCheckboxField } from './fields/custom-checkbox-field'
+import { FormLabel } from './fields/label'
+// Lazy load MarkdownEditor to avoid SSR issues with MDX Editor dependencies
+const MarkdownEditor = React.lazy(() =>
+  import('./fields/markdown-editor').then(m => ({ default: m.MarkdownEditor }))
+)
+// Lazy load PhoneField so libphonenumber's ~150 KB metadata is only downloaded
+// by forms that actually render a phone field
+const PhoneField = React.lazy(() =>
+  import('./fields/phone-field').then(m => ({ default: m.PhoneField }))
+)
+
+// This function remains internal to the renderer
+function renderComponent(
+  form: ReturnType<typeof useFormContext>,
+  field: FormField,
+  formReadOnly: boolean,
+  formReadOnlyStyle: 'value' | 'disabled',
+  requiredError: string,
+) {
+  const hasError = !!form.formState.errors[field.key]
+
+  switch (field.type) {
+    case FormFieldType.Text:
+      return (
+        <TextField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.TextArea:
+      return (
+        <TextAreaField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.MarkdownEditor:
+      return (
+        <React.Suspense fallback={<div aria-live="polite">Loading markdown editor...</div>}>
+          <MarkdownEditor
+            form={form}
+            field={field}
+            hasError={hasError}
+            formReadOnly={formReadOnly}
+            formReadOnlyStyle={formReadOnlyStyle}
+          />
+        </React.Suspense>
+      )
+    case FormFieldType.Email:
+      return (
+        <EmailField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Password:
+      return (
+        <PasswordField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Url:
+      return (
+        <UrlField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Phone:
+      return (
+        <React.Suspense fallback={<div aria-live="polite">Loading phone field...</div>}>
+          <PhoneField
+            form={form}
+            field={field}
+            hasError={hasError}
+            formReadOnly={formReadOnly}
+            formReadOnlyStyle={formReadOnlyStyle}
+          />
+        </React.Suspense>
+      )
+    case FormFieldType.Number:
+      return (
+        <NumberField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Currency:
+      return (
+        <MoneyField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Select:
+      return (
+        <SelectField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.EnumSelect:
+      return (
+        <SelectFieldEnum
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.MultiSelect:
+      return (
+        <SelectFieldMulti
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Checkbox:
+      return (
+        <CheckboxField
+          form={form}
+          field={field}
+          hasError={hasError}
+          errorMessage={hasError ? (form.formState.errors[field.key]?.message as string) ?? requiredError : undefined}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Switch:
+      return (
+        <SwitchField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Button:
+      return <ButtonField field={field} form={form} hasError={hasError} />
+    case FormFieldType.DatePicker:
+      return (
+        <DatePickerField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.DateTimePicker:
+      return (
+        <DateTimePickerField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.TimePicker:
+      return (
+        <TimePickerField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Radio:
+      return (
+        <RadioField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.CheckboxGroup:
+      return (
+        <CheckboxGroupField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.SearchSelect:
+      return (
+        <SelectFieldSearch
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.SearchSelectApollo:
+      return (
+        <SelectFieldSearchApollo
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.SearchSelectMulti:
+      return (
+        <SelectFieldMultiSearch
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.SearchSelectMultiApollo:
+      return (
+        <SelectFieldMultiSearchApollo
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.Content:
+      return field.options.content
+    case FormFieldType.Custom:
+      return (
+        <CustomField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    case FormFieldType.CustomCheckbox:
+      return (
+        <CustomCheckboxField
+          form={form}
+          field={field}
+          hasError={hasError}
+          formReadOnly={formReadOnly}
+          formReadOnlyStyle={formReadOnlyStyle}
+        />
+      )
+    default:
+      return null
+  }
+}
+
+/**
+ * Renders a form field component based on the field definition.
+ * This is the core function that enables declarative form field usage.
+ * 
+ * Must be used within a Form component to access form context.
+ * Automatically handles field rendering, validation display, and theming.
+ * 
+ * @param field - The field definition object created using FormFieldClass methods
+ * @param formReadOnly - Whether the field should be in read-only mode (overrides form-level setting)
+ * @param formReadOnlyStyle - How to display read-only fields: 'value' shows plain text, 'disabled' shows disabled input
+ * @param className - Additional CSS classes to apply to the field wrapper
+ * @returns A React component that renders the appropriate field type with label, validation, and styling
+ * 
+ * @example
+ * ```tsx
+ * // Basic usage
+ * <RenderFormField 
+ *   field={FormFieldClass.text('username', { label: 'Username', required: true })} 
+ * />
+ * 
+ * // Multi-column layout with CSS Grid
+ * <div className="grid grid-cols-2 gap-4">
+ *   <RenderFormField 
+ *     field={FormFieldClass.text('firstName', { label: 'First Name' })}
+ *     className="col-span-1"
+ *   />
+ *   <RenderFormField 
+ *     field={FormFieldClass.text('lastName', { label: 'Last Name' })}
+ *     className="col-span-1"
+ *   />
+ * </div>
+ * 
+ * // Using wrapperClassName in field options
+ * <div className="grid grid-cols-2 gap-4">
+ *   <RenderFormField 
+ *     field={FormFieldClass.text('firstName', { 
+ *       label: 'First Name',
+ *       wrapperClassName: 'col-span-1'
+ *     })}
+ *   />
+ *   <RenderFormField 
+ *     field={FormFieldClass.text('lastName', { 
+ *       label: 'Last Name',
+ *       wrapperClassName: 'col-span-1'
+ *     })}
+ *   />
+ * </div>
+ * 
+ * // Horizontal layout within field
+ * <RenderFormField 
+ *   field={FormFieldClass.checkbox('agree', { 
+ *     label: 'I agree to the terms',
+ *     layout: 'horizontal'
+ *   })}
+ * />
+ * 
+ * // Custom wrapper function
+ * <RenderFormField 
+ *   field={FormFieldClass.text('email', { 
+ *     label: 'Email',
+ *     customWrapper: (children) => (
+ *       <div className="flex items-center space-x-4">
+ *         {children}
+ *       </div>
+ *     )
+ *   })}
+ * />
+ * ```
+ */
+interface RenderFormFieldProps {
+  field: FormField
+  formReadOnly?: boolean
+  formReadOnlyStyle?: 'value' | 'disabled'
+  className?: string
+}
+
+export function RenderFormField(props: Readonly<RenderFormFieldProps>) {
+  // Only fields with conditional logic pay for a whole-form value subscription;
+  // everything else skips it so a keystroke doesn't re-render every field.
+  if (hasConditionalLogic(props.field)) {
+    return (
+      <FieldConditionalWrapper field={props.field}>
+        {(conditionalState) => <RenderFormFieldInner {...props} conditionalState={conditionalState} />}
+      </FieldConditionalWrapper>
+    )
+  }
+  return <RenderFormFieldInner {...props} conditionalState={STATIC_CONDITIONAL_STATE} />
+}
+
+function RenderFormFieldInner({
+  field,
+  formReadOnly = false,
+  formReadOnlyStyle = 'value',
+  className,
+  conditionalState,
+}: Readonly<RenderFormFieldProps & { conditionalState: ConditionalState }>) {
+  const form = useFormContext()
+  const { labelDisplay, strings } = useFormConfig()
+
+  // Note: We intentionally do NOT re-register fields here to update required state.
+  // In react-hook-form v7, calling register() again replaces all validation rules,
+  // which would strip any validate/schema rules set by individual field components.
+  // Instead, we pass the resolved required state through modifiedField (below),
+  // so each field component registers with the correct required state in its own
+  // render-phase register() call.
+
+  // Early return if field should be hidden
+  if (!conditionalState.isVisible) {
+    return null
+  }
+
+  const error = form.formState.errors[field.key]
+  const errorMessage = (error?.message as string) ?? (error ? strings.requiredError : null)
+
+  // --- CONFIGURABLE LABEL LOGIC ---
+  const hasLabelProp = !!field.options.label
+  let showLabel: boolean
+
+  if (!hasLabelProp) {
+    showLabel = false
+  } else if (labelDisplay === 'all') {
+    showLabel = true
+  } else if (labelDisplay === 'none') {
+    showLabel = false
+  } else {
+    // labelDisplay === 'default' or unset
+    // Checkbox and Switch render their own inline labels, so skip the outer FormLabel
+    showLabel = field.type !== FormFieldType.Checkbox && field.type !== FormFieldType.Switch
+  }
+
+  // Determine final required state (static OR dynamic)
+  const finalRequired = field.options.required || conditionalState.isDynamicallyRequired
+
+  const labelComponent = showLabel && (
+    <FormLabel htmlFor={field.key} label={field.options.label ?? ''} required={finalRequired} />
+  )
+
+  // Create modified field with dynamic disabled state
+  const finalDisabled = field.options.disabled || conditionalState.isDynamicallyDisabled
+  const modifiedField: FormField = {
+    ...field,
+    options: {
+      ...field.options,
+      disabled: finalDisabled,
+      required: finalRequired
+    }
+  } as FormField
+
+  const component = renderComponent(form, modifiedField, formReadOnly, formReadOnlyStyle, strings.requiredError)
+
+  // --- RESPECT FIELD OPTIONS FOR LAYOUT ---
+  const layout = field.options.layout || 'vertical'
+  const customWrapper = field.options.customWrapper
+  const wrapperClassName = field.options.wrapperClassName
+
+  // Build the field content
+  const fieldContent = (
+    <>
+      {layout === 'vertical' && labelComponent}
+      <div className={clsx(layout === 'horizontal' && 'flex items-center space-x-3')}>
+        {layout === 'horizontal' && labelComponent}
+        <div className={clsx(layout === 'horizontal' && 'flex-1')}>
+          {component}
+          {error && field.type !== FormFieldType.Checkbox && (
+            <span id={`${field.key}-error`} role="alert" className="text-red-700 text-sm">
+              {errorMessage}
+            </span>
+          )}
+        </div>
+      </div>
+    </>
+  )
+
+  // If field has customWrapper, use it
+  if (customWrapper) {
+    return customWrapper(fieldContent)
+  }
+
+  // Standard wrapper with customizable classes
+  return (
+    <div key={field.key} className={clsx('space-y-1', wrapperClassName, className)}>
+      {fieldContent}
+    </div>
+  )
+}

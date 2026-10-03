@@ -1,0 +1,135 @@
+'use client'
+
+import clsx from 'clsx'
+import { useEffect } from 'react'
+import { Controller, useWatch } from 'react-hook-form'
+import { useFormTheme, FormField, FormFieldProps, FormFieldType, formatDateFromDateTime, getDateFromDateTime } from '@nestledjs/forms-core'
+
+export function DatePickerField({
+  form,
+  field,
+  hasError,
+  formReadOnly = false,
+  formReadOnlyStyle = 'value',
+  errorMessage,
+}: Readonly<FormFieldProps<Extract<FormField, { type: FormFieldType.DatePicker }>> & {
+  hasError?: boolean
+  formReadOnly?: boolean
+  formReadOnlyStyle?: 'value' | 'disabled'
+  errorMessage?: string
+}>) {
+  const theme = useFormTheme().datePicker
+  const options = field.options
+
+  // Normalize a full ISO default (e.g. '2024-01-15T00:00:00.000Z' from a server)
+  // to the input's YYYY-MM-DD format — otherwise the input renders blank while
+  // form state silently keeps (and submits) the raw string. The date part is
+  // preserved as-is: calendar dates must never timezone-shift.
+  useEffect(() => {
+    const current = form.getValues(field.key)
+    if (typeof current === 'string' && current.includes('T')) {
+      form.setValue(field.key, current.split('T')[0])
+    }
+  }, [form, field.key])
+
+  const isReadOnly = options.readOnly ?? formReadOnly
+  const effectiveReadOnlyStyle = options.readOnlyStyle ?? formReadOnlyStyle
+  const value = useWatch({ control: form.control, name: field.key }) ?? ''
+  const helpText = (options as any).helpText
+  const helpTextClass = useFormTheme().checkbox.helpText
+  const describedByIds = []
+  if (helpText) describedByIds.push(`${field.key}-help`)
+  if (hasError && errorMessage) describedByIds.push(`${field.key}-error`)
+
+  if (isReadOnly) {
+    if (effectiveReadOnlyStyle === 'disabled') {
+      return (
+        <>
+          <input
+            id={field.key}
+            type="date"
+            disabled={true}
+            value={value}
+            className={clsx(theme.readOnlyInput, hasError && theme.error)}
+            readOnly
+            required={options.required}
+            aria-describedby={describedByIds.length ? describedByIds.join(' ') : undefined}
+          />
+          {helpText && <div id={`${field.key}-help`} className={helpTextClass}>{helpText}</div>}
+          {hasError && errorMessage && <div id={`${field.key}-error`} className={theme.error}>{errorMessage}</div>}
+        </>
+      )
+    }
+    
+    // Render as plain value (formatted)
+    const formattedDate = formatDateFromDateTime(value) || '—'
+    return (
+      <>
+        <div className={clsx(theme.readOnlyValue)}>{formattedDate}</div>
+        {helpText && <div id={`${field.key}-help`} className={helpTextClass}>{helpText}</div>}
+        {hasError && errorMessage && <div id={`${field.key}-error`} className={theme.error}>{errorMessage}</div>}
+      </>
+    )
+  }
+
+  const inputProps = {
+    id: field.key,
+    type: 'date' as const,
+    disabled: options.disabled,
+    placeholder: options.placeholder,
+    min: options.min,
+    max: options.max || '9999-12-31',
+    className: clsx(
+      theme.input,
+      options.disabled && theme.disabled,
+      hasError && theme.error
+    ),
+    required: options.required,
+    'aria-describedby': describedByIds.length ? describedByIds.join(' ') : undefined,
+  }
+
+  const input = options.useController ? (
+    <Controller
+      name={field.key}
+      control={form.control}
+      defaultValue={getDateFromDateTime(options.defaultValue ?? '')}
+      rules={{ required: options.required }}
+      render={({ field: controllerField }) => (
+        <input
+          {...inputProps}
+          value={controllerField.value || ''}
+          onChange={(e) => controllerField.onChange(e.target.value)}
+          onBlur={controllerField.onBlur}
+          ref={controllerField.ref}
+        />
+      )}
+    />
+  ) : (
+    <input
+      {...inputProps}
+      defaultValue={getDateFromDateTime(options.defaultValue ?? '') ?? ''}
+      {...form.register(field.key, {
+        required: options.required,
+        setValueAs: (v) => (v ? v.split('T')[0] : ''),
+      })}
+    />
+  )
+
+  if (options.customWrapper) {
+    return options.customWrapper(
+      <>
+        {input}
+        {helpText && <div id={`${field.key}-help`} className={helpTextClass}>{helpText}</div>}
+        {hasError && errorMessage && <div id={`${field.key}-error`} className={theme.error}>{errorMessage}</div>}
+      </>
+    )
+  }
+
+  return (
+    <>
+      {input}
+      {helpText && <div id={`${field.key}-help`} className={helpTextClass}>{helpText}</div>}
+      {hasError && errorMessage && <div id={`${field.key}-error`} className={theme.error}>{errorMessage}</div>}
+    </>
+  )
+}

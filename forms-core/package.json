@@ -1,0 +1,57 @@
+{
+  "name": "@nestledjs/forms-core",
+  "version": "0.9.0",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./apollo": {
+      "import": "./apollo.js",
+      "types": "./apollo.d.ts"
+    }
+  },
+  "sideEffects": false,
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "type": "module",
+  "description": "Platform-agnostic core types, validation, contexts, and utilities for @nestledjs/forms",
+  "keywords": [
+    "react",
+    "forms",
+    "typescript",
+    "validation",
+    "form-types",
+    "react-hook-form",
+    "zod"
+  ],
+  "author": "Nestled Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nestledjs/nestled.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@apollo/client": "^3.0.0 || ^4.0.0",
+    "@hookform/resolvers": "^3.0.0",
+    "dayjs": "^1.11.0",
+    "react": ">=18.0.0",
+    "react-hook-form": "^7.0.0",
+    "zod": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@apollo/client": {
+      "optional": true
+    },
+    "dayjs": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
+  }
+}

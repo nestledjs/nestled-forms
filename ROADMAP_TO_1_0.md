@@ -1,0 +1,48 @@
+# Roadmap to 1.0 — working plan
+
+_Last updated: 2026-07-22. Committed on develop; update it as tasks complete._
+
+## Where things stand
+
+**🚀 0.8.0 SHIPPED (2026-07-22).** All three packages published to npm at **0.8.0** together (forms-core, forms, forms-native), carrying the merged breaking changes below. Used the two-phase publish (forms-core first, then flip pins + regen lockfile for forms/forms-native). Root `CHANGELOG.md` added; nestledforms.com now has the localization, async-select, and changelog pages (docs debt cleared). CI green on both repos.
+
+**All four PRs are MERGED** into their repos' `develop` branches (each was fully green: CI, SonarCloud gate, zero open Sonar issues, GitGuardian). Feature branches deleted, local repos synced.
+
+Merged work, for reference:
+- [nestled-forms #4](https://github.com/nestledjs/nestled-forms/pull/4) — Apollo optional via adapter subpaths; all critical audit fixes (native submit, submitTransform defaults, resolver required-enforcement, timezone bugs, 414→114 KB bundle, markdown XSS, a11y errors); dedup shared helpers in forms-core.
+- [nestled-forms #5](https://github.com/nestledjs/nestled-forms/pull/5) — Localization (`strings` prop on Form/NativeForm, `FormStrings` in forms-core) + `FormFieldClass.multiSelect`.
+- [nestled-forms #6](https://github.com/nestledjs/nestled-forms/pull/6) — `loadOptions` async search selects (REST/tRPC/fetch) + double-initial-fetch fix in SearchSelectBase.
+- [nestledforms.com #2](https://github.com/nestledjs/nestledforms.com/pull/2) — 9 doc pages synced to the new APIs.
+
+### First actions next session
+
+1. ~~Verify develop CI is green post-merge in both repos.~~ ✅ Done. 0.8.0 published.
+2. ~~Docs debt: strings prop and loadOptions not yet on nestledforms.com.~~ ✅ Done — `/docs/localization`, `/docs/web/async-select`, `/docs/changelog` live.
+3. Start **#13 Slider field** (list below), branching off fresh `develop`. Next published release would be 0.9.0 (or the 1.0 line per #20).
+
+## Remaining feature tasks (session task list #13–#20)
+
+Work each as: feature + tests + README section in one branch/PR off `develop`; batch nestledforms.com pages every ~2 features. Order:
+
+1. **#13 Slider field** (S/M) — `FormFieldType.Slider`, min/max/step, web `input[type=range]` themed (`sliderField` theme section); native via `@react-native-community/slider` optional peer + fallback; factory, both render switches, a11y (`aria-valuetext`), readOnly modes, stories.
+2. **#14 Group/fieldset field** (M) — `FormFieldClass.group(key, { label, fields, showWhen })`; web `<fieldset>/<legend>`, native View+Text; children rendered via RenderFormField; flat keys (no nesting yet — document); pairs with `validationGroup`.
+3. **#15 Typed field keys** (M) — opt-in `createFormFields<T>()` typed facade over FormFieldClass (`key: Path<T>`); type `showWhen/requiredWhen/disabledWhen/validateWithForm` callbacks as `(values: T)`; keep untyped API intact; `expectTypeOf` tests; new docs page.
+4. **#16 File upload field** (L) — biggest gap. `accept/multiple/maxSize/maxFiles`, pluggable `uploadHandler: (file) => Promise<string>` (adapter philosophy), image preview, progress, drag-drop web; native via expo-document-picker/expo-image-picker optional peers; value = uploaded URL(s); deferred-upload option.
+5. **#17 Repeater field** (L) — `useFieldArray`; child keys `${key}.${index}.${childKey}`; **requires dotted-path support** in resolver, error display (`formState.errors` traversal in RenderFormField), and submitTransform application — that's the real work; add/remove/reorder, min/maxRows.
+6. **#18 Native optional-deps Metro strategy** — Metro fails builds on uninstalled optional packages (12 try/catch require sites, 4 packages), so fallbacks are unreachable. Ship a documented `metro.config.js` `resolveRequest` stub recipe in forms-native README + docs site; consider per-integration subpaths.
+7. **#19 Native parity long tail** — wire `onSearchChange/loading/searchDebounceMs` remnants; native phone validation (or document web-only); honor or JSDoc-mark web-only options (`wrapperClassName`, `fancyStyle`, `fullWidthLabel`, `indeterminate`, readonly icons); align native theme keys with web (`timePicker`→`timePickerField`, split `searchSelect`), move hardcoded hex colors into theme, add zod schema + native theme-reference doc. Also: native switch shows 'On'/'Off' — decide whether to map to `strings.readOnlyYes/No`.
+8. **#20 1.0 prep** — CHANGELOG.md consolidating breaking changes (Apollo provider, `/phone` subpath, required-only fields now validate, `noValidate` themed errors, native submit); migration-guide page on nestledforms.com; publish order forms-core (→0.2.0? or 1.0.0 across the board) then forms/forms-native with bumped forms-core spec; `pnpm pack` fresh-install smoke test. **Versions only bump at publish time** (standing rule).
+
+## Standing constraints & gotchas (learned this session)
+
+- **Docs-as-we-go**: every change updates the local README(s); nestledforms.com (`../nestledforms.com`, Markdoc pages in `src/app/docs/`) batched per few features. Docs site: run `pnpm format` before committing (Prettier CI check) and `pnpm test` (lint+type-check+build).
+- **Stacked-branch workflow**: fix review feedback on the branch that introduced it, then merge upward (4→5→6). Expect small conflicts in `validation.ts` / `form.tsx` import blocks.
+- **Sonar**: check BOTH the quality gate and the open-issues list (`api/issues/search?...&resolved=false`) — the gate passes while issues still decorate the PR. Duplication gate is 3% on new code; web/native twins are the usual culprits — share via forms-core (see `conditional-state.ts`, `conditional-field-wrapper.tsx`, `submit-transforms.ts` `createSubmitHandler`, `validation.ts` `buildFieldsResolver`, forms-native `use-text-field-default.ts`).
+- **CI**: `pnpm-lock.yaml` must be regenerated after any package.json dependency change (frozen-lockfile CI).
+- **Test flakes**: anything interacting with the lazy PhoneField (or future lazy fields) must use `findBy*` with generous timeouts (`{}, { timeout: 15000 }`), never `getBy*` — applies to stories' play functions and unit tests. Storybook chromium runner flakes under full `nx run-many` parallelism; rerun standalone (`npx vitest run --project storybook <name>`) to confirm.
+- **Architecture cheat sheet**: Apollo adapter contract in `forms-core/src/lib/search-query-context.tsx` (+`apollo-search-provider.tsx`, only file importing @apollo/client); shared search hook `use-search-select.ts`; async combobox `use-load-options.ts`; localization `form-config-context.ts` (`FormStrings`); submit pipeline `submit-transforms.ts`; native submit context `forms-native/src/lib/native-form-submit-context.ts`; timezone-safe date helpers in `date-time.ts`.
+- Deferred decision from audits: `validationDependencies` field option is typed/documented but unconsumed (phantom API) — implement or remove before 1.0.
+
+## Definition of done for 1.0
+
+All features above landed and documented (README + site); zero Sonar issues; CI green; changelog + migration guide published; packages published in order with the workspace pins updated; fresh-install smoke test of the published tarballs passes on a clean Next.js app and an Expo app.

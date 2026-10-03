@@ -1,0 +1,15 @@
+packages:
+  - forms
+  - forms-core
+  - forms-native
+
+onlyBuiltDependencies:
+  - '@apollo/protobufjs'
+  - '@parcel/watcher'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - core-js
+  - es5-ext
+  - esbuild
+  - nx
+  - unrs-resolver
