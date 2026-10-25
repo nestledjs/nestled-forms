@@ -1,6 +1,6 @@
 import { ZodTypeAny, ZodError } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FieldValues, RegisterOptions, Resolver } from 'react-hook-form'
+import { FieldValues, RegisterOptions, Resolver, get, set } from 'react-hook-form'
 import { BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
 import { DEFAULT_FORM_STRINGS } from '../form-config-context'
 
@@ -310,9 +310,11 @@ async function collectFieldErrors(
       continue
     }
 
-    const error = await validateField(field, values[field.key], values, defaultRequiredMessage)
+    // get()/set() so dotted keys ('address.city') read the nested value
+    // and report the error where react-hook-form looks it up
+    const error = await validateField(field, get(values, field.key), values, defaultRequiredMessage)
     if (error) {
-      errors[field.key] = error
+      set(errors, field.key, error)
     }
   }
 }
@@ -327,16 +329,16 @@ async function collectRegisteredRuleErrors(
   errors: Record<string, any>
 ): Promise<void> {
   for (const [name, registered] of Object.entries(registeredFields)) {
-    if (errors[name]) continue
+    if (get(errors, name)) continue
     const registeredValidate = (registered as { validate?: unknown })?.validate
     if (!registeredValidate) continue
 
-    const result = await runRegisteredValidate(registeredValidate, values[name], values)
+    const result = await runRegisteredValidate(registeredValidate, get(values, name), values)
     if (result !== true && result !== undefined) {
-      errors[name] = {
+      set(errors, name, {
         type: 'validate',
         message: typeof result === 'string' ? result : 'Invalid value',
-      }
+      })
     }
   }
 }
