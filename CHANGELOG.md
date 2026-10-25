@@ -4,6 +4,95 @@ All notable changes to the `@nestledjs/*` form packages are documented here.
 The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 `@nestledjs/forms-native` — are versioned together.
 
+## 0.9.1 — 2026-10-25
+
+Bug-fix release across all three packages. `@nestledjs/forms-core` changes too
+(the nested-key fix below), so all three move to 0.9.1 and `@nestledjs/forms`
+and `@nestledjs/forms-native` pin `@nestledjs/forms-core` 0.9.1.
+
+No API is added or removed, and no dependency or peer range changes.
+
+### 🐛 Fixes
+
+- **Pasted, dropped and autofilled values are registered.** A value set by a
+  script — a password manager, a browser extension, some browser autofill —
+  assigns the input's `.value` and then dispatches `input` or `change`. React's
+  value tracker has already seen the new value, so it treats the event as "no
+  change" and never calls `onChange`. The field showed the value while the form
+  state stayed empty, so a `required` rule blocked the submit and the button
+  appeared to do nothing until the user typed a key.
+
+  `@nestledjs/forms` text, email, password, url and textarea fields now also
+  sync from the native `input` and `change` events. Ordinary typing is
+  unaffected: the native listener runs after React's handler and does nothing
+  when the two already agree. `<Form>` also reads those fields' DOM values
+  when it submits, as a last resort for autofill that fills an input without
+  firing any event.
+
+- **A blocked submit focuses the first invalid field.** `<Form>` now focuses
+  the first field with an error in document order, so the reason a submit
+  didn't go through is in front of the user. Previously react-hook-form's own
+  focus reached only fields whose registered ref was the focusable element, so
+  a controlled field such as a required checkbox was skipped.
+
+- **A standalone `RenderFormField` shows its validation error.** The field read
+  `useFormContext().formState.errors[key]`, which creates no subscription of
+  its own. Inside `<Form fields={...}>` the form re-rendered and the message
+  appeared; under your own `FormContext.Provider`, with the field inside a
+  memoized section or any subtree that didn't re-render, a failed submit
+  showed nothing and `aria-invalid` was never set. The field now subscribes
+  with `useFormState({ control, name })` and reads its error with
+  `get(errors, key)`, so dotted keys resolve too. Fixed in both
+  `@nestledjs/forms` and `@nestledjs/forms-native`.
+
+  If you added your own error rendering around a standalone `RenderFormField`
+  to work around this, it will now show twice; remove it after upgrading.
+
+- **Dotted field keys validate.** The field resolver in `@nestledjs/forms-core`
+  read `values[key]` and wrote `errors[key]`, so a field keyed `address.city`
+  was always validated as empty: a filled, required nested field could never
+  be submitted. Values are now read with `get()` and errors written with
+  `set()`, so nested keys validate and submit as `{ address: { city } }`.
+
+### 📚 Documentation
+
+- **README "Validation" section.** Covers Zod setup (`zod` 3.x and
+  `@hookform/resolvers` are peer dependencies you install), the field rule
+  options and how they combine, `errorMessages` keyed by Zod issue code,
+  form-level schemas, nested keys, and using `RenderFormField` with your own
+  `useForm`. It states plainly that Zod 4 and Standard Schema (Valibot,
+  ArkType) aren't supported yet; that is separate, larger work.
+
+### 🏗️ Internal
+
+- **Dependency refresh.** `pnpm audit` went from 11 critical / 53 high /
+  39 moderate / 8 low to 0 critical / 1 high / 5 moderate, through targeted
+  bumps (nx 22.0.2 → 22.7.12, storybook 9.1.21, vite 7.3.7) and
+  `pnpm.overrides` for transitive tooling packages. Every advisory was in
+  build and test tooling, not in anything the packages ship. What remains:
+  - `zod` (high): fixed only in zod 4.6.6. The packages target zod 3, and the
+    workspace's own zod is a dev copy; your app's zod version is your choice.
+    Moving to zod 4 is the separate item above.
+  - `vitest` / `@vitest/mocker` (moderate): fixed only in vitest 4, which needs
+    storybook 10's vitest addon. Test-time only.
+  - The two `forms` advisories are false positives: the workspace directory
+    `forms` is matched against an unrelated public npm package of that name.
+- **`vitest>tinypool` is overridden to 2.x.** Vitest 3.2 depends on tinypool
+  1.x, which has no patched release for its critical advisories; the full
+  suite passes on tinypool 2.
+- **`linkWorkspacePackages: true` in `pnpm-workspace.yaml`.** `forms` and
+  `forms-native` pin an exact `@nestledjs/forms-core` version, which pnpm
+  resolved from the registry, so a release that bumps all three left the
+  lockfile uninstallable (and CI's frozen install red) until forms-core was
+  published. The pinned version now links from the workspace when it matches.
+  Published manifests are unchanged: they still name `"0.9.1"`.
+- **New specs.** Paste (`user.paste`), `fireEvent.input`, script-set values
+  with native `input` and `change` events, and event-less autofill, for text,
+  email, password, url and textarea fields; focus on a blocked submit;
+  standalone `RenderFormField` errors (top-level, `validate`, nested key,
+  clearing, checkbox) in `forms` and `forms-native`; nested-key submit and
+  error in `<Form>`. `@testing-library/user-event` is now a dev dependency.
+
 ## 0.9.0 — 2026-07-29
 
 Minor release across all three packages. `@nestledjs/forms-core` moves to 0.9.0

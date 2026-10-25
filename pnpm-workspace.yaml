@@ -13,3 +13,10 @@ onlyBuiltDependencies:
   - esbuild
   - nx
   - unrs-resolver
+
+# forms and forms-native pin an exact @nestledjs/forms-core version. Linking it
+# from the workspace when that version matches lets a release bump all three
+# together and keep the lockfile installable before forms-core is published.
+# Tests, typecheck and build resolve forms-core from source through the
+# tsconfig paths either way; verify-types installs it from the packed tarball.
+linkWorkspacePackages: true
