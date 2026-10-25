@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, ViewStyle } from 'react-native'
+import { get, useFormState, type FieldError } from 'react-hook-form'
 import {
   FormField,
   FormFieldType,
@@ -46,9 +47,10 @@ function renderComponent(
   field: FormField,
   formReadOnly: boolean,
   formReadOnlyStyle: 'value' | 'disabled',
+  error: FieldError | undefined,
   requiredError: string,
 ) {
-  const hasError = !!form.formState.errors[field.key]
+  const hasError = !!error
 
   switch (field.type) {
     case FormFieldType.Text:
@@ -81,7 +83,7 @@ function renderComponent(
           form={form}
           field={field}
           hasError={hasError}
-          errorMessage={hasError ? (form.formState.errors[field.key]?.message as string) ?? requiredError : undefined}
+          errorMessage={hasError ? (error?.message as string) ?? requiredError : undefined}
           formReadOnly={formReadOnly}
           formReadOnlyStyle={formReadOnlyStyle}
         />
@@ -155,12 +157,17 @@ function RenderFormFieldInner({
   const form = useFormContext()
   const { labelDisplay, strings } = useFormConfig()
   const theme = useNativeTheme()
+  // Subscribe to this field's errors directly. Reading form.formState.errors
+  // only re-renders when something above the field re-renders, so a field
+  // under a host that doesn't (a memoized section, a custom FormProvider)
+  // never showed its message. get() resolves dotted and nested keys.
+  const { errors } = useFormState({ control: form.control, name: field.key })
+  const error = get(errors, field.key) as FieldError | undefined
 
   if (!conditionalState.isVisible) {
     return null
   }
 
-  const error = form.formState.errors[field.key]
   const errorMessage = (error?.message as string) ?? (error ? strings.requiredError : null)
 
   // Label logic
@@ -189,7 +196,7 @@ function RenderFormFieldInner({
     }
   } as FormField
 
-  const component = renderComponent(form, modifiedField, formReadOnly, formReadOnlyStyle, strings.requiredError)
+  const component = renderComponent(form, modifiedField, formReadOnly, formReadOnlyStyle, error, strings.requiredError)
 
   const labelComponent = showLabel && (
     <FormLabel fieldKey={field.key} label={field.options.label ?? ''} required={finalRequired} />

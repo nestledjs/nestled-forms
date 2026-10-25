@@ -3,6 +3,7 @@
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
 import { fieldA11yProps } from './field-a11y'
+import { withNativeInputSync } from '../utils/native-input-sync'
 import { useWatch } from 'react-hook-form'
 
 export function TextField({
@@ -69,7 +70,7 @@ export function TextField({
         placeholder={field.options.placeholder}
         defaultValue={field.options.defaultValue}
         required={field.options.required}
-        {...form.register(field.key, validationRules)}
+        {...withNativeInputSync(form, form.register(field.key, validationRules))}
         {...fieldA11yProps(field.key, hasError, field.options.helpText)}
         className={clsx(
           theme.textField.input,
