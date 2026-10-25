@@ -1304,6 +1304,7 @@ const field = FormFieldClass.text('name', {
 - **`useFormContext<T>()`**: Access form state and methods
 - **`useFormValue<T>(name)`**: Reactively read one field's value from any component inside `<Form>`
 - **`useFormValues<T>()`**: Reactively read all form values
+- **`useFieldError(name)`**: One field's error and message, subscribed to that field alone (works outside `<Form>` and for dotted keys)
 - **`useWatch()`**: react-hook-form's primitive, re-exported so you subscribe through the same instance `<Form>` uses
 - **`useFormConfig()`**: Access form configuration (label display, etc.)
 - **`useFormTheme()`**: Access current theme configuration

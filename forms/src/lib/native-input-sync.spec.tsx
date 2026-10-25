@@ -65,37 +65,22 @@ describe('Form registers values that arrive without key events', () => {
         expect(submit.mock.calls[0][0]).toMatchObject({ secret: value })
       })
 
-      it('submits a value delivered by fireEvent.input', async () => {
-        const { submit, input, button } = renderLogin(factory)
-        fireEvent.input(input, { target: { value } })
-        fireEvent.click(button)
-        await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
-        expect(submit.mock.calls[0][0]).toMatchObject({ secret: value })
-      })
+      const FILLS: Array<[string, (el: HTMLInputElement | HTMLTextAreaElement) => void]> = [
+        ['delivered by fireEvent.input', (el) => fireEvent.input(el, { target: { value } })],
+        ['a script set before dispatching a native input event', (el) => scriptFill(el, value, 'input')],
+        ['a script set before dispatching a native change event', (el) => scriptFill(el, value, 'change')],
+        ['autofilled without firing any event, read when the form submits', (el) => silentFill(el, value)],
+      ]
 
-      it('submits a value a script set before dispatching a native input event', async () => {
-        const { submit, input, button } = renderLogin(factory)
-        scriptFill(input, value, 'input')
-        fireEvent.click(button)
-        await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
-        expect(submit.mock.calls[0][0]).toMatchObject({ secret: value })
-      })
-
-      it('submits a value a script set before dispatching a native change event', async () => {
-        const { submit, input, button } = renderLogin(factory)
-        scriptFill(input, value, 'change')
-        fireEvent.click(button)
-        await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
-        expect(submit.mock.calls[0][0]).toMatchObject({ secret: value })
-      })
-
-      it('reads an autofilled value that fired no event when the form submits', async () => {
-        const { submit, input, button } = renderLogin(factory)
-        silentFill(input, value)
-        fireEvent.click(button)
-        await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
-        expect(submit.mock.calls[0][0]).toMatchObject({ secret: value })
-      })
+      for (const [how, fill] of FILLS) {
+        it(`submits a value ${how}`, async () => {
+          const { submit, input, button } = renderLogin(factory)
+          fill(input)
+          fireEvent.click(button)
+          await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
+          expect(submit.mock.calls[0][0]).toMatchObject({ secret: value })
+        })
+      }
     })
   }
 

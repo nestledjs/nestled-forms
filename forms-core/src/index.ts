@@ -41,6 +41,7 @@ export type { SearchQueryResult, UseSearchQuery } from './lib/search-query-conte
 // Hooks
 export { useFormValue, useFormValues } from './lib/hooks/use-form-value'
 export { useFieldValidation } from './lib/hooks/use-field-validation'
+export { useFieldError } from './lib/hooks/use-field-error'
 export { useSearchSelect, defaultOptionsMap } from './lib/hooks/use-search-select'
 export { useLoadOptions } from './lib/hooks/use-load-options'
 export { useDebounce } from './lib/utils/debounce'

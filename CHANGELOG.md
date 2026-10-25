@@ -10,7 +10,8 @@ Bug-fix release across all three packages. `@nestledjs/forms-core` changes too
 (the nested-key fix below), so all three move to 0.9.1 and `@nestledjs/forms`
 and `@nestledjs/forms-native` pin `@nestledjs/forms-core` 0.9.1.
 
-No API is added or removed, and no dependency or peer range changes.
+Nothing is removed, and no dependency or peer range changes. One hook is
+added: `useFieldError` (below).
 
 ### 🐛 Fixes
 
@@ -43,7 +44,9 @@ No API is added or removed, and no dependency or peer range changes.
   showed nothing and `aria-invalid` was never set. The field now subscribes
   with `useFormState({ control, name })` and reads its error with
   `get(errors, key)`, so dotted keys resolve too. Fixed in both
-  `@nestledjs/forms` and `@nestledjs/forms-native`.
+  `@nestledjs/forms` and `@nestledjs/forms-native`, through a new
+  `useFieldError(name)` hook in `@nestledjs/forms-core` (re-exported by both)
+  that custom field components can use the same way.
 
   If you added your own error rendering around a standalone `RenderFormField`
   to work around this, it will now show twice; remove it after upgrading.

@@ -2,12 +2,13 @@
 
 import React from 'react'
 import clsx from 'clsx'
-import { get, useFormState, type FieldError } from 'react-hook-form'
+import type { FieldError } from 'react-hook-form'
 import {
   FormField,
   FormFieldType,
   useFormContext,
   useFormConfig,
+  useFieldError,
   STATIC_CONDITIONAL_STATE,
   hasConditionalLogic,
   FieldConditionalWrapper,
@@ -423,12 +424,8 @@ function RenderFormFieldInner({
 }: Readonly<RenderFormFieldProps & { conditionalState: ConditionalState }>) {
   const form = useFormContext()
   const { labelDisplay, strings } = useFormConfig()
-  // Subscribe to this field's errors directly. Reading form.formState.errors
-  // only re-renders when something above the field re-renders, so a field
-  // under a host that doesn't (a memoized section, a custom FormProvider)
-  // never showed its message. get() resolves dotted and nested keys.
-  const { errors } = useFormState({ control: form.control, name: field.key })
-  const error = get(errors, field.key) as FieldError | undefined
+  // Subscribed per field, so the message shows even when nothing above re-renders
+  const { error, errorMessage } = useFieldError(field.key)
 
   // Note: We intentionally do NOT re-register fields here to update required state.
   // In react-hook-form v7, calling register() again replaces all validation rules,
@@ -441,8 +438,6 @@ function RenderFormFieldInner({
   if (!conditionalState.isVisible) {
     return null
   }
-
-  const errorMessage = (error?.message as string) ?? (error ? strings.requiredError : null)
 
   // --- CONFIGURABLE LABEL LOGIC ---
   const hasLabelProp = !!field.options.label
