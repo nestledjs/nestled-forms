@@ -963,29 +963,127 @@ All conditional functions:
 
 ## 📝 Validation
 
-Built-in validation support with custom validators:
+Validation runs when a field loses focus and when the form is submitted, then
+on every change once a submit has failed. A blocked submit shows each field's
+message under it, marks the input `aria-invalid`, and moves focus to the first
+invalid field.
+
+### Zod setup
+
+Schema validation uses [Zod](https://zod.dev) **3.x** through
+`@hookform/resolvers`. Neither is bundled: both are peer dependencies, along
+with `react-hook-form`, so install them in your app:
+
+```bash
+pnpm add react-hook-form zod@^3 @hookform/resolvers
+```
+
+`required`, `validate` and `validateWithForm` don't use Zod, but the package
+imports it, so it has to be installed even if you never write a schema.
+
+> **Zod 4 and Standard Schema aren't supported yet.** The peer range is
+> `zod@^3`, and schemas are typed as Zod 3's `ZodTypeAny`. Passing a Zod 4
+> schema, or a Valibot or ArkType schema, isn't supported.
+
+### Field rules
+
+Every field accepts these options, and they combine — a field fails on the
+first rule that fails:
+
+| Option | Runs | Use it for |
+| --- | --- | --- |
+| `required` | always | A value must be present (`false` counts as empty, for "must be checked" boxes) |
+| `requiredWhen(values)` | always | Required only when other fields say so |
+| `schema` | always | A Zod schema for this field's value |
+| `validate(value)` | always | A custom check, sync or async; return `true` or a message |
+| `validateWithForm(value, values)` | always | A check that needs other fields, e.g. "passwords match" |
+| `validateWhen(values)` | gate | Skip all of this field's rules when it returns `false` |
+| `validationGroup` | gate | While `<Form validationGroup>` is set, fields in other groups are skipped (multi-step forms) |
 
 ```tsx
+import { z } from 'zod'
+import { Form, FormFieldClass } from '@nestledjs/forms'
+
 const fields = [
   FormFieldClass.text('username', {
     label: 'Username',
     required: true,
-    validate: (value) => {
-      if (value.length < 3) return 'Username must be at least 3 characters'
-      if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Username can only contain letters, numbers, and underscores'
-      return true
-    }
+    schema: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/),
+    // Override a message by Zod issue code, or `required`
+    errorMessages: {
+      required: 'Pick a username',
+      too_small: 'Usernames are at least 3 characters',
+      invalid_string: 'Letters, numbers and underscores only',
+    },
   }),
   FormFieldClass.email('email', {
     label: 'Email',
     required: true,
+    schema: z.string().email('Enter a valid email address'),
     validate: async (value) => {
-      const response = await fetch(`/api/check-email?email=${value}`)
+      const response = await fetch(`/api/check-email?email=${encodeURIComponent(value)}`)
       const { exists } = await response.json()
-      return exists ? 'Email already exists' : true
-    }
-  })
+      return exists ? 'That email is already registered' : true
+    },
+  }),
+  FormFieldClass.password('password', { label: 'Password', required: true, schema: z.string().min(12) }),
+  FormFieldClass.password('confirmPassword', {
+    label: 'Confirm password',
+    required: true,
+    validateWithForm: (value, values) => value === values.password || 'Passwords must match',
+  }),
 ]
+```
+
+A field shows the first Zod issue for its value, with its message replaced by
+`errorMessages[issue.code]` when you've set one.
+
+### Form-level schema
+
+Pass `schema` to `<Form>` to validate the whole value object — useful for rules
+that span fields, or when the schema already exists elsewhere. Field rules
+still run alongside it, and a field-level error wins when both report the same
+key.
+
+```tsx
+const signup = z
+  .object({
+    email: z.string().email(),
+    password: z.string().min(12),
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    message: 'Passwords must match',
+    path: ['confirmPassword'],
+  })
+
+<Form id="signup" schema={signup} fields={fields} submit={createAccount} />
+```
+
+### Nested keys
+
+Dotted keys such as `address.city` validate and submit as nested values
+(`{ address: { city: '…' } }`). In a form-level schema, nest the object the
+same way.
+
+### Messages and localization
+
+The fallback required message comes from the `strings` prop
+(`strings.requiredError`); a field's `errorMessages.required` wins over it.
+See [Localization](#-localization-strings).
+
+### Using `RenderFormField` without `<Form>`
+
+A `RenderFormField` placed under your own `FormContext.Provider` subscribes to
+its own errors, so its message appears even when nothing above it re-renders.
+`required` and the other field rules are enforced by the resolver that `<Form>`
+builds; when you call `useForm` yourself, pass the same resolver:
+
+```tsx
+import { useForm } from 'react-hook-form'
+import { FormContext, RenderFormField, buildFieldsResolver } from '@nestledjs/forms'
+
+const form = useForm({ resolver: buildFieldsResolver({ fields }) })
 ```
 
 ## ✍️ Markdown Editor Configuration
@@ -1206,6 +1304,7 @@ const field = FormFieldClass.text('name', {
 - **`useFormContext<T>()`**: Access form state and methods
 - **`useFormValue<T>(name)`**: Reactively read one field's value from any component inside `<Form>`
 - **`useFormValues<T>()`**: Reactively read all form values
+- **`useFieldError(name)`**: One field's error and message, subscribed to that field alone (works outside `<Form>` and for dotted keys)
 - **`useWatch()`**: react-hook-form's primitive, re-exported so you subscribe through the same instance `<Form>` uses
 - **`useFormConfig()`**: Access form configuration (label display, etc.)
 - **`useFormTheme()`**: Access current theme configuration

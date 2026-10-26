@@ -161,3 +161,28 @@ describe('Form validation via resolver', () => {
     expect((result.errors as any).step2Field).toBeUndefined()
   })
 })
+
+describe('Form validation with nested (dotted) keys', () => {
+  const fields = [
+    FormFieldClass.text('address.city', { label: 'City', required: true }),
+    FormFieldClass.button('go', { text: 'Submit', type: 'submit' }),
+  ]
+
+  it('submits a filled nested required field as a nested value', async () => {
+    const submit = vi.fn()
+    render(<Form id="nested-ok" submit={submit} fields={fields} />)
+    fireEvent.input(screen.getByLabelText(/city/i), { target: { value: 'Lisbon' } })
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
+    expect(submit.mock.calls[0][0]).toEqual({ address: { city: 'Lisbon' } })
+  })
+
+  it('blocks an empty nested required field and shows its error', async () => {
+    const submit = vi.fn()
+    render(<Form id="nested-empty" submit={submit} fields={fields} />)
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/required/i)
+    expect(screen.getByLabelText(/city/i)).toHaveAttribute('aria-invalid', 'true')
+    expect(submit).not.toHaveBeenCalled()
+  })
+})

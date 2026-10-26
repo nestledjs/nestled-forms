@@ -3,6 +3,7 @@
 import clsx from 'clsx'
 import { FormField, FormFieldProps, FormFieldType, useFormTheme, useFieldValidation } from '@nestledjs/forms-core'
 import { fieldA11yProps } from './field-a11y'
+import { withNativeInputSync } from '../utils/native-input-sync'
 import { useWatch } from 'react-hook-form'
 
 export function PasswordField({
@@ -64,7 +65,7 @@ export function PasswordField({
         disabled={field.options.disabled}
         required={field.options.required}
         defaultValue={field.options.defaultValue}
-        {...form.register(field.key, validationRules)}
+        {...withNativeInputSync(form, form.register(field.key, validationRules))}
         {...fieldA11yProps(field.key, hasError, field.options.helpText)}
       />
       {field.options.helpText && (

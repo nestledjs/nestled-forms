@@ -2,11 +2,13 @@
 
 import React from 'react'
 import clsx from 'clsx'
+import type { FieldError } from 'react-hook-form'
 import {
   FormField,
   FormFieldType,
   useFormContext,
   useFormConfig,
+  useFieldError,
   STATIC_CONDITIONAL_STATE,
   hasConditionalLogic,
   FieldConditionalWrapper,
@@ -54,9 +56,10 @@ function renderComponent(
   field: FormField,
   formReadOnly: boolean,
   formReadOnlyStyle: 'value' | 'disabled',
+  error: FieldError | undefined,
   requiredError: string,
 ) {
-  const hasError = !!form.formState.errors[field.key]
+  const hasError = !!error
 
   switch (field.type) {
     case FormFieldType.Text:
@@ -189,7 +192,7 @@ function renderComponent(
           form={form}
           field={field}
           hasError={hasError}
-          errorMessage={hasError ? (form.formState.errors[field.key]?.message as string) ?? requiredError : undefined}
+          errorMessage={hasError ? (error?.message as string) ?? requiredError : undefined}
           formReadOnly={formReadOnly}
           formReadOnlyStyle={formReadOnlyStyle}
         />
@@ -421,6 +424,8 @@ function RenderFormFieldInner({
 }: Readonly<RenderFormFieldProps & { conditionalState: ConditionalState }>) {
   const form = useFormContext()
   const { labelDisplay, strings } = useFormConfig()
+  // Subscribed per field, so the message shows even when nothing above re-renders
+  const { error, errorMessage } = useFieldError(field.key)
 
   // Note: We intentionally do NOT re-register fields here to update required state.
   // In react-hook-form v7, calling register() again replaces all validation rules,
@@ -433,9 +438,6 @@ function RenderFormFieldInner({
   if (!conditionalState.isVisible) {
     return null
   }
-
-  const error = form.formState.errors[field.key]
-  const errorMessage = (error?.message as string) ?? (error ? strings.requiredError : null)
 
   // --- CONFIGURABLE LABEL LOGIC ---
   const hasLabelProp = !!field.options.label
@@ -471,7 +473,7 @@ function RenderFormFieldInner({
     }
   } as FormField
 
-  const component = renderComponent(form, modifiedField, formReadOnly, formReadOnlyStyle, strings.requiredError)
+  const component = renderComponent(form, modifiedField, formReadOnly, formReadOnlyStyle, error, strings.requiredError)
 
   // --- RESPECT FIELD OPTIONS FOR LAYOUT ---
   const layout = field.options.layout || 'vertical'

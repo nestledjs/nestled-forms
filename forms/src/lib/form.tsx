@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef } from 'react'
-import { useForm, UseFormProps, FieldValues } from 'react-hook-form'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import { get, useForm, UseFormProps, FieldValues, FieldErrors } from 'react-hook-form'
 import {
   FormField,
   FormContext,
@@ -18,6 +18,7 @@ import {
 import clsx from 'clsx'
 import { RenderFormField } from './render-form-field'
 import { createFinalTheme } from './utils/resolve-theme'
+import { syncNativeValues } from './utils/native-input-sync'
 import { ZodTypeAny } from 'zod'
 
 export interface FormProps<T extends FieldValues = Record<string, unknown>> extends UseFormProps<T> {
@@ -119,6 +120,26 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
 const EMPTY_THEME = {}
 const DEFAULT_FINAL_THEME = createFinalTheme(EMPTY_THEME)
 
+const FOCUSABLE = 'input, select, textarea, button, [tabindex]'
+
+/**
+ * Focuses the first field, in document order, that holds an error. Matches a
+ * control by `name` first, then by `id` (fields render `id={field.key}`).
+ * Returns false when no focusable control was found.
+ */
+function focusFirstInvalid(formEl: HTMLFormElement, errors: FieldErrors): boolean {
+  const controls = formEl.querySelectorAll<HTMLElement>(FOCUSABLE)
+  for (const el of Array.from(controls)) {
+    if ((el as HTMLInputElement).disabled || (el as HTMLInputElement).type === 'hidden') continue
+    const key = el.getAttribute('name') || el.id
+    if (key && get(errors, key)) {
+      el.focus()
+      return true
+    }
+  }
+  return false
+}
+
 /**
  * Main form component that provides both declarative and imperative form usage patterns.
  * 
@@ -194,7 +215,10 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
     defaultValues,
     resolver,
     mode: 'onBlur', // Try onBlur to see if validation triggers
-    reValidateMode: 'onChange' // Re-validate on every change
+    reValidateMode: 'onChange', // Re-validate on every change
+    // Focus is handled in onInvalid below: in document order, and for fields
+    // whose registered ref isn't the focusable element.
+    shouldFocusError: false,
   })
 
   const prevDefaultValuesRef = useRef(defaultValues)
@@ -221,11 +245,27 @@ export function Form<T extends FieldValues = Record<string, unknown>>({
   // (explicit per-field transforms win, otherwise the per-type default)
   const handleSubmitWithTransform = useMemo(() => createSubmitHandler<T>(fields, submit), [fields, submit])
 
+  const onSubmit = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      const formEl = event.currentTarget
+      // Autofill can fill an input without firing any event; read the DOM
+      // before validating so a visibly filled field isn't reported empty.
+      syncNativeValues(formEl)
+      const onInvalid = (errors: FieldErrors<T>) => {
+        if (focusFirstInvalid(formEl, errors)) return
+        const firstKey = Object.keys(errors)[0]
+        if (firstKey) form.setFocus(firstKey as Parameters<typeof form.setFocus>[0])
+      }
+      return form.handleSubmit(handleSubmitWithTransform, onInvalid)(event)
+    },
+    [form, handleSubmitWithTransform],
+  )
+
   return (
     <FormConfigContext.Provider value={formConfig}>
       <ThemeContext.Provider value={finalTheme}>
         <FormContext.Provider value={form as unknown as import('react-hook-form').UseFormReturn<import('react-hook-form').FieldValues>}>
-          <form id={id} noValidate className={clsx('space-y-6', className)} onSubmit={form.handleSubmit(handleSubmitWithTransform)}>
+          <form id={id} noValidate className={clsx('space-y-6', className)} onSubmit={onSubmit}>
             {/* Render fields from the declarative array */}
             {fields
               ?.filter((field): field is FormField => field !== null)
