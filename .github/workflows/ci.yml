@@ -15,7 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: "--max-old-space-size=4096"
-      NX_CLOUD_AUTH_TOKEN: ${{ secrets.NX_CLOUD_AUTH_TOKEN }}
+      # Nx Cloud, per Nx's recommendation: pushes use the read-write token; pull requests use the
+      # read-only token (a scoped per-PR cache, and read-only tokens can still use workers), so PR code
+      # can never write into the cache develop and releases trust. Fork PRs get no secrets and run with
+      # the workspace's anonymous access (none).
+      NX_CLOUD_ACCESS_TOKEN: ${{ github.event_name == 'push' && secrets.NX_CLOUD_ACCESS_TOKEN || secrets.NX_CLOUD_ACCESS_TOKEN_READ }}
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +54,7 @@ jobs:
           fi
 
       # Enable Nx Cloud Distributed CI (keep this)
-      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-workers-after="build"
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -62,7 +66,7 @@ jobs:
         run: pnpm exec nx affected -t lint test
 
       # Supplies dist/ for the publish gate, and is the only build invocation,
-      # so it owns the tasks the agents distribute. --stop-agents-after="build"
+      # so it owns the tasks the workers distribute. --stop-workers-after="build"
       # then tears them down at the right point.
       - name: Build all packages
         run: pnpm exec nx run-many -t build --all
