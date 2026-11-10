@@ -58,6 +58,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
 
   useEffect(() => {
     if (apolloOptions.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- accumulates labels from each Apollo result as it arrives; deriving them in render would drop labels of selected options missing from the current result
       setSelectedOptionsCache(prev => {
         let hasChanges = false
         for (const option of apolloOptions) {

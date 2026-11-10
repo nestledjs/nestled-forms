@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { View, Text, TextInput } from 'react-native'
 import { useWatch } from 'react-hook-form'
 import { FormField, FormFieldProps, FormFieldType, CustomFieldRenderProps } from '@nestledjs/forms-core'
@@ -63,20 +64,26 @@ export function CustomField<T = unknown>({
     field: field as any,
   }
 
+  // Only the caller's callbacks run inside the try. React renders returned JSX later, so a try
+  // around building it catches nothing more; the wrapper markup itself can't throw.
+  let content: ReactNode = null
+  let wrapped = false
+  let failed = false
+  let renderError: unknown
   try {
-    const customFieldContent = options.customField(renderProps)
+    content = options.customField(renderProps)
 
     if (options.customWrapper) {
-      return options.customWrapper(customFieldContent)
+      content = options.customWrapper(content)
+      wrapped = true
     }
-
-    return (
-      <View style={theme.wrapper}>
-        {customFieldContent}
-      </View>
-    )
   } catch (error) {
-    console.error('Error rendering custom field:', error)
+    failed = true
+    renderError = error
+  }
+
+  if (failed) {
+    console.error('Error rendering custom field:', renderError)
     return (
       <View style={theme.wrapper}>
         <Text style={theme.errorText}>
@@ -85,6 +92,12 @@ export function CustomField<T = unknown>({
       </View>
     )
   }
+
+  if (wrapped) {
+    return content
+  }
+
+  return <View style={theme.wrapper}>{content}</View>
 }
 
 CustomField.displayName = 'CustomField'

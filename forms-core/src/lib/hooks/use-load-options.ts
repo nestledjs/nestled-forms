@@ -22,6 +22,7 @@ export function useLoadOptions(
   const requestIdRef = useRef(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadOptionsRef = useRef(loadOptions)
+  // eslint-disable-next-line react-hooks/refs -- latest-ref pattern: keeps runSearch stable while calling the newest loadOptions; moving it to an effect would leave it stale for effects that run first
   loadOptionsRef.current = loadOptions
 
   const runSearch = useCallback(async (searchTerm: string) => {
