@@ -101,6 +101,7 @@ export const StorybookFieldWrapper: React.FC<StorybookFieldWrapperProps> = ({
             {showState && (
               <div className="mt-6 p-3 bg-gray-100 rounded text-xs">
                 <h4 className="font-bold mb-2">Live Form State:</h4>
+                {/* eslint-disable-next-line react-hooks/incompatible-library -- story-only live state readout; watch() opts this component out of React Compiler memoization, which this workspace does not use */}
                 <pre>{JSON.stringify(form.watch(), null, 2)}</pre>
               </div>
             )}

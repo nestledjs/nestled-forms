@@ -69,6 +69,7 @@ export function useSearchSelect<TDataItem extends RequiredItemShape>(
     if (!loading && data) {
       // Keep the previous reference when nothing changed, so unstable adapter
       // results or inline field options can't cascade into a render loop
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs options from the Apollo query result, which arrives after render; the updater keeps the old reference when nothing changed, so it cannot loop
       setOptions((prev) => {
         const next = processData(data[dataType] ?? [])
         return sameOptions(prev, next) ? prev : next

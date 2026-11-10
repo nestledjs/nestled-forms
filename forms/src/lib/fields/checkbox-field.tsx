@@ -154,6 +154,7 @@ export function CheckboxField(props: Readonly<CheckboxFieldProps>) {
     return renderReadOnlyState(props, theme, value, strings)
   }
 
+  // eslint-disable-next-line react-hooks/refs -- the ref is only attached as the input's ref prop inside the helper; .current is never read during render
   const inputNode = renderControlledInput(props, theme, inputRef, strings)
 
   return renderStandardLayout(props, inputNode, theme)

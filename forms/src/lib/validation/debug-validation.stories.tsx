@@ -109,6 +109,7 @@ export const DirectReactHookForm: Story = {
 
           <div className="mt-4 p-3 bg-gray-100 rounded">
             <h3 className="text-sm font-medium mb-2">Form State:</h3>
+            {/* eslint-disable-next-line react-hooks/incompatible-library -- story-only live state readout; watch() opts this component out of React Compiler memoization, which this workspace does not use */}
             <pre className="text-xs">{JSON.stringify(form.watch(), null, 2)}</pre>
           </div>
         </div>

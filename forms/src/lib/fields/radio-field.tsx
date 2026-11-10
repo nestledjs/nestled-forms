@@ -125,6 +125,7 @@ export function RadioField(
         props.form.setValue(props.field.key, defaultOption.value)
       }
       if (options?.defaultSubValue !== undefined && defaultOption?.checkedSubOption) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- applies defaultSubValue once the field mounts without a value, together with the form.setValue calls beside it; an initializer would run before the form value is known
         setSubOptionKey(defaultOption?.checkedSubOption?.key)
         setSubOptionValue(options?.defaultSubValue)
         props.form.setValue(defaultOption?.checkedSubOption?.key, options?.defaultSubValue)

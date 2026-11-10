@@ -1,5 +1,6 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
+import { playwright } from '@vitest/browser-playwright'
 import viteConfig from './vite.config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -65,7 +66,7 @@ export default mergeConfig(
             },
             browser: {
               enabled: true,
-              provider: 'playwright',
+              provider: playwright(),
               headless: true,
               instances: [{ browser: 'chromium' }],
             },

@@ -128,6 +128,7 @@ export function SelectFieldMultiSearchApollo<TDataItem extends RequiredItemShape
   // Update cache whenever new options come from Apollo
   useEffect(() => {
     if (options.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- accumulates labels from each Apollo result as it arrives; deriving them in render would drop labels of selected options missing from the current result
       setSelectedOptionsCache((prevCache) => {
         // Check if any new options are actually different
         let hasChanges = false

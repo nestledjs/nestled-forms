@@ -7,7 +7,8 @@
     "strict": true,
     "types": ["vite/client", "vitest"],
     "module": "ESNext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],

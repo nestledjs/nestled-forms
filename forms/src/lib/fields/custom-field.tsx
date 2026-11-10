@@ -1,6 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
+import type { ReactNode } from 'react'
 import { useWatch } from 'react-hook-form'
 import { useFormTheme, FormField, FormFieldProps, FormFieldType, CustomFieldRenderProps } from '@nestledjs/forms-core'
 
@@ -72,21 +73,28 @@ export function CustomField<T = unknown>({
     field: field,
   }
 
+  // Only the caller's callbacks run inside the try. React renders returned JSX later, so a try
+  // around building it catches nothing more; the wrapper markup itself can't throw.
+  let content: ReactNode = null
+  let wrapped = false
+  let wrappedContent: ReturnType<NonNullable<typeof options.customWrapper>> | undefined
+  let failed = false
+  let renderError: unknown
   try {
     // Render the custom field component with the render props
-    const customFieldContent = options.customField(renderProps)
-    
+    content = options.customField(renderProps)
+
     if (options.customWrapper) {
-      return options.customWrapper(customFieldContent)
+      wrappedContent = options.customWrapper(content)
+      wrapped = true
     }
-    
-    return (
-      <div className={clsx(theme.wrapper)}>
-        {customFieldContent}
-      </div>
-    )
   } catch (error) {
-    console.error('Error rendering custom field:', error)
+    failed = true
+    renderError = error
+  }
+
+  if (failed) {
+    console.error('Error rendering custom field:', renderError)
     return (
       <div className={clsx(theme.wrapper)}>
         <div className={clsx(theme.errorContainer)}>
@@ -95,13 +103,20 @@ export function CustomField<T = unknown>({
           </div>
           {process.env.NODE_ENV === 'development' && (
             <div className={clsx(theme.errorText, 'mt-1 text-xs')}>
-              {error instanceof Error ? error.message : String(error)}
+              {renderError instanceof Error ? renderError.message : String(renderError)}
             </div>
           )}
         </div>
       </div>
     )
   }
+
+  if (wrapped) {
+    // Keeps the component's JSX.Element return type, which customWrapper's own return type matches
+    return wrappedContent as ReturnType<NonNullable<typeof options.customWrapper>>
+  }
+
+  return <div className={clsx(theme.wrapper)}>{content}</div>
 }
 
 CustomField.displayName = 'CustomField'

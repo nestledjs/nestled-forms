@@ -4,6 +4,31 @@ All notable changes to the `@nestledjs/*` form packages are documented here.
 The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 `@nestledjs/forms-native` — are versioned together.
 
+## 0.9.2 — 2026-11-10
+
+Toolchain release across all three packages, which stay in lockstep:
+`@nestledjs/forms` and `@nestledjs/forms-native` pin `@nestledjs/forms-core`
+0.9.2. No API changes, and no dependency or peer range changes.
+
+### 🐛 Fixes
+
+- **`CustomField` builds its wrapper outside the `try`.** Your `customField`
+  and `customWrapper` callbacks still run inside it, and a throw from either
+  still renders the same "Error rendering custom field" state. Only the
+  wrapper markup moved, which can't throw. Same in `@nestledjs/forms` and
+  `@nestledjs/forms-native`.
+
+### 🏗️ Internal
+
+- **Nx 22.7.12 → 24.0.5, TypeScript 5.7 → 6.0, ESLint 9 → 10.** Builds now
+  use Vite 8 (Rolldown), tests Vitest 4, and Storybook moves 9 → 10. The
+  published files are the same set as 0.9.1 apart from content-hashed chunk
+  names and one small `rolldown-runtime` chunk in `@nestledjs/forms`; every
+  chunk keeps its `'use client'` banner.
+- **eslint-plugin-react-hooks 7.** Its React Compiler rules are errors. The
+  findings were fixed in code where that changed nothing, and otherwise kept
+  with a one-line reasoned `eslint-disable-next-line`.
+
 ## 0.9.1 — 2026-10-25
 
 Bug-fix release across all three packages. `@nestledjs/forms-core` changes too
