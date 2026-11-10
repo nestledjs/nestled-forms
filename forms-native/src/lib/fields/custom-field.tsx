@@ -68,13 +68,14 @@ export function CustomField<T = unknown>({
   // around building it catches nothing more; the wrapper markup itself can't throw.
   let content: ReactNode = null
   let wrapped = false
+  let wrappedContent: ReturnType<NonNullable<typeof options.customWrapper>> | undefined
   let failed = false
   let renderError: unknown
   try {
     content = options.customField(renderProps)
 
     if (options.customWrapper) {
-      content = options.customWrapper(content)
+      wrappedContent = options.customWrapper(content)
       wrapped = true
     }
   } catch (error) {
@@ -94,7 +95,8 @@ export function CustomField<T = unknown>({
   }
 
   if (wrapped) {
-    return content
+    // Keeps the component's JSX.Element return type, which customWrapper's own return type matches
+    return wrappedContent as ReturnType<NonNullable<typeof options.customWrapper>>
   }
 
   return <View style={theme.wrapper}>{content}</View>
