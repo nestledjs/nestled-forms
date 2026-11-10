@@ -3,18 +3,15 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "forms-native/src",
   "projectType": "library",
+  "publishable": true,
   "tags": [],
   "implicitDependencies": ["forms-core"],
-  "publishable": true,
   "targets": {
     "build": {
-      "executor": "@nx/vite:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{projectRoot}/{options.outDir}", "{workspaceRoot}/dist/forms-native"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/forms-native"
+        "outDir": "../dist/forms-native"
       },
       "configurations": {
         "development": {

@@ -18,7 +18,11 @@
       "@nestledjs/forms-core": ["forms-core/src/index.ts"],
       "@nestledjs/forms-core/apollo": ["forms-core/src/apollo.ts"],
       "@nestledjs/forms-native": ["forms-native/src/index.ts"]
-    }
+    },
+    "strict": false,
+    "noUncheckedSideEffectImports": false,
+    "types": ["*"],
+    "ignoreDeprecations": "6.0"
   },
   "exclude": ["node_modules", "tmp"]
 }

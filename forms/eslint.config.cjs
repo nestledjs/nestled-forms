@@ -4,15 +4,11 @@ const baseConfig = require('../eslint.config.js')
 module.exports = [
   ...baseConfig,
   ...nx.configs['flat/react'],
+  baseConfig.reactVersionSettings,
+  baseConfig.reactHooksV7Rules,
   {
     // Ignore build outputs and generated files
-    ignores: [
-      'storybook-static/**',
-      'dist/**', 
-      'coverage/**',
-      '**/node_modules/**',
-      'src/markdown.ts'
-    ]
+    ignores: ['storybook-static/**', 'dist/**', 'coverage/**', '**/node_modules/**', 'src/markdown.ts'],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -27,7 +23,7 @@ module.exports = [
       // Allow other common patterns
       '@typescript-eslint/no-empty-function': 'off',
       'prefer-const': 'off',
-      'no-var': 'off'
+      'no-var': 'off',
     },
   },
 ]

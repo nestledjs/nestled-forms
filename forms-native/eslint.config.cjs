@@ -4,12 +4,10 @@ const baseConfig = require('../eslint.config.js')
 module.exports = [
   ...baseConfig,
   ...nx.configs['flat/react'],
+  baseConfig.reactVersionSettings,
+  baseConfig.reactHooksV7Rules,
   {
-    ignores: [
-      'dist/**',
-      'coverage/**',
-      '**/node_modules/**',
-    ]
+    ignores: ['dist/**', 'coverage/**', '**/node_modules/**'],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
@@ -20,7 +18,7 @@ module.exports = [
       'react-hooks/exhaustive-deps': 'off',
       '@typescript-eslint/no-empty-function': 'off',
       'prefer-const': 'off',
-      'no-var': 'off'
+      'no-var': 'off',
     },
   },
 ]

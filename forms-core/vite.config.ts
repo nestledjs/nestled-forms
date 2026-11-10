@@ -3,16 +3,17 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'node:path'
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
+import { copyPackageFiles } from '../tools/vite/copy-package-files'
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   root: __dirname,
   cacheDir: '../node_modules/.vite/forms-core',
   plugins: [
     react(),
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
+    copyPackageFiles(['*.md']),
     dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') }),
   ],
   build: {
@@ -31,7 +32,7 @@ export default defineConfig({
       fileName: (_format, entryName) => `${entryName}.js`,
       formats: ['es' as const],
     },
-    rollupOptions: {
+    rolldownOptions: {
       external: [
         'react',
         'react/jsx-runtime',
