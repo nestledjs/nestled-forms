@@ -14,7 +14,7 @@ import {
   type FormTheme,
   type FormConfig,
   type FormStrings,
-  type AnyZodSchema,
+  type FormSchema,
 } from '@nestledjs/forms-core'
 import clsx from 'clsx'
 import { RenderFormField } from './render-form-field'
@@ -54,7 +54,8 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
   strings?: Partial<FormStrings>
 
   /**
-   * Optional Zod schema for form-level validation.
+   * Optional schema for form-level validation: Zod, Valibot, ArkType or any
+   * Standard Schema (https://standardschema.dev) validator.
    * When provided, this schema will validate the entire form's data structure.
    * Can be used alongside field-level schemas for comprehensive validation.
    *
@@ -76,7 +77,7 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
    * />
    * ```
    */
-  schema?: AnyZodSchema
+  schema?: FormSchema
 
   /**
    * Current validation group to validate.

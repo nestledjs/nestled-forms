@@ -8,7 +8,7 @@ import { useFormConfig } from '../form-config-context'
 
 /**
  * Hook that provides validation rules for a form field,
- * including support for Zod schemas, cross-field validation, and conditional validation.
+ * including support for schemas, cross-field validation, and conditional validation.
  *
  * @param field - The field configuration
  * @param form - The form instance from react-hook-form

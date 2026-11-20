@@ -55,8 +55,6 @@ export default defineConfig({
         'react/jsx-runtime',
         'react-hook-form',
         'zod',
-        '@hookform/resolvers',
-        '@hookform/resolvers/zod',
         '@mdxeditor/editor',
         '@apollo/client',
         '@apollo/client/react',

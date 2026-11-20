@@ -25,7 +25,7 @@ export function EmailField({
   const readOnlyStyle = field.options.readOnlyStyle ?? formReadOnlyStyle
   const value = useWatch({ control: form.control, name: field.key }) ?? ''
 
-  // Get validation rules including Zod schema and cross-field validation
+  // Get validation rules including schema and cross-field validation
   const validationRules = useFieldValidation(
     field,
     form

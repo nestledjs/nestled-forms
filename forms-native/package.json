@@ -24,20 +24,23 @@
     "validation",
     "react-hook-form",
     "zod",
+    "standard-schema",
+    "valibot",
+    "arktype",
     "nativewind"
   ],
   "author": "Nestled Contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nestledjs/nestled.git"
+    "url": "git+https://github.com/nestledjs/nestled-forms.git",
+    "directory": "forms-native"
   },
   "publishConfig": {
     "access": "public"
   },
   "peerDependencies": {
     "@apollo/client": "^3.0.0 || ^4.0.0",
-    "@hookform/resolvers": "^3.0.0 || ^4.0.0 || ^5.0.0",
     "@react-native-community/datetimepicker": ">=8.0.0",
     "expo-checkbox": ">=3.0.0",
     "react": ">=18.0.0",
@@ -50,9 +53,6 @@
   "peerDependenciesMeta": {
     "@apollo/client": {
       "optional": true
-    },
-    "@hookform/resolvers": {
-      "optional": false
     },
     "@react-native-community/datetimepicker": {
       "optional": true

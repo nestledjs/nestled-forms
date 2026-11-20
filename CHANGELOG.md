@@ -6,8 +6,9 @@ The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 
 ## Unreleased
 
-Zod 4 support across all three packages. The peer range grows — `zod@^3` keeps
-working — and no public export is removed. One breaking detail is called out
+Zod 4 support and Standard Schema validation across all three packages. The
+peer range grows — `zod@^3` keeps working — `@hookform/resolvers` is no longer
+needed, and no public export is removed. One breaking detail is called out
 under "Changed" below: `FormThemeSchema` is no longer a Zod schema object.
 
 ### ✨ Features
@@ -17,17 +18,28 @@ under "Changed" below: `FormThemeSchema` is no longer a Zod schema object.
   majors now work, and the publish gate type-checks the packed packages
   against each in turn.
 
-  `@hookform/resolvers` widens to `^3 || ^4 || ^5` to go with it. A Zod 4
-  schema needs resolvers 5, which reads the schema at runtime and handles both
-  majors; resolvers 3 and 4 only understand Zod 3. If you stay on Zod 3,
-  nothing changes.
+  Neither major needs `@hookform/resolvers` any more (see "Changed"): the
+  built-in resolver reads a schema through Standard Schema, which Zod 4 and
+  Zod 3.24+ both implement, and through `safeParseAsync` on older Zod 3.
 
   `errorMessages` keys are the installed Zod's issue codes, and Zod renamed
   some between majors (`invalid_string` → `invalid_format`,
   `invalid_enum_value` → `invalid_value`; `too_small`, `too_big` and
   `invalid_type` are unchanged). The packages pass your key straight through
   and do not translate, so check the codes you key on when you upgrade Zod.
-  See the README's "Zod setup".
+  See the README's "Schema validation setup".
+
+- **`schema` accepts any Standard Schema validator.** On a field and on
+  `<Form>` (web and native), `schema` now takes Zod, Valibot, ArkType or any
+  other [Standard Schema v1](https://standardschema.dev) validator. Every
+  Zod release in the peer range works, including Zod 3 releases older than
+  3.24 that predate Standard Schema.
+
+- **New schema exports from all three packages:** the `FormSchema` type (what
+  `schema` accepts), the `StandardSchemaV1` type, `standardSchemaResolver`
+  (the react-hook-form resolver `<Form>` uses for a form-level schema),
+  `validateSchema` and `FORM_ERROR_KEY`. `InferSchemaType` now resolves for
+  any Standard Schema validator, not only Zod.
 
 - **New theme helpers,** exported from `@nestledjs/forms-core` and
   re-exported by `@nestledjs/forms`: `createDefaultFormTheme()` for a fresh
@@ -79,6 +91,18 @@ under "Changed" below: `FormThemeSchema` is no longer a Zod schema object.
   packages, which was being bundled into the published `@nestledjs/forms`:
   `index.js` goes from 109,278 to 88,825 bytes (−19%).
 
+- **Register-time rules on nested keys run on submit.** A field keyed
+  `address.phone` whose component registers its own `validate` rule (the
+  phone field's format check, `useFieldValidation`) skipped that rule
+  whenever the form had a resolver, because react-hook-form nests the
+  registered fields by key and only top-level names were read. Those rules
+  also now respect `validateWhen` and the active `validationGroup`, which a
+  registered rule could not see.
+
+- **`repository` in the three `package.json` files** pointed at a different
+  repository. It now points here, with each package's `directory`, so the npm
+  pages link to the right source after the next release.
+
 ### 🔄 Changed
 
 - **`FormThemeSchema` is no longer a Zod schema.** It is still exported, and
@@ -97,11 +121,43 @@ under "Changed" below: `FormThemeSchema` is no longer a Zod schema object.
   reachable by passing a wrong-typed theme value.
 
 - **`InputFieldOptions.schema` and the `<Form schema>` prop are typed
-  `AnyZodSchema`** (also exported), which resolves on both Zod majors.
-  `ZodTypeAny` is deprecated in Zod 4, and bare `ZodType` defaults its
-  input to `unknown` there, which `zodResolver` rejects.
+  `FormSchema`,** not Zod's `ZodTypeAny`. `FormSchema` is structural — any
+  Standard Schema validator, or an older Zod 3 schema — so it resolves on
+  both Zod majors and for other validators. Passing a Zod schema compiles as
+  before. Code that reads a schema back off a field's options and calls Zod
+  methods on it (`field.options.schema.parse(…)`) now needs a cast;
+  `AnyZodSchema`, a Zod schema type that resolves on both majors, is exported
+  for that.
+
+- **`@hookform/resolvers` is no longer a peer dependency.** The form-level
+  resolver is built in. It is safe to leave installed; these packages no
+  longer import it. `zod` stays a required peer: the packages' types refer to
+  it, and your app and the packages must share one copy.
+
+- **Form-level Zod errors keep their shape:** the first issue per path, with
+  the Zod issue code as the error `type`; an array-level issue at
+  `items.root` beside its item errors; and an issue with no path (a
+  `.refine()` on the whole object without `path`) under the empty key, now
+  exported as `FORM_ERROR_KEY`, where it blocks the submit. One difference
+  from `@hookform/resolvers`: a failed union reports the union's own issue
+  rather than the flattened issues of its branches.
+
+- **A field-level schema that throws** fails the field with the thrown
+  message everywhere. Under `<Form>` it already did; a `RenderFormField` used
+  with your own `useForm` and no resolver showed "Invalid value" instead.
+
+### 📚 Documentation
+
+- **README "Schema validation setup".** What to install (`react-hook-form`
+  and `zod`, either major) and why Zod is a peer, a Valibot example, and
+  which validators provide the issue codes `errorMessages` keys on. The
+  install section at the top now names the peer dependencies too.
 
 ### 🏗️ Internal
+
+- **`@hookform/resolvers` is gone from the workspace.** The root pinned `^5`
+  while the packages declared `^3`, so the workspace advertised one major and
+  developed against another.
 
 - **The workspace dev-installs Zod 4** (4.6.6+, which clears the high-severity
   advisory `pnpm audit` reported under 0.9.1), plus `zod-v3`

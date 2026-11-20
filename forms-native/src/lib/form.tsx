@@ -13,7 +13,7 @@ import {
   deepEqual,
   type FormStrings,
   type FormConfig,
-  type AnyZodSchema,
+  type FormSchema,
 } from '@nestledjs/forms-core'
 import { NativeFormSubmitContext } from './native-form-submit-context'
 import { NativeThemeContext } from './native-theme-context'
@@ -44,7 +44,11 @@ export interface NativeFormProps<T extends FieldValues = Record<string, unknown>
   labelDisplay?: 'all' | 'default' | 'none'
   /** Override any user-facing strings (localization). Merged over English defaults. */
   strings?: Partial<FormStrings>
-  schema?: AnyZodSchema
+  /**
+   * Form-level schema: Zod, Valibot, ArkType or any Standard Schema
+   * (https://standardschema.dev) validator.
+   */
+  schema?: FormSchema
   validationGroup?: string
   validationGroups?: string[]
 }
