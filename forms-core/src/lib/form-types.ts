@@ -163,8 +163,8 @@ export interface BaseFieldOptions {
    * Custom error messages for validation.
    * `required` overrides the required message. Any other key is matched
    * against the schema issue's `code` when the validator provides one: Zod
-   * does (`too_small`, `invalid_string`, …); Valibot and ArkType don't, so
-   * set their messages in the schema itself.
+   * does (`too_small`, `invalid_string`, …) and so does ArkType (`min`,
+   * `pattern`, …); Valibot doesn't, so set its messages in the schema itself.
    *
    * @example
    * ```tsx
