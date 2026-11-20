@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { z } from 'zod'
+import { z as z4 } from 'zod/v4'
 import * as v from 'valibot'
 import { type } from 'arktype'
 import { Form } from './form'
@@ -254,6 +255,17 @@ describe('form-level schema from any Standard Schema validator', () => {
     clickSubmit()
     await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
     expect(submit.mock.calls[0][0]).toEqual({ name: 'Ada' })
+  })
+
+  it('validates with the Zod 4 API from the zod/v4 entry of zod 3.25', async () => {
+    const resolver = createFormResolver(z4.object({ email: z4.email('Enter a valid email') }), [
+      { key: 'name', options: { schema: z4.string().min(2, 'Too short') } },
+    ])!
+    const result = await resolver({ email: 'nope', name: 'A' }, undefined, resolverOptions)
+    expect(result.errors).toEqual({
+      email: { type: 'invalid_format', message: 'Enter a valid email' },
+      name: { type: 'too_small', message: 'Too short' },
+    })
   })
 
   it('validates a whole form with an ArkType schema', async () => {
