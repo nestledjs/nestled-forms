@@ -48,8 +48,6 @@ export default defineConfig({
         'react-native',
         'react-hook-form',
         'zod',
-        '@hookform/resolvers',
-        '@hookform/resolvers/zod',
         '@apollo/client',
         '@apollo/client/react',
         'graphql',

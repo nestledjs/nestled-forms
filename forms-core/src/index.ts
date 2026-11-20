@@ -60,6 +60,19 @@ export {
   type InferSchemaType,
 } from './lib/utils/validation'
 
+// Schema validation: what `schema` accepts, and the resolver <Form> uses for it
+export { standardSchemaResolver, validateSchema } from './lib/utils/standard-schema'
+export type {
+  FormSchema,
+  LegacyZodSchema,
+  SchemaIssue,
+  SchemaValidationResult,
+  StandardSchemaV1,
+  StandardSchemaV1Issue,
+  StandardSchemaV1Props,
+  StandardSchemaV1Result,
+} from './lib/utils/standard-schema'
+
 // Currency utilities
 export {
   CURRENCY_CONFIGS,

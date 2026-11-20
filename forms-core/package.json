@@ -23,20 +23,23 @@
     "validation",
     "form-types",
     "react-hook-form",
-    "zod"
+    "zod",
+    "standard-schema",
+    "valibot",
+    "arktype"
   ],
   "author": "Nestled Contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nestledjs/nestled.git"
+    "url": "git+https://github.com/nestledjs/nestled-forms.git",
+    "directory": "forms-core"
   },
   "publishConfig": {
     "access": "public"
   },
   "peerDependencies": {
     "@apollo/client": "^3.0.0 || ^4.0.0",
-    "@hookform/resolvers": "^3.0.0 || ^4.0.0 || ^5.0.0",
     "dayjs": "^1.11.0",
     "react": ">=18.0.0",
     "react-hook-form": "^7.0.0",
