@@ -80,9 +80,9 @@ function failure(issues: ReadonlyArray<StandardSchemaV1Issue>): SchemaValidation
 
 /**
  * Validates a value against a schema. Uses the Standard Schema interface when
- * the schema has one, else Zod 3's `safeParseAsync`. Never throws: a schema
- * that throws, or that has neither interface, fails the value with a single
- * issue — a broken schema must not pass a value as valid.
+ * the schema has one, else Zod's `safeParseAsync`, else `parseAsync`. Never
+ * throws: a schema that throws, or that has none of those, fails the value
+ * with a single issue — a broken schema must not pass a value as valid.
  */
 export async function validateSchema(schema: FormSchema, value: unknown): Promise<SchemaValidationResult> {
   try {
@@ -99,10 +99,31 @@ export async function validateSchema(schema: FormSchema, value: unknown): Promis
       return result.success ? { value: result.data } : failure(result.error.issues)
     }
 
+    // A schema exposing only `parseAsync` rejects by throwing. An error that
+    // carries an `issues` array is a rejection of the value — read structurally,
+    // never with `instanceof ZodError`, which fails across two copies of zod and
+    // across majors. Anything else is the schema itself breaking.
+    const parser = schema as { parseAsync?: (value: unknown) => Promise<unknown> } | null | undefined
+    if (parser && typeof parser.parseAsync === 'function') {
+      try {
+        return { value: await parser.parseAsync(value) }
+      } catch (error) {
+        const issues = (error as { issues?: unknown } | null | undefined)?.issues
+        if (Array.isArray(issues)) return failure(issues as StandardSchemaV1Issue[])
+        throw error
+      }
+    }
+
     return failure([])
   } catch (error) {
     return {
-      issues: [{ message: error instanceof Error ? error.message : FALLBACK_MESSAGE, path: [], code: 'schema' }],
+      issues: [
+        {
+          message: error instanceof Error && error.message ? error.message : FALLBACK_MESSAGE,
+          path: [],
+          code: 'schema',
+        },
+      ],
     }
   }
 }
