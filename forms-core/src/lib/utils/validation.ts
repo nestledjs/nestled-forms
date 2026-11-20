@@ -278,7 +278,7 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
     }
 
     await collectFieldErrors(fieldsNeedingValidation, values, currentValidationGroup, errors, defaultRequiredMessage)
-    await collectRegisteredRuleErrors(options.fields ?? {}, values, errors)
+    await collectRegisteredRuleErrors(options.fields ?? {}, values, errors, fields ?? [], currentValidationGroup)
 
     return {
       values: Object.keys(errors).length ? {} : values,
@@ -316,9 +316,21 @@ async function collectFieldErrors(
 async function collectRegisteredRuleErrors(
   registeredFields: Record<string, unknown>,
   values: any,
-  errors: Record<string, any>
+  errors: Record<string, any>,
+  configuredFields: Array<{ key: string; options: InputFieldOptions }> = [],
+  currentValidationGroup?: string
 ): Promise<void> {
+  // A registered rule doesn't know the form's active validation group, so a
+  // configured field that validateWhen or the group excludes is skipped here
+  // exactly as collectFieldErrors skips it.
+  const skipped = new Set(
+    configuredFields
+      .filter((field) => !shouldValidateField(field, values, currentValidationGroup))
+      .map((field) => field.key)
+  )
+
   for (const [name, registered] of flattenRegisteredFields(registeredFields)) {
+    if (skipped.has(name)) continue
     if (get(errors, name)) continue
     const registeredValidate = registered.validate
     if (!registeredValidate) continue
@@ -335,17 +347,18 @@ async function collectRegisteredRuleErrors(
 
 // react-hook-form nests options.fields by key ('address.city' arrives as
 // { address: { city: field } }), so walk down to the registered fields — the
-// objects carrying `ref` and their full dotted `name`.
+// objects carrying their full dotted `name` as a string. A container never
+// does: a child field called `name`, `ref` or `validate` is an object there.
 function flattenRegisteredFields(
   node: Record<string, unknown>,
   out: Array<[string, { validate?: unknown }]> = [],
   depth = 0
 ): Array<[string, { validate?: unknown }]> {
-  for (const [key, entry] of Object.entries(node)) {
+  for (const entry of Object.values(node)) {
     if (typeof entry !== 'object' || entry === null) continue
     const candidate = entry as { name?: unknown; ref?: unknown; validate?: unknown }
-    if ('ref' in candidate || 'validate' in candidate) {
-      out.push([typeof candidate.name === 'string' ? candidate.name : key, candidate])
+    if (typeof candidate.name === 'string') {
+      out.push([candidate.name, candidate])
     } else if (depth < 10) {
       flattenRegisteredFields(entry as Record<string, unknown>, out, depth + 1)
     }

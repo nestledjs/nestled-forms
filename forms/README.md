@@ -1133,6 +1133,13 @@ Each field shows the first issue the schema reports for its path. When the
 form has no field-level rules, `submit` receives the schema's output (trimmed,
 coerced or defaulted values included).
 
+An issue with no path — a whole-object `.refine()` without `path` — blocks the
+submit but belongs to no field, so no field shows it. Give the refinement a
+`path`, as above, or read it from `formState.errors[FORM_ERROR_KEY]`
+(`FORM_ERROR_KEY` is exported; react-hook-form reserves `errors.root`, so it
+isn't used). An issue on an array itself is reported at `items.root`, next to
+the errors of its items.
+
 `<Form>` builds its resolver for you. If you call `useForm` yourself, the same
 resolver is exported: `useForm({ resolver: standardSchemaResolver(signup) })`,
 or `buildFieldsResolver({ schema: signup, fields })` to include field rules.

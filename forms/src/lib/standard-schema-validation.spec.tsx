@@ -6,7 +6,9 @@ import * as v from 'valibot'
 import { type } from 'arktype'
 import { Form } from './form'
 import {
+  FORM_ERROR_KEY,
   FormFieldClass,
+  useFormContext,
   createFieldValidation,
   createFormResolver,
   standardSchemaResolver,
@@ -299,9 +301,99 @@ describe('form-level schema from any Standard Schema validator', () => {
     expect(result.errors).toEqual({
       name: { type: 'too_small', message: 'Too short' },
       address: { city: { type: 'too_small', message: 'City is required' } },
-      // An issue with no path is reported on root
-      root: { type: 'custom', message: 'Whole form is wrong' },
+      // An issue with no path is reported under the empty key, never `root`
+      [FORM_ERROR_KEY]: { type: 'custom', message: 'Whole form is wrong' },
     })
+    expect(FORM_ERROR_KEY).toBe('')
+  })
+
+  it.each([
+    [
+      'a refinement with no path',
+      z.object({ name: z.string() }).refine(() => false, { message: 'Whole form is wrong' }),
+    ],
+    [
+      'a schema that throws',
+      syncSchema(() => {
+        throw new Error('Schema exploded')
+      }),
+    ],
+  ])('blocks the submit when the only failure is %s', async (_label, schema) => {
+    // react-hook-form clears errors.root before deciding whether to submit,
+    // so a pathless failure reported there would submit `{}`
+    const submit = vi.fn()
+    let form: any
+    function Capture() {
+      form = useFormContext()
+      return null
+    }
+    render(
+      <Form
+        id="pathless"
+        schema={schema}
+        submit={submit}
+        fields={[FormFieldClass.text('name', { label: 'Name' }), submitButton()]}
+      >
+        <Capture />
+      </Form>,
+    )
+
+    typeInto(/name/i, 'Ada')
+    clickSubmit()
+    await waitFor(() => expect(form.formState.errors[FORM_ERROR_KEY]).toBeTruthy())
+    expect(form.formState.isSubmitSuccessful).toBe(false)
+    expect(submit).not.toHaveBeenCalled()
+  })
+
+  it('keeps an array-level issue beside the item issues, whichever comes first', async () => {
+    const itemFirst = syncSchema(() => ({
+      issues: [
+        { message: 'Name is required', path: ['items', 0, 'name'] },
+        { message: 'Add at least two items', path: ['items'] },
+        { message: 'Ignored duplicate', path: ['items'] },
+      ],
+    }))
+    const arrayFirst = syncSchema(() => ({
+      issues: [
+        { message: 'Add at least two items', path: ['items'] },
+        { message: 'Name is required', path: ['items', { key: 0 }, 'name'] },
+      ],
+    }))
+    for (const schema of [itemFirst, arrayFirst]) {
+      const result = await standardSchemaResolver(schema)({ items: [{ name: '' }] }, undefined, resolverOptions)
+      // Read the way react-hook-form reads them: errors.items[0].name and errors.items.root
+      const items = (result.errors as any).items
+      expect(items[0].name).toEqual({ type: 'validation', message: 'Name is required' })
+      expect(items.root).toEqual({ type: 'validation', message: 'Add at least two items' })
+    }
+
+    // With no item issue, the registered names say it is an array
+    const onlyArray = syncSchema(() => ({ issues: [{ message: 'Add at least two items', path: ['items'] }] }))
+    const result = await standardSchemaResolver(onlyArray)({ items: [{ name: 'a' }] }, undefined, {
+      fields: {},
+      names: ['items.0.name'],
+      shouldUseNativeValidation: false,
+    } as any)
+    expect(result.errors).toEqual({ items: { root: { type: 'validation', message: 'Add at least two items' } } })
+  })
+
+  it('keeps an object-level issue and its child issues, whichever comes first', async () => {
+    const parent = { message: 'Address is incomplete', path: ['address'] }
+    const child = { message: 'City is required', path: ['address', 'city'] }
+    const expected = {
+      address: {
+        type: 'validation',
+        message: 'Address is incomplete',
+        city: { type: 'validation', message: 'City is required' },
+      },
+    }
+    for (const issues of [
+      [parent, child],
+      [child, parent],
+    ]) {
+      const result = await standardSchemaResolver(syncSchema(() => ({ issues })))({}, undefined, resolverOptions)
+      expect(result.errors).toEqual(expected)
+    }
   })
 
   it('attaches the registered ref to an error so react-hook-form can focus the field', async () => {
@@ -345,6 +437,89 @@ describe('register-time rules in the resolver', () => {
       address: { phone: { type: 'validate', message: 'Bad phone' } },
       plain: { type: 'validate', message: 'Bad plain' },
     })
+  })
+
+  it('finds registered fields under a container whose children are called ref, validate or name', async () => {
+    const leaf = (name: string) => ({ name, ref: {}, validate: () => `Bad ${name}` })
+    const fields = {
+      address: {
+        ref: leaf('address.ref'),
+        validate: leaf('address.validate'),
+        name: leaf('address.name'),
+        phone: leaf('address.phone'),
+      },
+    }
+    const resolver = createFormResolver(undefined, [{ key: 'other', options: { required: true } }])!
+    const result = await resolver({ address: {}, other: 'y' }, undefined, {
+      fields,
+      shouldUseNativeValidation: false,
+    } as any)
+
+    expect(result.errors).toEqual({
+      address: {
+        ref: { type: 'validate', message: 'Bad address.ref' },
+        validate: { type: 'validate', message: 'Bad address.validate' },
+        name: { type: 'validate', message: 'Bad address.name' },
+        phone: { type: 'validate', message: 'Bad address.phone' },
+      },
+    })
+  })
+
+  it('skips the registered rules of a field outside the active validation group or gated by validateWhen', async () => {
+    const leaf = (name: string) => ({ name, ref: {}, validate: () => `Bad ${name}` })
+    const fields = {
+      address: { city: leaf('address.city'), zip: leaf('address.zip') },
+      later: leaf('later'),
+      gated: leaf('gated'),
+      phone: leaf('phone'),
+    }
+    const resolver = createFormResolver(
+      undefined,
+      [
+        { key: 'name', options: { required: true, validationGroup: 'step-1' } },
+        { key: 'address.city', options: { schema: z.string().min(1), validationGroup: 'step-2' } },
+        { key: 'later', options: { validationGroup: 'step-2' } },
+        { key: 'gated', options: { validateWhen: () => false } },
+        // In the active group, and not configured at all: both still run
+        { key: 'address.zip', options: { validationGroup: 'step-1' } },
+      ],
+      'step-1',
+    )!
+    const result = await resolver({ name: 'Ada', address: { city: '', zip: '' } }, undefined, {
+      fields,
+      shouldUseNativeValidation: false,
+    } as any)
+
+    expect(result.errors).toEqual({
+      address: { zip: { type: 'validate', message: 'Bad address.zip' } },
+      phone: { type: 'validate', message: 'Bad phone' },
+    })
+  })
+
+  it('does not fail a step-1 submit on a step-2 field with a schema', async () => {
+    const submit = vi.fn()
+    render(
+      <Form
+        id="grouped"
+        validationGroup="step-1"
+        submit={submit}
+        defaultValues={{ name: '', address: { city: '' } }}
+        fields={[
+          FormFieldClass.text('name', { label: 'Name', required: true, validationGroup: 'step-1' }),
+          FormFieldClass.text('address.city', {
+            label: 'City',
+            schema: z.string().min(1, 'City is required'),
+            validationGroup: 'step-2',
+          }),
+          submitButton(),
+        ]}
+      />,
+    )
+
+    typeInto(/name/i, 'Ada')
+    clickSubmit()
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1))
+    expect(screen.queryByText('City is required')).not.toBeInTheDocument()
   })
 })
 

@@ -113,29 +113,75 @@ export async function validateSchema(schema: FormSchema, value: unknown): Promis
  * On success the validated output becomes the form values. On failure the
  * first issue for each path is reported at that path (`address.city` for
  * `['address', 'city']`) as `{ type, message }`, where `type` is the
- * validator's issue code when it has one and `'validation'` otherwise. An
- * issue with no path is reported on `root`.
+ * validator's issue code when it has one and `'validation'` otherwise.
+ *
+ * An issue on an array itself (`items`, next to item issues such as
+ * `items.0.name`) is reported at `items.root`, where react-hook-form's field
+ * arrays read it, so it never hides or is hidden by the item errors.
+ *
+ * An issue with no path (a whole-object refinement without `path`, or a
+ * schema that throws) is reported under `FORM_ERROR_KEY`, the empty key. It
+ * blocks the submit. It can't go on `root`: react-hook-form reserves that
+ * key and clears it before deciding whether to submit.
  */
 export function standardSchemaResolver<TFieldValues extends FieldValues = FieldValues>(
   schema: FormSchema,
 ): Resolver<TFieldValues> {
-  return (async (values: TFieldValues, _context: unknown, options?: { fields?: Record<string, unknown> }) => {
+  return (async (
+    values: TFieldValues,
+    _context: unknown,
+    options?: { fields?: Record<string, unknown>; names?: string[] },
+  ) => {
     const result = await validateSchema(schema, values)
     if (!('issues' in result)) {
       return { values: result.value, errors: {} }
     }
 
-    const errors: Record<string, unknown> = {}
+    // First issue per exact path; a parent path and its children are
+    // different paths and both are kept
+    const firstByPath = new Map<string, SchemaIssue>()
     for (const issue of result.issues) {
-      const name = issue.path.length ? issue.path.join('.') : 'root'
-      if (get(errors, name)) continue
-      const ref = (get(options?.fields, name) as { ref?: unknown } | undefined)?.ref
-      set(errors, name, {
+      const name = issue.path.join('.')
+      if (!firstByPath.has(name)) firstByPath.set(name, issue)
+    }
+
+    const knownNames = [...firstByPath.keys(), ...(options?.names ?? [])]
+    const errors: Record<string, unknown> = {}
+    for (const [name, issue] of firstByPath) {
+      // A registered field carries its dotted name as a string; a container
+      // of fields (which may have a child called `ref`) does not
+      const registered = get(options?.fields, name) as { name?: unknown; ref?: unknown } | undefined
+      const ref = typeof registered?.name === 'string' ? registered.ref : undefined
+      const error = {
         type: issue.code ?? 'validation',
         message: issue.message,
         ...(ref ? { ref } : {}),
-      })
+      }
+
+      if (name === '') {
+        errors[FORM_ERROR_KEY] = error
+      } else if (hasIndexedChild(knownNames, name)) {
+        // Array-level issue: keep it beside the item errors, whichever came first
+        set(errors, `${name}.root`, error)
+      } else {
+        // Keep any child errors already written under this path
+        const existing = get(errors, name) as Record<string, unknown> | undefined
+        set(errors, name, existing ? { ...existing, ...error } : error)
+      }
     }
     return { values: {}, errors }
   }) as unknown as Resolver<TFieldValues>
+}
+
+/**
+ * Where `standardSchemaResolver` reports an issue that has no path:
+ * `formState.errors[FORM_ERROR_KEY]`. The empty key, as `@hookform/resolvers`
+ * used; `root` is reserved by react-hook-form.
+ */
+export const FORM_ERROR_KEY = ''
+
+/** True when some name is an indexed child of `name` (`items.0`, `items.0.title`). */
+function hasIndexedChild(names: string[], name: string): boolean {
+  const prefix = `${name}.`
+  return names.some((candidate) => candidate.startsWith(prefix) && /^\d+(\.|$)/.test(candidate.slice(prefix.length)))
 }
