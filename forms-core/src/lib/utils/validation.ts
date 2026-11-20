@@ -1,22 +1,58 @@
-import { ZodTypeAny, ZodError } from 'zod'
+import { ZodType } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FieldValues, RegisterOptions, Resolver, get, set } from 'react-hook-form'
 import { BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
 import { DEFAULT_FORM_STRINGS } from '../form-config-context'
 
+const FALLBACK_INVALID_MESSAGE = 'Invalid value'
+
+/**
+ * Reads the first issue out of a schema rejection, structurally.
+ *
+ * Deliberately not `error instanceof ZodError`: that fails whenever the thrown
+ * error comes from a different copy of zod than the one this module imported
+ * (pnpm's isolated node_modules, or a resolver bringing its own), and it ties
+ * the read to one major — zod 4 renamed `error.errors` to `error.issues`.
+ * `.issues` exists on both majors, so an object carrying an issues array is the
+ * cross-major signal that this was a validation failure and not a bug in the
+ * schema itself.
+ *
+ * An empty `issues` array still counts as a rejection; it just has no message
+ * of its own, so the generic one is used. (Reading `issues[0].code` unguarded
+ * used to throw here and surface as a crash instead of a field error.)
+ *
+ * @returns the first issue's code and message, or null if this is not a schema
+ *          rejection at all.
+ */
+function readSchemaIssue(error: unknown): { code: string; message: string } | null {
+  const issues = (error as { issues?: unknown } | null | undefined)?.issues
+  if (!Array.isArray(issues)) return null
+
+  const first = issues[0] as { code?: unknown; message?: unknown } | undefined
+  return {
+    code: typeof first?.code === 'string' ? first.code : 'invalid_input',
+    message: typeof first?.message === 'string' ? first.message : FALLBACK_INVALID_MESSAGE,
+  }
+}
+
+/** The message to report when the schema threw rather than rejected the value. */
+function thrownMessage(error: unknown): string {
+  return error instanceof Error && error.message ? error.message : FALLBACK_INVALID_MESSAGE
+}
+
 // Helper function to create Zod validator
-function createZodValidator(schema: ZodTypeAny, errorMessages?: Record<string, string | undefined>) {
+function createZodValidator(schema: ZodType, errorMessages?: Record<string, string | undefined>) {
   return async (value: any) => {
     try {
       await schema.parseAsync(value)
       return true
     } catch (error) {
-      if (error instanceof ZodError) {
-        const firstError = error.errors[0]
-        const errorKey = firstError.code
-        return errorMessages?.[errorKey] ?? firstError.message
-      }
-      return 'Invalid value'
+      const issue = readSchemaIssue(error)
+      // `||`, not `??`: an empty-string override means "no override", so fall
+      // back to the schema's own message rather than showing a blank error.
+      if (issue) return errorMessages?.[issue.code] || issue.message
+      // Not a rejection — the schema itself threw. Never pass the field.
+      return thrownMessage(error)
     }
   }
 }
@@ -32,7 +68,7 @@ function combineValidators(existing: any, newValidator: any) {
 
 // Helper function to run Zod schema validation
 async function runSchemaValidation(
-  schema: ZodTypeAny,
+  schema: ZodType,
   value: any,
   errorMessages?: Record<string, string | undefined>
 ): Promise<{ type: string; message: string } | null> {
@@ -40,15 +76,15 @@ async function runSchemaValidation(
     await schema.parseAsync(value)
     return null
   } catch (error) {
-    if (error instanceof ZodError) {
-      const firstError = error.errors[0]
+    const issue = readSchemaIssue(error)
+    if (issue) {
       return {
-        type: firstError.code,
-        message: errorMessages?.[firstError.code] || firstError.message
+        type: issue.code,
+        message: errorMessages?.[issue.code] || issue.message
       }
     }
     // A throwing schema must not pass the field as valid
-    return { type: 'schema', message: error instanceof Error ? error.message : 'Invalid value' }
+    return { type: 'schema', message: thrownMessage(error) }
   }
 }
 
@@ -246,7 +282,7 @@ export function createFieldValidation(
  * @returns A resolver function for react-hook-form
  */
 export function createFormResolver<TFieldValues extends FieldValues = FieldValues>(
-  schema?: ZodTypeAny,
+  schema?: ZodType,
   fields?: Array<{ key: string; options: InputFieldOptions }>,
   currentValidationGroup?: string,
   defaultRequiredMessage?: string
@@ -366,7 +402,7 @@ export interface FormFieldLike {
  * ignores register rules once a resolver exists.
  */
 export function buildFieldsResolver<TFieldValues extends FieldValues = FieldValues>(options: {
-  schema?: ZodTypeAny
+  schema?: ZodType
   fields?: (FormFieldLike | null)[]
   validationGroup?: string
   /** Localized fallback for required errors (per-field errorMessages.required wins) */
@@ -487,6 +523,14 @@ export function shouldValidateField(
 }
 
 /**
- * Utility to extract TypeScript types from Zod schemas for better type inference
+ * Utility to extract TypeScript types from Zod schemas for better type inference.
+ *
+ * Read structurally rather than through `ZodType['_output']`: zod 3 exposes the
+ * output type as `_output`, zod 4 as `_zod.output`, and this has to resolve under
+ * whichever major the consumer installed.
  */
-export type InferSchemaType<T> = T extends ZodTypeAny ? T['_output'] : never
+export type InferSchemaType<T> = T extends { _output: infer Output }
+  ? Output
+  : T extends { _zod: { output: infer Output } }
+    ? Output
+    : never

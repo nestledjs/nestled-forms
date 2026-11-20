@@ -15,7 +15,7 @@ import {
   type FormConfig,
 } from '@nestledjs/forms-core'
 import { NativeFormSubmitContext } from './native-form-submit-context'
-import { ZodTypeAny } from 'zod'
+import { ZodType } from 'zod'
 import { NativeThemeContext } from './native-theme-context'
 import { NativeTheme } from './themes/default'
 import { createFinalNativeTheme } from './utils/resolve-theme'
@@ -44,7 +44,7 @@ export interface NativeFormProps<T extends FieldValues = Record<string, unknown>
   labelDisplay?: 'all' | 'default' | 'none'
   /** Override any user-facing strings (localization). Merged over English defaults. */
   strings?: Partial<FormStrings>
-  schema?: ZodTypeAny
+  schema?: ZodType
   validationGroup?: string
   validationGroups?: string[]
 }

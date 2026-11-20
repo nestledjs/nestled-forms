@@ -2,7 +2,9 @@ import type { DocumentNode } from 'graphql'
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import { JSX, ReactNode } from 'react'
 import { UseFormReturn } from 'react-hook-form'
-import { ZodTypeAny } from 'zod'
+// `ZodType`, not `ZodTypeAny`: zod 4 deprecated the latter, and `ZodType`
+// resolves on both majors (this type reaches the published .d.ts).
+import { ZodType } from 'zod'
 
 // The single enum for all field types, combining the best of both libraries
 export enum FormFieldType {
@@ -139,7 +141,7 @@ export interface BaseFieldOptions {
    * })
    * ```
    */
-  schema?: ZodTypeAny
+  schema?: ZodType
 
   /**
    * Custom error messages for validation.

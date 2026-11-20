@@ -19,7 +19,7 @@ import clsx from 'clsx'
 import { RenderFormField } from './render-form-field'
 import { createFinalTheme } from './utils/resolve-theme'
 import { syncNativeValues } from './utils/native-input-sync'
-import { ZodTypeAny } from 'zod'
+import { ZodType } from 'zod'
 
 export interface FormProps<T extends FieldValues = Record<string, unknown>> extends UseFormProps<T> {
   id: string
@@ -76,7 +76,7 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
    * />
    * ```
    */
-  schema?: ZodTypeAny
+  schema?: ZodType
 
   /**
    * Current validation group to validate.
