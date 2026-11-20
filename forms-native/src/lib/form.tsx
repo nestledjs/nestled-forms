@@ -6,7 +6,7 @@ import {
   FormContext,
   ThemeContext,
   FormConfigContext,
-  FormThemeSchema,
+  createDefaultFormTheme,
   buildFieldsResolver,
   createSubmitHandler,
   resolveFormStrings,
@@ -107,8 +107,8 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
     [form, handleSubmitWithTransform],
   )
 
-  // For forms-core ThemeContext, provide the default parsed theme (CSS-based, unused in native)
-  const coreTheme = useMemo(() => FormThemeSchema.parse({}), [])
+  // For forms-core ThemeContext, provide the default core theme (CSS-based, unused in native)
+  const coreTheme = useMemo(() => createDefaultFormTheme(), [])
   const finalNativeTheme = useMemo(
     () => (userNativeTheme === EMPTY_NATIVE_THEME ? DEFAULT_FINAL_NATIVE_THEME : createFinalNativeTheme(userNativeTheme)),
     [userNativeTheme],

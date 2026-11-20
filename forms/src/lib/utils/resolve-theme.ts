@@ -1,6 +1,6 @@
 import { merge } from 'lodash-es'
 import clsx from 'clsx'
-import { FormThemeSchema } from '@nestledjs/forms-core'
+import { resolveFormTheme } from '@nestledjs/forms-core'
 import type { FormTheme, DeepPartial } from '@nestledjs/forms-core'
 import { tailwindTheme } from '../themes/tailwind'
 
@@ -61,7 +61,7 @@ export function createFinalTheme(userTheme: DeepPartial<FormTheme> = {}): FormTh
   const globalStyles = finalTheme.global
 
   if (!globalStyles) {
-    return FormThemeSchema.parse(finalTheme)
+    return resolveFormTheme(finalTheme)
   }
 
   // Define which keys to apply inheritance to
@@ -101,5 +101,5 @@ export function createFinalTheme(userTheme: DeepPartial<FormTheme> = {}): FormTh
     )
   }
 
-  return FormThemeSchema.parse(finalTheme)
+  return resolveFormTheme(finalTheme)
 }

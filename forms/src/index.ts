@@ -8,6 +8,9 @@ export { tailwindTheme } from './lib/themes/tailwind'
 export { themeReference, generateThemeTemplate, createCustomTheme } from './lib/theme-reference'
 export { RenderFormField } from './lib/render-form-field'
 export { createFinalTheme } from './lib/utils/resolve-theme'
+// Named explicitly (the `export *` above already covers them) so the theme
+// helpers sit next to the other theme exports web consumers reach for.
+export { defaultFormTheme, createDefaultFormTheme, resolveFormTheme } from '@nestledjs/forms-core'
 
 // Field Components
 export { TextField } from './lib/fields/text-field'

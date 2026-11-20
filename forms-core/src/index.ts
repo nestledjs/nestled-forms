@@ -1,7 +1,7 @@
 // Types, enums, interfaces
 export * from './lib/form-types'
-export { FormThemeSchema } from './lib/form-theme'
-export type { FormTheme } from './lib/form-theme'
+export { FormThemeSchema, defaultFormTheme, createDefaultFormTheme, resolveFormTheme } from './lib/form-theme'
+export type { FormTheme, FormThemeInput, FormThemeSchemaLike } from './lib/form-theme'
 export type { DeepPartial } from './lib/types/deep-partial'
 
 // Constants
