@@ -7,9 +7,10 @@ import { ZodType } from 'zod'
 /**
  * Any zod schema, spelled so it resolves under zod 3 and zod 4 alike.
  *
- * `ZodTypeAny` is zod-3-only — zod 4 deprecated it. Bare `ZodType` resolves on
- * both, but on zod 4 its Output and Input default to `unknown`, and
- * `zodResolver` needs an input type that extends `FieldValues`. The three
+ * `ZodTypeAny` is `ZodType<any, any, any>` on zod 3, but zod 4 deprecated it
+ * and redefined it as `ZodType<unknown, unknown>`, which `zodResolver` rejects
+ * because it needs an input type that extends `FieldValues`. Bare `ZodType`
+ * has the same problem — its parameters default to `unknown` there. The three
  * explicit `any`s mean the right thing on both majors, which read the
  * parameters differently: zod 3 as `<Output, Def, Input>`, zod 4 as
  * `<Output, Input, Internals>`.

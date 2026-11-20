@@ -4,6 +4,128 @@ All notable changes to the `@nestledjs/*` form packages are documented here.
 The three packages — `@nestledjs/forms-core`, `@nestledjs/forms`, and
 `@nestledjs/forms-native` — are versioned together.
 
+## Unreleased
+
+Zod 4 support across all three packages. The peer range grows — `zod@^3` keeps
+working — and no public export is removed. One breaking detail is called out
+under "Changed" below: `FormThemeSchema` is no longer a Zod schema object.
+
+### ✨ Features
+
+- **`zod@^3 || ^4` is the peer range.** All three packages previously declared
+  `zod: "^3.0.0"`, so an app on Zod 4 could not install them cleanly. Both
+  majors now work, and the publish gate type-checks the packed packages
+  against each in turn.
+
+  `@hookform/resolvers` widens to `^3 || ^4 || ^5` to go with it. A Zod 4
+  schema needs resolvers 5, which reads the schema at runtime and handles both
+  majors; resolvers 3 and 4 only understand Zod 3. If you stay on Zod 3,
+  nothing changes.
+
+  `errorMessages` keys are the installed Zod's issue codes, and Zod renamed
+  some between majors (`invalid_string` → `invalid_format`,
+  `invalid_enum_value` → `invalid_value`; `too_small`, `too_big` and
+  `invalid_type` are unchanged). The packages pass your key straight through
+  and do not translate, so check the codes you key on when you upgrade Zod.
+  See the README's "Zod setup".
+
+- **New theme helpers,** exported from `@nestledjs/forms-core` and
+  re-exported by `@nestledjs/forms`: `createDefaultFormTheme()` for a fresh
+  complete theme with every class name `''`, `defaultFormTheme` for the shared
+  one, and `resolveFormTheme(partial)` to fill a partial theme out — what
+  `FormThemeSchema.parse()` did, under a name that says so.
+
+### 🐛 Fixes
+
+- **The default theme comes back complete.** `FormThemeSchema` was built from
+  25 `z.object({…}).default({})` sections over 285 `z.string().default('')`
+  leaves. Zod 4's `.default()` short-circuits — an absent input returns the
+  given default *unparsed* — so the inner leaves never ran and
+  `FormThemeSchema.parse({})` produced 25 empty sections instead of a theme.
+  Every field then rendered with browser-default styling. On Zod 3 it worked,
+  which is why the peer range was pinned there. Zod 4's replacement,
+  `.prefault()`, does not exist in Zod 3, so no single spelling covered both.
+
+  The theme no longer uses Zod at all: the defaults are a plain TypeScript
+  literal and the merge is a small key-driven resolver with the same
+  behaviour (unknown sections and keys stripped, absent values defaulted,
+  element slots carried by reference). The default values themselves are
+  unchanged — verified by diffing the old Zod 3 output against the new one
+  key for key.
+
+- **A Zod error with no issues no longer crashes validation.**
+  `error.errors[0].code` was read unguarded, so an error carrying an empty
+  issue list threw out of the validator instead of failing the field. Errors
+  are now read structurally (`issues[0]`, with a generic message when there is
+  no issue), which also works across both Zod majors — Zod 4 renamed
+  `.errors` to `.issues` — and across a second copy of Zod in the tree, where
+  the old `instanceof ZodError` check silently failed and every schema
+  rejection degraded to "Invalid value".
+
+- **An `errorMessages` override set to `''` falls back to Zod's message.** The
+  register-rule path used `??` and the resolver path `||`, so the same empty
+  override rendered a blank message on one and Zod's own message on the other.
+  Both now use `||`.
+
+- **A themed icon replaces the default instead of merging into it.**
+  `createFinalTheme` laid the user theme over the Tailwind base with
+  `lodash.merge`. A React element is a plain object, so a user's
+  `readonlyCheckedIcon` was deep-merged *into* the default icon: the result
+  carried the user's element type with leftovers of the default's props and
+  children, so an overridden icon could render as a hybrid of the two. The
+  merge is now a per-section copy that assigns element slots by reference.
+
+  Dropping that call also drops the only `lodash-es` import in the three
+  packages, which was being bundled into the published `@nestledjs/forms`:
+  `index.js` goes from 109,278 to 88,825 bytes (−19%).
+
+### 🔄 Changed
+
+- **`FormThemeSchema` is no longer a Zod schema.** It is still exported, and
+  `.parse()` and `.safeParse()` behave as they always did for theme shapes, so
+  normal use is unaffected. What is gone: `.extend()`, `.shape`,
+  `.partial()`, and passing it to a form resolver. It was a theme-shape helper,
+  never a validation schema for user input, and keeping it a `ZodObject` is
+  precisely what pinned these packages to one Zod major — the emitted `.d.ts`
+  carried Zod-3-only generics that do not resolve under Zod 4. If you need the
+  resolved-theme type, use `FormTheme`; if you need to fill a partial theme,
+  use `resolveFormTheme()`.
+
+  `.parse()` on a malformed theme now throws a plain `Error` naming the
+  failing path (`"textField.input" must be a string, received number`) rather
+  than a `ZodError`, and `.safeParse()`'s `error` is typed `unknown`. Only
+  reachable by passing a wrong-typed theme value.
+
+- **`InputFieldOptions.schema` and the `<Form schema>` prop are typed
+  `AnyZodSchema`** (also exported), which resolves on both Zod majors.
+  `ZodTypeAny` is deprecated in Zod 4, and bare `ZodType` defaults its
+  input to `unknown` there, which `zodResolver` rejects.
+
+### 🏗️ Internal
+
+- **The workspace dev-installs Zod 4** (4.6.6+, which clears the high-severity
+  advisory `pnpm audit` reported under 0.9.1), plus `zod-v3`
+  (`npm:zod@^3.25.76`) so the Zod 3 half of the peer range is still exercised.
+  `pnpm test:zod3` re-runs the whole suite with `zod` aliased to that copy,
+  and `pre-publish` runs it. It is deliberately not in PR CI: `verify-types`
+  covers both majors on every run.
+
+  `pnpm audit` still reports the Zod advisory, now against that Zod 3 test
+  copy — its patched range is `>=4.6.6`, so no Zod 3 release fixes it. Keeping
+  a Zod 3 copy is the cost of keeping `^3` in the peer range; it is a dev
+  dependency and nothing ships it.
+
+- **`tools/verify-published-types.mjs` type-checks the packed packages against
+  both Zod majors,** naming the one that broke, and its consumer file now
+  exercises the theme helpers, an element slot, and a field `schema:` built
+  from the consumer's own Zod install.
+
+- **`@nestledjs/forms-core` has a test target.** The root `vitest.config.ts`
+  already listed its Vite config as a project, but that config had no `test`
+  block, so no target was inferred and a spec added there would never have
+  run. It now has one, with specs for the theme defaults, the resolver and the
+  Zod error reading.
+
 ## 0.9.2 — 2026-11-10
 
 Toolchain release across all three packages, which stay in lockstep:
