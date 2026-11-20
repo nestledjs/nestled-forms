@@ -4,10 +4,12 @@ import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
 import * as path from 'node:path'
 import { copyPackageFiles } from '../tools/vite/copy-package-files'
+import { zodTestAlias } from '../tools/vite/zod-alias'
 
 export default defineConfig({
   resolve: {
     tsconfigPaths: true,
+    alias: zodTestAlias(),
   },
   root: __dirname,
   cacheDir: '../node_modules/.vite/forms-native',

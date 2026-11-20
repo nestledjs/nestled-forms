@@ -26,8 +26,9 @@ module.exports = [
           allowCircularSelfDependency: true,
           allow: [
             String.raw`^.*/eslint(\.base)?\.config\.[cm]?js$`,
-            // Build-time vite plugin shared by the package vite configs; never part of package source.
+            // Build-time vite helpers shared by the package vite configs; never part of package source.
             String.raw`^.*/tools/vite/copy-package-files$`,
+            String.raw`^.*/tools/vite/zod-alias$`,
           ],
           depConstraints: [
             {

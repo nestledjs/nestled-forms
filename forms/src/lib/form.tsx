@@ -14,12 +14,12 @@ import {
   type FormTheme,
   type FormConfig,
   type FormStrings,
+  type AnyZodSchema,
 } from '@nestledjs/forms-core'
 import clsx from 'clsx'
 import { RenderFormField } from './render-form-field'
 import { createFinalTheme } from './utils/resolve-theme'
 import { syncNativeValues } from './utils/native-input-sync'
-import { ZodType } from 'zod'
 
 export interface FormProps<T extends FieldValues = Record<string, unknown>> extends UseFormProps<T> {
   id: string
@@ -76,7 +76,7 @@ export interface FormProps<T extends FieldValues = Record<string, unknown>> exte
    * />
    * ```
    */
-  schema?: ZodType
+  schema?: AnyZodSchema
 
   /**
    * Current validation group to validate.

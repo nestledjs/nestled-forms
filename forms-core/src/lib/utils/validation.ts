@@ -1,7 +1,6 @@
-import { ZodType } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FieldValues, RegisterOptions, Resolver, get, set } from 'react-hook-form'
-import { BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
+import { AnyZodSchema, BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
 import { DEFAULT_FORM_STRINGS } from '../form-config-context'
 
 const FALLBACK_INVALID_MESSAGE = 'Invalid value'
@@ -41,7 +40,7 @@ function thrownMessage(error: unknown): string {
 }
 
 // Helper function to create Zod validator
-function createZodValidator(schema: ZodType, errorMessages?: Record<string, string | undefined>) {
+function createZodValidator(schema: AnyZodSchema, errorMessages?: Record<string, string | undefined>) {
   return async (value: any) => {
     try {
       await schema.parseAsync(value)
@@ -68,7 +67,7 @@ function combineValidators(existing: any, newValidator: any) {
 
 // Helper function to run Zod schema validation
 async function runSchemaValidation(
-  schema: ZodType,
+  schema: AnyZodSchema,
   value: any,
   errorMessages?: Record<string, string | undefined>
 ): Promise<{ type: string; message: string } | null> {
@@ -282,7 +281,7 @@ export function createFieldValidation(
  * @returns A resolver function for react-hook-form
  */
 export function createFormResolver<TFieldValues extends FieldValues = FieldValues>(
-  schema?: ZodType,
+  schema?: AnyZodSchema,
   fields?: Array<{ key: string; options: InputFieldOptions }>,
   currentValidationGroup?: string,
   defaultRequiredMessage?: string
@@ -402,7 +401,7 @@ export interface FormFieldLike {
  * ignores register rules once a resolver exists.
  */
 export function buildFieldsResolver<TFieldValues extends FieldValues = FieldValues>(options: {
-  schema?: ZodType
+  schema?: AnyZodSchema
   fields?: (FormFieldLike | null)[]
   validationGroup?: string
   /** Localized fallback for required errors (per-field errorMessages.required wins) */
@@ -525,7 +524,7 @@ export function shouldValidateField(
 /**
  * Utility to extract TypeScript types from Zod schemas for better type inference.
  *
- * Read structurally rather than through `ZodType['_output']`: zod 3 exposes the
+ * Read structurally rather than through the schema type's `_output`: zod 3 exposes the
  * output type as `_output`, zod 4 as `_zod.output`, and this has to resolve under
  * whichever major the consumer installed.
  */

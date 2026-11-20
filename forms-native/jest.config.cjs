@@ -14,6 +14,10 @@ module.exports = {
     // resolve workspace imports to source, mirroring tsconfig.base.json paths
     '^@nestledjs/forms-core/apollo$': '<rootDir>/../forms-core/src/apollo.ts',
     '^@nestledjs/forms-core$': '<rootDir>/../forms-core/src/index.ts',
+    // `pnpm test:zod3` points `zod` at the aliased zod 3 install so the zod 3
+    // half of the `^3.0.0 || ^4.0.0` peer range is covered. See
+    // tools/vite/zod-alias.ts for the vitest-side equivalent.
+    ...(process.env.NESTLED_ZOD_ALIAS ? { '^zod$': process.env.NESTLED_ZOD_ALIAS } : {}),
   },
   // React Native (and RNTL) ship untranspiled ESM/Flow and must be transformed.
   // pnpm nests them under node_modules/.pnpm/<pkg>@<version>/node_modules/<pkg>,

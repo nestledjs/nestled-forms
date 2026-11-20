@@ -5,10 +5,12 @@ import dts from 'vite-plugin-dts'
 import * as path from 'node:path'
 import { copyPackageFiles } from '../tools/vite/copy-package-files'
 import tailwindcss from '@tailwindcss/vite'
+import { zodTestAlias } from '../tools/vite/zod-alias'
 
 export default defineConfig({
   resolve: {
     tsconfigPaths: true,
+    alias: zodTestAlias(),
   },
   root: __dirname,
   cacheDir: '../node_modules/.vite/forms',
