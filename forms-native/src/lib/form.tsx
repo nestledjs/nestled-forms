@@ -6,16 +6,16 @@ import {
   FormContext,
   ThemeContext,
   FormConfigContext,
-  FormThemeSchema,
+  createDefaultFormTheme,
   buildFieldsResolver,
   createSubmitHandler,
   resolveFormStrings,
   deepEqual,
   type FormStrings,
   type FormConfig,
+  type AnyZodSchema,
 } from '@nestledjs/forms-core'
 import { NativeFormSubmitContext } from './native-form-submit-context'
-import { ZodTypeAny } from 'zod'
 import { NativeThemeContext } from './native-theme-context'
 import { NativeTheme } from './themes/default'
 import { createFinalNativeTheme } from './utils/resolve-theme'
@@ -44,7 +44,7 @@ export interface NativeFormProps<T extends FieldValues = Record<string, unknown>
   labelDisplay?: 'all' | 'default' | 'none'
   /** Override any user-facing strings (localization). Merged over English defaults. */
   strings?: Partial<FormStrings>
-  schema?: ZodTypeAny
+  schema?: AnyZodSchema
   validationGroup?: string
   validationGroups?: string[]
 }
@@ -107,8 +107,8 @@ export function NativeForm<T extends FieldValues = Record<string, unknown>>({
     [form, handleSubmitWithTransform],
   )
 
-  // For forms-core ThemeContext, provide the default parsed theme (CSS-based, unused in native)
-  const coreTheme = useMemo(() => FormThemeSchema.parse({}), [])
+  // For forms-core ThemeContext, provide the default core theme (CSS-based, unused in native)
+  const coreTheme = useMemo(() => createDefaultFormTheme(), [])
   const finalNativeTheme = useMemo(
     () => (userNativeTheme === EMPTY_NATIVE_THEME ? DEFAULT_FINAL_NATIVE_THEME : createFinalNativeTheme(userNativeTheme)),
     [userNativeTheme],

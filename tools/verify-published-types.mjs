@@ -17,6 +17,11 @@
  *
  * forms-native is static-only: its peers (react-native, expo-checkbox, …) are too
  * heavy to install on every publish, and layer 1 already covers the failure mode.
+ *
+ * Layer 2 runs once per zod major. The packages declare `zod: "^3.0.0 || ^4.0.0"`,
+ * and the two majors disagree about type names (`ZodTypeAny` is gone in 4) and
+ * about generics, so a published .d.ts can type-check under one and not the other.
+ * This is where that promise is kept honest.
  */
 import { execFileSync } from 'node:child_process'
 import {
@@ -37,6 +42,15 @@ import { isBuiltin } from 'node:module'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const PACKAGES = ['forms-core', 'forms', 'forms-native']
 const CONSUMER_TYPECHECK = ['forms-core', 'forms']
+
+/**
+ * The zod majors layer 2 type-checks against, as directories in the workspace
+ * install. `zod-v3` is the `npm:zod@^3.25.76` alias in the root package.json.
+ */
+const ZOD_MAJORS = [
+  { label: 'zod 4', dir: 'zod' },
+  { label: 'zod 3', dir: 'zod-v3' },
+]
 
 const problems = []
 const note = (s) => console.log(s)
@@ -156,13 +170,33 @@ try {
   writeFileSync(
     path.join(tmp, 'index.ts'),
     [
-      `import { Form, FormFieldType, useFormValue, useFormValues, useWatch } from '@nestledjs/forms'`,
+      `import { Form, FormFieldType, FormThemeSchema, useFormValue, useFormValues, useWatch } from '@nestledjs/forms'`,
+      `import { createDefaultFormTheme, resolveFormTheme } from '@nestledjs/forms'`,
       `import type { FormField, FormTheme } from '@nestledjs/forms'`,
       `import { ApolloSearchProvider, useApolloSearchQuery } from '@nestledjs/forms/apollo'`,
+      `import { z } from 'zod'`,
       ``,
       `const field: FormField = { key: 'name', type: FormFieldType.Text, options: {} }`,
       `const theme: Partial<FormTheme> = {}`,
+      ``,
+      `// The theme has to come back complete and stay assignable to FormTheme.`,
+      `const parsedTheme: FormTheme = FormThemeSchema.parse({})`,
+      `const resolvedTheme: FormTheme = resolveFormTheme({ textField: { input: 'x' } })`,
+      `const freshTheme: FormTheme = createDefaultFormTheme()`,
+      `const inputClass: string = parsedTheme.textField.input`,
+      `// An element slot: optional, and not typed as a class string.`,
+      `const readonlyIcon: unknown = resolvedTheme.checkbox.readonlyCheckedIcon`,
+      ``,
+      `// A field option built from the consumer's own zod install. This is the`,
+      `// line that breaks when a zod-major-specific schema type reaches the .d.ts.`,
+      `const validated: FormField = {`,
+      `  key: 'email',`,
+      `  type: FormFieldType.Email,`,
+      `  options: { schema: z.string().min(1) },`,
+      `}`,
+      ``,
       `export const used = [Form, field, theme, ApolloSearchProvider, useApolloSearchQuery]`,
+      `export const themeReads = [parsedTheme, resolvedTheme, freshTheme, inputClass, readonlyIcon, validated]`,
       `export const reactiveReads = [useFormValue, useFormValues, useWatch]`,
       ``,
     ].join('\n'),
@@ -208,34 +242,68 @@ try {
     return null
   }
 
+  const link = (dep, src) => {
+    const dest = path.join(nm, dep)
+    mkdirSync(path.dirname(dest), { recursive: true })
+    rmSync(dest, { recursive: true, force: true })
+    symlinkSync(realpathSync(src), dest, 'junction')
+  }
+
   const unresolved = []
   for (const dep of needed) {
+    // zod is linked per major inside the loop below.
+    if (dep === 'zod') continue
     const src = locate(dep)
     if (!src) {
       unresolved.push(dep)
       continue
     }
-    const dest = path.join(nm, dep)
-    if (existsSync(dest)) continue
-    mkdirSync(path.dirname(dest), { recursive: true })
-    symlinkSync(realpathSync(src), dest, 'junction')
+    if (existsSync(path.join(nm, dep))) continue
+    link(dep, src)
   }
   if (unresolved.length) {
     note(`  note: not found in the workspace install, so not linked: ${unresolved.join(', ')}`)
   }
 
-  execFileSync(path.join(ROOT, 'node_modules', '.bin', 'tsc'), ['-p', 'tsconfig.json', '--noEmit'], {
-    cwd: tmp,
-    stdio: 'inherit',
-  })
-  note('  ✓ installed consumer type-checks clean\n')
+  for (const { label, dir } of ZOD_MAJORS) {
+    const src = locate(dir)
+    if (!src) {
+      problems.push(`${label}: '${dir}' is not in the workspace install — cannot type-check the peer range`)
+      continue
+    }
+    // Both majors install as real directories (the pnpm alias lays `zod-v3`
+    // down beside `zod`), so each can stand in as the consumer's `zod`.
+    link('zod', src)
+
+    try {
+      execFileSync(path.join(ROOT, 'node_modules', '.bin', 'tsc'), ['-p', 'tsconfig.json', '--noEmit'], {
+        cwd: tmp,
+        stdio: 'inherit',
+      })
+    } catch (err) {
+      console.error(`\n✖ Consumer type-check failed against ${label} — the published packages would not`)
+      console.error(`  type-check for a user on that major, which the "zod" peer range promises.\n`)
+      if (err.stdout) console.error(err.stdout.toString().slice(0, 4000))
+      if (err.stderr) console.error(err.stderr.toString().slice(0, 4000))
+      process.exit(1)
+    }
+    note(`  ✓ installed consumer type-checks clean against ${label}`)
+  }
+  note('')
 } catch (err) {
-  console.error('\n✖ Consumer type-check failed — the published packages would not type-check for users.\n')
+  console.error('\n✖ Consumer type-check could not run.\n')
   if (err.stdout) console.error(err.stdout.toString().slice(0, 4000))
   if (err.stderr) console.error(err.stderr.toString().slice(0, 4000))
   process.exit(1)
 } finally {
   rmSync(tmp, { recursive: true, force: true })
+}
+
+if (problems.length) {
+  console.error('\n✖ Publish gate failed:\n')
+  for (const p of problems) console.error(`  ${p}`)
+  console.error('')
+  process.exit(1)
 }
 
 note('Publish gate passed.')

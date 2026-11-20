@@ -1,6 +1,5 @@
-import { merge } from 'lodash-es'
 import clsx from 'clsx'
-import { FormThemeSchema } from '@nestledjs/forms-core'
+import { resolveFormTheme } from '@nestledjs/forms-core'
 import type { FormTheme, DeepPartial } from '@nestledjs/forms-core'
 import { tailwindTheme } from '../themes/tailwind'
 
@@ -52,16 +51,45 @@ function mergeSection<T extends object>(global: Partial<Record<string, string>>,
   return result
 }
 
+/**
+ * Lays a user theme over a base theme, one section at a time.
+ *
+ * Deliberately not a deep merge. The theme is exactly two levels — section, then
+ * class name or element — so a per-section copy is both correct and cheaper.
+ * `lodash.merge` used to do this and got element slots wrong: a React element is
+ * a plain object, so a user's `readonlyCheckedIcon` was deep-merged *into* the
+ * default icon rather than replacing it, which can render a hybrid of the two
+ * (the user's `type` with leftovers of the default's `props`/children). It also
+ * cloned every default icon on the way through, and pulled the whole of
+ * lodash-es into the published bundle for this one call.
+ *
+ * An `undefined` override is ignored, as it was before: it means "not set".
+ */
+function layerOverBase(base: FormTheme, override: DeepPartial<FormTheme>): FormTheme {
+  const overrides = override as Record<string, Record<string, unknown> | undefined>
+  const result: Record<string, Record<string, unknown>> = {}
+
+  for (const [section, values] of Object.entries(base)) {
+    const merged: Record<string, unknown> = { ...(values as Record<string, unknown>) }
+    for (const [key, value] of Object.entries(overrides[section] ?? {})) {
+      if (value !== undefined) merged[key] = value
+    }
+    result[section] = merged
+  }
+
+  return result as FormTheme
+}
+
 export function createFinalTheme(userTheme: DeepPartial<FormTheme> = {}): FormTheme {
   // --- Step 1: Handle User Overrides ---
-  const mergedTheme = merge({}, tailwindTheme, userTheme)
+  const mergedTheme = layerOverBase(tailwindTheme, userTheme)
 
   // --- Step 2: Handle Inheritance from Global (The Smart Way) ---
   const finalTheme = { ...mergedTheme }
   const globalStyles = finalTheme.global
 
   if (!globalStyles) {
-    return FormThemeSchema.parse(finalTheme)
+    return resolveFormTheme(finalTheme)
   }
 
   // Define which keys to apply inheritance to
@@ -101,5 +129,5 @@ export function createFinalTheme(userTheme: DeepPartial<FormTheme> = {}): FormTh
     )
   }
 
-  return FormThemeSchema.parse(finalTheme)
+  return resolveFormTheme(finalTheme)
 }

@@ -970,20 +970,37 @@ invalid field.
 
 ### Zod setup
 
-Schema validation uses [Zod](https://zod.dev) **3.x** through
-`@hookform/resolvers`. Neither is bundled: both are peer dependencies, along
-with `react-hook-form`, so install them in your app:
+Schema validation uses [Zod](https://zod.dev) through `@hookform/resolvers`.
+The peer range is `zod@^3 || ^4` — either major works. Neither Zod nor the
+resolvers are bundled: both are peer dependencies, along with
+`react-hook-form`, so install them in your app:
 
 ```bash
+# Zod 4 (recommended)
+pnpm add react-hook-form zod@^4 @hookform/resolvers@^5
+
+# Zod 3
 pnpm add react-hook-form zod@^3 @hookform/resolvers
 ```
 
 `required`, `validate` and `validateWithForm` don't use Zod, but the package
 imports it, so it has to be installed even if you never write a schema.
 
-> **Zod 4 and Standard Schema aren't supported yet.** The peer range is
-> `zod@^3`, and schemas are typed as Zod 3's `ZodTypeAny`. Passing a Zod 4
-> schema, or a Valibot or ArkType schema, isn't supported.
+Two things to know when choosing a major:
+
+- **Zod 4 needs `@hookform/resolvers@^5`.** Resolvers 5 reads the schema at
+  runtime and handles both majors; resolvers 3 and 4 only understand Zod 3,
+  so a Zod 4 schema won't validate at form level. (Resolvers 5 also imports
+  `zod/v4/core`, so on Zod 3 it needs `zod@^3.25`.)
+- **`errorMessages` keys follow the installed Zod's issue codes,** which Zod
+  renamed between majors: `invalid_string` became `invalid_format` and
+  `invalid_enum_value` became `invalid_value`. `too_small`, `too_big` and
+  `invalid_type` are unchanged. The package passes your key through to Zod's
+  code as-is and does not translate, so an override written against Zod 3 may
+  stop matching when *you* upgrade — check the codes you key on.
+
+> **Standard Schema isn't supported yet.** `schema` is typed for Zod, so
+> passing a Valibot or ArkType schema isn't supported.
 
 ### Field rules
 

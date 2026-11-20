@@ -1,6 +1,6 @@
-import { FormThemeSchema } from '@nestledjs/forms-core'
+import { resolveFormTheme } from '@nestledjs/forms-core'
 
-export const tailwindTheme = FormThemeSchema.parse({
+export const tailwindTheme = resolveFormTheme({
   global: {
     input:
       'border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sky-300 focus:border-sky-300',

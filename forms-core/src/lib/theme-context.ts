@@ -1,13 +1,11 @@
 'use client'
 
 import { createContext, useContext } from 'react'
-import { FormTheme, FormThemeSchema } from './form-theme'
+import { FormTheme, createDefaultFormTheme } from './form-theme'
 
-// --- THIS IS THE FIX ---
-// Create the default theme by parsing an empty object.
-// Zod will automatically fill in all the default values we defined in the schema.
+// The context default: a complete theme with every class name empty.
 // This object has NO dependencies on `tailwindTheme` or `createFinalTheme`.
-const defaultTheme = FormThemeSchema.parse({})
+const defaultTheme = createDefaultFormTheme()
 
 // Provide this simple, dependency-free object as the context's default value.
 export const ThemeContext = createContext<FormTheme>(defaultTheme)

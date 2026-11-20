@@ -2,7 +2,23 @@ import type { DocumentNode } from 'graphql'
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import { JSX, ReactNode } from 'react'
 import { UseFormReturn } from 'react-hook-form'
-import { ZodTypeAny } from 'zod'
+import { ZodType } from 'zod'
+
+/**
+ * Any zod schema, spelled so it resolves under zod 3 and zod 4 alike.
+ *
+ * `ZodTypeAny` is `ZodType<any, any, any>` on zod 3, but zod 4 deprecated it
+ * and redefined it as `ZodType<unknown, unknown>`, which `zodResolver` rejects
+ * because it needs an input type that extends `FieldValues`. Bare `ZodType`
+ * has the same problem — its parameters default to `unknown` there. The three
+ * explicit `any`s mean the right thing on both majors, which read the
+ * parameters differently: zod 3 as `<Output, Def, Input>`, zod 4 as
+ * `<Output, Input, Internals>`.
+ *
+ * This type reaches the published `.d.ts`, so it has to resolve against
+ * whichever major the consumer installed.
+ */
+export type AnyZodSchema = ZodType<any, any, any>
 
 // The single enum for all field types, combining the best of both libraries
 export enum FormFieldType {
@@ -139,7 +155,7 @@ export interface BaseFieldOptions {
    * })
    * ```
    */
-  schema?: ZodTypeAny
+  schema?: AnyZodSchema
 
   /**
    * Custom error messages for validation.

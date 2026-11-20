@@ -13,8 +13,9 @@
     "lint-all": "nx run-many -t lint --all",
     "lint-all:fix": "nx run-many -t lint --all --fix",
     "test-suite": "nx run-many -t lint test build --all",
+    "test:zod3": "NESTLED_ZOD_ALIAS=zod-v3 nx run-many -t test --all --skip-nx-cache",
     "verify-types": "node tools/verify-published-types.mjs",
-    "pre-publish": "pnpm test-suite && pnpm verify-types",
+    "pre-publish": "pnpm test-suite && pnpm test:zod3 && pnpm verify-types",
     "postinstall": "if [ \"$CI\" = \"true\" ]; then pnpm exec playwright install --with-deps; fi"
   },
   "private": true,
@@ -39,7 +40,8 @@
     "react-hook-form": "^7.58.1",
     "react-phone-number-input": "^3.4.12",
     "vite-tsconfig-paths": "^5.1.4",
-    "zod": "^3.0.0"
+    "zod": "^4.6.6",
+    "zod-v3": "npm:zod@^3.25.76"
   },
   "devDependencies": {
     "@babel/core": "^7.14.5",
