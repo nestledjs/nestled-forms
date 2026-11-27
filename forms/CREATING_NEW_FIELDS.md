@@ -7,7 +7,7 @@ This guide provides a comprehensive walkthrough for adding new form field types 
 When adding a new form field type, you must update these files in order:
 
 - [ ] **form-types.ts** - Add type definitions
-- [ ] **form-theme.ts** - Add theme schema
+- [ ] **form-theme.ts** - Add theme defaults (and element slots, if any)
 - [ ] **themes/tailwind.tsx** - Add default theme implementation  
 - [ ] **utils/resolve-theme.ts** - Add to theme inheritance
 - [ ] **form-fields.ts** - Add factory method
@@ -58,29 +58,51 @@ export type FormField =
   | YourNewFieldType  // Add your new type here
 ```
 
-### 2. Define Theme Schema (`form-theme.ts`)
+### 2. Define Theme Defaults (`forms-core/src/lib/form-theme.ts`)
 
-Add a theme section for your new field. This defines all the CSS class properties that can be themed:
+Add a theme section for your new field to the `THEME_DEFAULTS` literal. This declares all the
+CSS class properties that can be themed; each one defaults to `''`:
 
 ```typescript
-export const FormThemeSchema = z.object({
-  // ... existing fields
-  yourNewField: z
-    .object({
-      wrapper: z.string().default(''),
-      input: z.string().default(''),
-      error: z.string().default(''),
-      disabled: z.string().default(''),
-      readOnly: z.string().default(''),
-      readOnlyInput: z.string().default(''),
-      readOnlyValue: z.string().default(''),
-      // Add any field-specific theme properties
-      customElement: z.string().default(''),
-      specialState: z.string().default(''),
-    })
-    .default({}),
-})
+const THEME_DEFAULTS = {
+  // ... existing sections
+  yourNewField: {
+    wrapper: '',
+    input: '',
+    error: '',
+    disabled: '',
+    readOnly: '',
+    readOnlyInput: '',
+    readOnlyValue: '',
+    // Add any field-specific theme properties
+    customElement: '',
+    specialState: '',
+  },
+} as const satisfies Record<string, Record<string, string>>
 ```
+
+That is the only place to add the keys. `FormTheme` is a mapped type over
+`THEME_DEFAULTS`, and `createDefaultFormTheme()` / `resolveFormTheme()` are key-driven, so
+the type and the runtime merge both pick the new section up with no further edits.
+
+> **This module must not import zod.** The theme is a plain TypeScript literal on purpose:
+> the packages support `zod@^3 || ^4`, and a zod-typed export bakes major-specific generics
+> into the emitted `form-theme.d.ts`, which would pin consumers to one major. The publish
+> gate (`pnpm verify-types`) fails if the shipped declaration mentions zod at all. See the
+> comment at the top of `form-theme.ts`.
+
+**Element slots (icons) are declared separately.** A member that holds a rendered element
+rather than a class string has no default and goes in `ICON_SLOTS`, keyed by section:
+
+```typescript
+const ICON_SLOTS = {
+  // ... existing sections
+  yourNewField: ['readOnlyIcon', 'readOnlyUnselectedIcon'],
+} as const
+```
+
+Those members are optional on `FormTheme` and are carried through by reference, so a JSX
+element — or an explicit `null` — survives the merge untouched.
 
 **Theme Property Guidelines:**
 - `wrapper` - Container around the entire field
@@ -97,7 +119,7 @@ export const FormThemeSchema = z.object({
 Provide Tailwind CSS classes for your theme properties:
 
 ```typescript
-export const tailwindTheme = FormThemeSchema.parse({
+export const tailwindTheme = resolveFormTheme({
   // ... existing themes
   yourNewField: {
     wrapper: '',
@@ -123,7 +145,9 @@ export const tailwindTheme = FormThemeSchema.parse({
 
 Add your field to the theme inheritance system so it receives global styles:
 
-#### A. Add to inheritableKeys Array
+Add your field to the `inheritableKeys` array — that is the whole edit. The merge loop
+below it is uniform, so there is no per-field case to add:
+
 ```typescript
 const inheritableKeys: (keyof FormTheme)[] = [
   'textField',
@@ -133,23 +157,9 @@ const inheritableKeys: (keyof FormTheme)[] = [
 ]
 ```
 
-#### B. Add Type-Safe Merging Case
-```typescript
-for (const key of inheritableKeys) {
-  const section = finalTheme[key]
-  if (!section) continue
-
-  if (key === 'textField') {
-    finalTheme[key] = mergeSection(globalStyles, section as FormTheme['textField'])
-  } else if (key === 'checkbox') {
-    finalTheme[key] = mergeSection(globalStyles, section as FormTheme['checkbox'])
-  }
-  // ... existing cases
-  else if (key === 'yourNewField') {
-    finalTheme[key] = mergeSection(globalStyles, section as FormTheme['yourNewField'])
-  }
-}
-```
+Inheritance only copies a `global` class into a section member of the **same name**
+(`input`, `error`, `disabled`, `readOnly`), so leave your field out of `inheritableKeys` if
+it should not pick those up.
 
 ### 5. Add Factory Method (`form-fields.ts`)
 
