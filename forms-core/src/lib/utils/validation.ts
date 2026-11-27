@@ -3,9 +3,22 @@ import { BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-type
 import { DEFAULT_FORM_STRINGS } from '../form-config-context'
 import { FormSchema, StandardSchemaV1, standardSchemaResolver, validateSchema } from './standard-schema'
 
+// The schema a register-time validator checks when that schema is its only
+// rule. The resolver reads it to skip re-running a schema it has already run
+// on the same value in the same pass (see collectRegisteredRuleErrors).
+const SCHEMA_ONLY = Symbol('nestled.schemaOnlyValidator')
+
+type SchemaOnlyValidator = ((value: any, formValues?: any) => Promise<true | string>) & {
+  [SCHEMA_ONLY]?: FormSchema
+}
+
+function schemaOnlyValidatorSchema(validate: unknown): FormSchema | undefined {
+  return typeof validate === 'function' ? (validate as SchemaOnlyValidator)[SCHEMA_ONLY] : undefined
+}
+
 // Helper function to create a register-time validator from a schema
 function createSchemaValidator(schema: FormSchema, errorMessages?: Record<string, string | undefined>) {
-  return async (value: any) => {
+  const validator: SchemaOnlyValidator = async (value: any) => {
     const result = await validateSchema(schema, value)
     if (!('issues' in result)) return true
     const firstIssue = result.issues[0]
@@ -13,6 +26,8 @@ function createSchemaValidator(schema: FormSchema, errorMessages?: Record<string
     // back to the schema's own message rather than showing a blank error.
     return (firstIssue.code ? errorMessages?.[firstIssue.code] : undefined) || firstIssue.message
   }
+  validator[SCHEMA_ONLY] = schema
+  return validator
 }
 
 // Helper function to combine validators
@@ -150,7 +165,7 @@ function createConditionalWrapper(
   field: InputFieldOptions,
   currentValidationGroup?: string
 ): (value: any, formValues: any) => Promise<true | string> {
-  return async (value: any, formValues: any) => {
+  const wrapper: SchemaOnlyValidator = async (value: any, formValues: any) => {
     // Skip validation if conditions not met
     const shouldSkipConditional = field.validateWhen && !field.validateWhen(formValues)
     if (shouldSkipConditional) {
@@ -176,6 +191,10 @@ function createConditionalWrapper(
 
     return true
   }
+  // Still only the schema underneath: the wrapper adds skips, not rules
+  const schema = schemaOnlyValidatorSchema(originalValidate)
+  if (schema) wrapper[SCHEMA_ONLY] = schema
+  return wrapper
 }
 
 /**
@@ -278,7 +297,14 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
     }
 
     await collectFieldErrors(fieldsNeedingValidation, values, currentValidationGroup, errors, defaultRequiredMessage)
-    await collectRegisteredRuleErrors(options.fields ?? {}, values, errors, fields ?? [], currentValidationGroup)
+    await collectRegisteredRuleErrors(
+      options.fields ?? {},
+      values,
+      errors,
+      fields ?? [],
+      currentValidationGroup,
+      schemasRunThisPass(fieldsNeedingValidation, values, currentValidationGroup)
+    )
 
     return {
       values: Object.keys(errors).length ? {} : values,
@@ -313,12 +339,28 @@ async function collectFieldErrors(
 // auto-injected format validator, useFieldValidation composites):
 // react-hook-form ignores register rules whenever a resolver exists, so
 // the resolver has to execute them itself from options.fields.
+// The field schemas collectFieldErrors ran in this pass, by field key.
+function schemasRunThisPass(
+  fields: Array<{ key: string; options: InputFieldOptions }>,
+  values: any,
+  currentValidationGroup: string | undefined
+): Map<string, FormSchema> {
+  const run = new Map<string, FormSchema>()
+  for (const field of fields) {
+    if (field.options.schema && shouldValidateField(field, values, currentValidationGroup)) {
+      run.set(field.key, field.options.schema)
+    }
+  }
+  return run
+}
+
 async function collectRegisteredRuleErrors(
   registeredFields: Record<string, unknown>,
   values: any,
   errors: Record<string, any>,
   configuredFields: Array<{ key: string; options: InputFieldOptions }> = [],
-  currentValidationGroup?: string
+  currentValidationGroup?: string,
+  schemasAlreadyRun: Map<string, FormSchema> = new Map()
 ): Promise<void> {
   // A registered rule doesn't know the form's active validation group, so a
   // configured field that validateWhen or the group excludes is skipped here
@@ -334,6 +376,13 @@ async function collectRegisteredRuleErrors(
     if (get(errors, name)) continue
     const registeredValidate = registered.validate
     if (!registeredValidate) continue
+    // A rule that is only the field's schema, which collectFieldErrors has
+    // already run on this value without an error: running it again would
+    // call every async refinement a second time. A rule combining the schema
+    // with anything else (a phone format check, a validate function) still
+    // runs whole.
+    const onlySchema = schemaOnlyValidatorSchema(registeredValidate)
+    if (onlySchema && schemasAlreadyRun.get(name) === onlySchema) continue
 
     const result = await runRegisteredValidate(registeredValidate, get(values, name), values)
     if (result !== true && result !== undefined) {

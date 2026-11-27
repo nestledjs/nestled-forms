@@ -91,6 +91,17 @@ under "Changed" below: `FormThemeSchema` is no longer a Zod schema object.
   packages, which was being bundled into the published `@nestledjs/forms`:
   `index.js` goes from 109,278 to 88,825 bytes (−19%).
 
+- **Async Zod refinements run once per validation.** A Zod schema is
+  validated with its own `safeParseAsync`, not through Standard Schema:
+  Zod's `~standard.validate` parses synchronously first and starts over when
+  it meets an async refinement, so a `.refine(async …)` (a "username taken"
+  request, say) ran twice — on every validation in Zod 4, on the first in
+  Zod 3. Valibot, ArkType and other validators still go through Standard
+  Schema. On submit, `<Form>` also no longer runs a field's schema a second
+  time through the field's registered rule when that rule is only the schema
+  and the field pass already ran it; a registered rule that adds a check of
+  its own (the phone field's format check) still runs whole.
+
 - **Register-time rules on nested keys run on submit.** A field keyed
   `address.phone` whose component registers its own `validate` rule (the
   phone field's format check, `useFieldValidation`) skipped that rule

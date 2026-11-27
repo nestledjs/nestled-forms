@@ -79,24 +79,35 @@ function failure(issues: ReadonlyArray<StandardSchemaV1Issue>): SchemaValidation
 }
 
 /**
- * Validates a value against a schema. Uses the Standard Schema interface when
- * the schema has one, else Zod's `safeParseAsync`, else `parseAsync`. Never
- * throws: a schema that throws, or that has none of those, fails the value
- * with a single issue — a broken schema must not pass a value as valid.
+ * Validates a value against a schema. A Zod schema (any release) goes through
+ * its own `safeParseAsync`; any other schema through the Standard Schema
+ * interface, else `parseAsync`. Never throws: a schema that throws, or that
+ * has none of those, fails the value with a single issue — a broken schema
+ * must not pass a value as valid.
+ *
+ * Zod is not validated through `~standard.validate`: Zod's implementation of
+ * it parses synchronously first and starts over asynchronously when it meets
+ * an async refinement, so every async refinement (a "username taken" request,
+ * say) would run twice per validation — on every call in Zod 4, on the first
+ * call per schema in Zod 3. `safeParseAsync` runs each refinement once.
  */
 export async function validateSchema(schema: FormSchema, value: unknown): Promise<SchemaValidationResult> {
   try {
     const standard = (schema as Partial<StandardSchemaV1> | null | undefined)?.['~standard']
+    const legacy = schema as Partial<LegacyZodSchema> | null | undefined
+    const isZod = !standard || standard.vendor === 'zod'
+
+    // Zod 3 before 3.24 has no `~standard` at all; later Zod releases say so
+    // in `vendor`
+    if (isZod && legacy && typeof legacy.safeParseAsync === 'function') {
+      const result = await legacy.safeParseAsync(value)
+      return result.success ? { value: result.data } : failure(result.error.issues)
+    }
+
     if (standard && typeof standard.validate === 'function') {
       // validate() may return synchronously or a promise; await covers both
       const result = await standard.validate(value)
       return result.issues ? failure(result.issues) : { value: result.value }
-    }
-
-    const legacy = schema as Partial<LegacyZodSchema> | null | undefined
-    if (legacy && typeof legacy.safeParseAsync === 'function') {
-      const result = await legacy.safeParseAsync(value)
-      return result.success ? { value: result.data } : failure(result.error.issues)
     }
 
     // A schema exposing only `parseAsync` rejects by throwing. An error that
