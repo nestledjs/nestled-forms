@@ -57,3 +57,7 @@ tmp.html
 
 # Scratch output from the Copilot-comment review script
 .temp-review/
+
+# Storybook diagnostic output
+debug-storybook.log
+doctor-storybook.log
