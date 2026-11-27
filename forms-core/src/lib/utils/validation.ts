@@ -1,59 +1,33 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { FieldValues, RegisterOptions, Resolver, get, set } from 'react-hook-form'
-import { AnyZodSchema, BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
+import { BaseFieldOptions, FormFieldType, InputFieldOptions } from '../form-types'
 import { DEFAULT_FORM_STRINGS } from '../form-config-context'
+import { FormSchema, StandardSchemaV1, standardSchemaResolver, validateSchema } from './standard-schema'
 
-const FALLBACK_INVALID_MESSAGE = 'Invalid value'
+// The schema a register-time validator checks when that schema is its only
+// rule. The resolver reads it to skip re-running a schema it has already run
+// on the same value in the same pass (see collectRegisteredRuleErrors).
+const SCHEMA_ONLY = Symbol('nestled.schemaOnlyValidator')
 
-/**
- * Reads the first issue out of a schema rejection, structurally.
- *
- * Deliberately not `error instanceof ZodError`: that fails whenever the thrown
- * error comes from a different copy of zod than the one this module imported
- * (pnpm's isolated node_modules, or a resolver bringing its own), and it ties
- * the read to one major — zod 4 renamed `error.errors` to `error.issues`.
- * `.issues` exists on both majors, so an object carrying an issues array is the
- * cross-major signal that this was a validation failure and not a bug in the
- * schema itself.
- *
- * An empty `issues` array still counts as a rejection; it just has no message
- * of its own, so the generic one is used. (Reading `issues[0].code` unguarded
- * used to throw here and surface as a crash instead of a field error.)
- *
- * @returns the first issue's code and message, or null if this is not a schema
- *          rejection at all.
- */
-function readSchemaIssue(error: unknown): { code: string; message: string } | null {
-  const issues = (error as { issues?: unknown } | null | undefined)?.issues
-  if (!Array.isArray(issues)) return null
-
-  const first = issues[0] as { code?: unknown; message?: unknown } | undefined
-  return {
-    code: typeof first?.code === 'string' ? first.code : 'invalid_input',
-    message: typeof first?.message === 'string' ? first.message : FALLBACK_INVALID_MESSAGE,
-  }
+type SchemaOnlyValidator = ((value: any, formValues?: any) => Promise<true | string>) & {
+  [SCHEMA_ONLY]?: FormSchema
 }
 
-/** The message to report when the schema threw rather than rejected the value. */
-function thrownMessage(error: unknown): string {
-  return error instanceof Error && error.message ? error.message : FALLBACK_INVALID_MESSAGE
+function schemaOnlyValidatorSchema(validate: unknown): FormSchema | undefined {
+  return typeof validate === 'function' ? (validate as SchemaOnlyValidator)[SCHEMA_ONLY] : undefined
 }
 
-// Helper function to create Zod validator
-function createZodValidator(schema: AnyZodSchema, errorMessages?: Record<string, string | undefined>) {
-  return async (value: any) => {
-    try {
-      await schema.parseAsync(value)
-      return true
-    } catch (error) {
-      const issue = readSchemaIssue(error)
-      // `||`, not `??`: an empty-string override means "no override", so fall
-      // back to the schema's own message rather than showing a blank error.
-      if (issue) return errorMessages?.[issue.code] || issue.message
-      // Not a rejection — the schema itself threw. Never pass the field.
-      return thrownMessage(error)
-    }
+// Helper function to create a register-time validator from a schema
+function createSchemaValidator(schema: FormSchema, errorMessages?: Record<string, string | undefined>) {
+  const validator: SchemaOnlyValidator = async (value: any) => {
+    const result = await validateSchema(schema, value)
+    if (!('issues' in result)) return true
+    const firstIssue = result.issues[0]
+    // `||`, not `??`: an empty-string override means "no override", so fall
+    // back to the schema's own message rather than showing a blank error.
+    return (firstIssue.code ? errorMessages?.[firstIssue.code] : undefined) || firstIssue.message
   }
+  validator[SCHEMA_ONLY] = schema
+  return validator
 }
 
 // Helper function to combine validators
@@ -65,25 +39,20 @@ function combineValidators(existing: any, newValidator: any) {
   }
 }
 
-// Helper function to run Zod schema validation
+// Helper function to run schema validation for one field's value
 async function runSchemaValidation(
-  schema: AnyZodSchema,
+  schema: FormSchema,
   value: any,
   errorMessages?: Record<string, string | undefined>
 ): Promise<{ type: string; message: string } | null> {
-  try {
-    await schema.parseAsync(value)
-    return null
-  } catch (error) {
-    const issue = readSchemaIssue(error)
-    if (issue) {
-      return {
-        type: issue.code,
-        message: errorMessages?.[issue.code] || issue.message
-      }
-    }
-    // A throwing schema must not pass the field as valid
-    return { type: 'schema', message: thrownMessage(error) }
+  // validateSchema never throws: a throwing schema comes back as a 'schema'
+  // issue, so it can't pass the field as valid
+  const result = await validateSchema(schema, value)
+  if (!('issues' in result)) return null
+  const firstIssue = result.issues[0]
+  return {
+    type: firstIssue.code ?? 'validation',
+    message: (firstIssue.code ? errorMessages?.[firstIssue.code] : undefined) || firstIssue.message
   }
 }
 
@@ -124,7 +93,7 @@ async function validateField(
     }
   }
 
-  // Run Zod schema validation
+  // Run schema validation
   if (fieldOptions.schema) {
     const schemaError = await runSchemaValidation(fieldOptions.schema, value, fieldOptions.errorMessages)
     if (schemaError) return schemaError
@@ -196,7 +165,7 @@ function createConditionalWrapper(
   field: InputFieldOptions,
   currentValidationGroup?: string
 ): (value: any, formValues: any) => Promise<true | string> {
-  return async (value: any, formValues: any) => {
+  const wrapper: SchemaOnlyValidator = async (value: any, formValues: any) => {
     // Skip validation if conditions not met
     const shouldSkipConditional = field.validateWhen && !field.validateWhen(formValues)
     if (shouldSkipConditional) {
@@ -222,11 +191,16 @@ function createConditionalWrapper(
 
     return true
   }
+  // Still only the schema underneath: the wrapper adds skips, not rules
+  const schema = schemaOnlyValidatorSchema(originalValidate)
+  if (schema) wrapper[SCHEMA_ONLY] = schema
+  return wrapper
 }
 
 /**
- * Creates validation rules for a field that combine Zod schema validation
- * with traditional validation functions.
+ * Creates validation rules for a field that combine schema validation
+ * (Zod, Valibot, ArkType or any Standard Schema validator) with traditional
+ * validation functions.
  *
  * @param field - The field configuration containing validation options
  * @param isRequired - Whether the field is currently required (considering dynamic conditions)
@@ -246,10 +220,10 @@ export function createFieldValidation(
     rules.required = field.errorMessages?.required || defaultRequiredMessage
   }
 
-  // Add Zod schema validation if present
+  // Add schema validation if present
   if (field.schema) {
-    const zodValidate = createZodValidator(field.schema, field.errorMessages)
-    addValidatorToRules(rules, zodValidate, 'schema')
+    const schemaValidate = createSchemaValidator(field.schema, field.errorMessages)
+    addValidatorToRules(rules, schemaValidate, 'schema')
   }
 
   // Add custom validation function if present
@@ -273,15 +247,15 @@ export function createFieldValidation(
 }
 
 /**
- * Creates a form-level resolver that can handle both Zod schemas and field-level validation.
+ * Creates a form-level resolver that can handle both a form-level schema and field-level validation.
  * This allows for mixed validation strategies within the same form.
  *
- * @param schema - Optional Zod schema for form-level validation
+ * @param schema - Optional schema for form-level validation (Zod, Valibot, ArkType or any Standard Schema validator)
  * @param fields - Array of form fields with their validation configurations
  * @returns A resolver function for react-hook-form
  */
 export function createFormResolver<TFieldValues extends FieldValues = FieldValues>(
-  schema?: AnyZodSchema,
+  schema?: FormSchema,
   fields?: Array<{ key: string; options: InputFieldOptions }>,
   currentValidationGroup?: string,
   defaultRequiredMessage?: string
@@ -305,12 +279,12 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
     return undefined
   }
 
-  // Form-level schema with no field-level validation: plain zodResolver
+  // Form-level schema with no field-level validation: the schema resolver alone
   if (schema && !fieldsNeedingValidation.length) {
-    return zodResolver(schema) as Resolver<TFieldValues>
+    return standardSchemaResolver<TFieldValues>(schema)
   }
 
-  const schemaResolver = schema ? (zodResolver(schema) as Resolver<TFieldValues>) : undefined
+  const schemaResolver = schema ? standardSchemaResolver<TFieldValues>(schema) : undefined
 
   // Custom resolver: form-level schema (if any) and field-level validation
   // both run; field-level errors win on key collisions.
@@ -323,7 +297,14 @@ export function createFormResolver<TFieldValues extends FieldValues = FieldValue
     }
 
     await collectFieldErrors(fieldsNeedingValidation, values, currentValidationGroup, errors, defaultRequiredMessage)
-    await collectRegisteredRuleErrors(options.fields ?? {}, values, errors)
+    await collectRegisteredRuleErrors(
+      options.fields ?? {},
+      values,
+      errors,
+      fields ?? [],
+      currentValidationGroup,
+      schemasRunThisPass(fieldsNeedingValidation, values, currentValidationGroup)
+    )
 
     return {
       values: Object.keys(errors).length ? {} : values,
@@ -358,15 +339,50 @@ async function collectFieldErrors(
 // auto-injected format validator, useFieldValidation composites):
 // react-hook-form ignores register rules whenever a resolver exists, so
 // the resolver has to execute them itself from options.fields.
+// The field schemas collectFieldErrors ran in this pass, by field key.
+function schemasRunThisPass(
+  fields: Array<{ key: string; options: InputFieldOptions }>,
+  values: any,
+  currentValidationGroup: string | undefined
+): Map<string, FormSchema> {
+  const run = new Map<string, FormSchema>()
+  for (const field of fields) {
+    if (field.options.schema && shouldValidateField(field, values, currentValidationGroup)) {
+      run.set(field.key, field.options.schema)
+    }
+  }
+  return run
+}
+
 async function collectRegisteredRuleErrors(
   registeredFields: Record<string, unknown>,
   values: any,
-  errors: Record<string, any>
+  errors: Record<string, any>,
+  configuredFields: Array<{ key: string; options: InputFieldOptions }> = [],
+  currentValidationGroup?: string,
+  schemasAlreadyRun: Map<string, FormSchema> = new Map()
 ): Promise<void> {
-  for (const [name, registered] of Object.entries(registeredFields)) {
+  // A registered rule doesn't know the form's active validation group, so a
+  // configured field that validateWhen or the group excludes is skipped here
+  // exactly as collectFieldErrors skips it.
+  const skipped = new Set(
+    configuredFields
+      .filter((field) => !shouldValidateField(field, values, currentValidationGroup))
+      .map((field) => field.key)
+  )
+
+  for (const [name, registered] of flattenRegisteredFields(registeredFields)) {
+    if (skipped.has(name)) continue
     if (get(errors, name)) continue
-    const registeredValidate = (registered as { validate?: unknown })?.validate
+    const registeredValidate = registered.validate
     if (!registeredValidate) continue
+    // A rule that is only the field's schema, which collectFieldErrors has
+    // already run on this value without an error: running it again would
+    // call every async refinement a second time. A rule combining the schema
+    // with anything else (a phone format check, a validate function) still
+    // runs whole.
+    const onlySchema = schemaOnlyValidatorSchema(registeredValidate)
+    if (onlySchema && schemasAlreadyRun.get(name) === onlySchema) continue
 
     const result = await runRegisteredValidate(registeredValidate, get(values, name), values)
     if (result !== true && result !== undefined) {
@@ -376,6 +392,27 @@ async function collectRegisteredRuleErrors(
       })
     }
   }
+}
+
+// react-hook-form nests options.fields by key ('address.city' arrives as
+// { address: { city: field } }), so walk down to the registered fields — the
+// objects carrying their full dotted `name` as a string. A container never
+// does: a child field called `name`, `ref` or `validate` is an object there.
+function flattenRegisteredFields(
+  node: Record<string, unknown>,
+  out: Array<[string, { validate?: unknown }]> = [],
+  depth = 0
+): Array<[string, { validate?: unknown }]> {
+  for (const entry of Object.values(node)) {
+    if (typeof entry !== 'object' || entry === null) continue
+    const candidate = entry as { name?: unknown; ref?: unknown; validate?: unknown }
+    if (typeof candidate.name === 'string') {
+      out.push([candidate.name, candidate])
+    } else if (depth < 10) {
+      flattenRegisteredFields(entry as Record<string, unknown>, out, depth + 1)
+    }
+  }
+  return out
 }
 
 async function runRegisteredValidate(validate: unknown, value: any, values: any): Promise<unknown> {
@@ -401,7 +438,7 @@ export interface FormFieldLike {
  * ignores register rules once a resolver exists.
  */
 export function buildFieldsResolver<TFieldValues extends FieldValues = FieldValues>(options: {
-  schema?: AnyZodSchema
+  schema?: FormSchema
   fields?: (FormFieldLike | null)[]
   validationGroup?: string
   /** Localized fallback for required errors (per-field errorMessages.required wins) */
@@ -522,14 +559,18 @@ export function shouldValidateField(
 }
 
 /**
- * Utility to extract TypeScript types from Zod schemas for better type inference.
+ * Utility to extract the output type of a schema for better type inference.
+ * Works with any Standard Schema validator (Zod 3.24+ and Zod 4, Valibot,
+ * ArkType) and with older Zod 3 schemas.
  *
- * Read structurally rather than through the schema type's `_output`: zod 3 exposes the
- * output type as `_output`, zod 4 as `_zod.output`, and this has to resolve under
+ * Read structurally rather than through a Zod type: zod 3 exposes the output
+ * type as `_output`, zod 4 as `_zod.output`, and this has to resolve under
  * whichever major the consumer installed.
  */
-export type InferSchemaType<T> = T extends { _output: infer Output }
-  ? Output
-  : T extends { _zod: { output: infer Output } }
+export type InferSchemaType<T> = T extends StandardSchemaV1
+  ? NonNullable<T['~standard']['types']>['output']
+  : T extends { _output: infer Output }
     ? Output
-    : never
+    : T extends { _zod: { output: infer Output } }
+      ? Output
+      : never

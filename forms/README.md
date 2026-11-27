@@ -9,7 +9,7 @@ A flexible React form library that supports both **declarative** and **imperativ
 - **Flexible**: Mix and match declarative and imperative patterns
 - **Conditional Logic**: Dynamic show/hide, required, and disabled field behavior based on form values
 - **Themeable**: Customizable styling system
-- **Validation**: Built-in validation with react-hook-form
+- **Validation**: Built-in validation with react-hook-form, and schemas from Zod, Valibot, ArkType or any Standard Schema validator
 - **Read-only Support**: Toggle between editable and read-only modes
 - **Rich Field Types**: 20+ field types including text, email, select, date pickers, markdown editor, and more
 
@@ -22,6 +22,16 @@ yarn add @nestledjs/forms
 # or
 pnpm add @nestledjs/forms
 ```
+
+Then install the two required peer dependencies, if your app doesn't have them
+already:
+
+```bash
+pnpm add react-hook-form zod
+```
+
+Zod 3 and Zod 4 both work. See [Schema validation setup](#schema-validation-setup) for what `schema`
+accepts (Zod, Valibot, ArkType or any Standard Schema validator).
 
 ## 📋 Requirements
 
@@ -968,30 +978,25 @@ on every change once a submit has failed. A blocked submit shows each field's
 message under it, marks the input `aria-invalid`, and moves focus to the first
 invalid field.
 
-### Zod setup
+### Schema validation setup
 
-Schema validation uses [Zod](https://zod.dev) through `@hookform/resolvers`.
-The peer range is `zod@^3 || ^4` — either major works. Neither Zod nor the
-resolvers are bundled: both are peer dependencies, along with
-`react-hook-form`, so install them in your app:
+`react-hook-form` and [Zod](https://zod.dev) are peer dependencies. The Zod
+peer range is `zod@^3 || ^4` — either major works. Neither is bundled, so
+install them in your app:
 
 ```bash
 # Zod 4 (recommended)
-pnpm add react-hook-form zod@^4 @hookform/resolvers@^5
+pnpm add react-hook-form zod@^4
 
 # Zod 3
-pnpm add react-hook-form zod@^3 @hookform/resolvers
+pnpm add react-hook-form zod@^3
 ```
 
-`required`, `validate` and `validateWithForm` don't use Zod, but the package
-imports it, so it has to be installed even if you never write a schema.
+That is all the wiring there is: pass a schema to a field or to `<Form>` and it
+is validated. `@hookform/resolvers` is not needed, on either Zod major.
 
-Two things to know when choosing a major:
+One thing to know when choosing a major:
 
-- **Zod 4 needs `@hookform/resolvers@^5`.** Resolvers 5 reads the schema at
-  runtime and handles both majors; resolvers 3 and 4 only understand Zod 3,
-  so a Zod 4 schema won't validate at form level. (Resolvers 5 also imports
-  `zod/v4/core`, so on Zod 3 it needs `zod@^3.25`.)
 - **`errorMessages` keys follow the installed Zod's issue codes,** which Zod
   renamed between majors: `invalid_string` became `invalid_format` and
   `invalid_enum_value` became `invalid_value`. `too_small`, `too_big` and
@@ -999,8 +1004,53 @@ Two things to know when choosing a major:
   code as-is and does not translate, so an override written against Zod 3 may
   stop matching when *you* upgrade — check the codes you key on.
 
-> **Standard Schema isn't supported yet.** `schema` is typed for Zod, so
-> passing a Valibot or ArkType schema isn't supported.
+Zod is a peer rather than a bundled dependency so that your app and the form
+packages share one copy of it. The packages' types refer to it, so it has to
+be installed even if you never write a schema, or write yours with something
+else.
+
+`schema` accepts any [Standard Schema](https://standardschema.dev) validator —
+Zod, [Valibot](https://valibot.dev), [ArkType](https://arktype.io) and others —
+on a field and on `<Form>`:
+
+```tsx
+import * as v from 'valibot'
+import { Form, FormFieldClass } from '@nestledjs/forms'
+
+const signup = v.pipe(
+  v.object({
+    username: v.string(),
+    password: v.pipe(v.string(), v.minLength(8, 'Password must be at least 8 characters')),
+    confirmPassword: v.string(),
+  }),
+  v.forward(
+    v.partialCheck(
+      [['password'], ['confirmPassword']],
+      (input) => input.password === input.confirmPassword,
+      'Passwords must match',
+    ),
+    ['confirmPassword'],
+  ),
+)
+
+<Form
+  id="signup"
+  schema={signup}
+  fields={[
+    FormFieldClass.text('username', {
+      label: 'Username',
+      schema: v.pipe(v.string(), v.minLength(3, 'Username must be at least 3 characters')),
+    }),
+    FormFieldClass.password('password', { label: 'Password' }),
+    FormFieldClass.password('confirmPassword', { label: 'Confirm password' }),
+    FormFieldClass.button('submit', { text: 'Sign up', type: 'submit' }),
+  ]}
+  submit={createAccount}
+/>
+```
+
+Every Zod release in the peer range works, including Zod 3 releases older than
+3.24 that predate Standard Schema. The examples below use Zod.
 
 ### Field rules
 
@@ -1011,7 +1061,7 @@ first rule that fails:
 | --- | --- | --- |
 | `required` | always | A value must be present (`false` counts as empty, for "must be checked" boxes) |
 | `requiredWhen(values)` | always | Required only when other fields say so |
-| `schema` | always | A Zod schema for this field's value |
+| `schema` | always | A schema for this field's value: Zod, Valibot, ArkType or any Standard Schema validator |
 | `validate(value)` | always | A custom check, sync or async; return `true` or a message |
 | `validateWithForm(value, values)` | always | A check that needs other fields, e.g. "passwords match" |
 | `validateWhen(values)` | gate | Skip all of this field's rules when it returns `false` |
@@ -1052,8 +1102,10 @@ const fields = [
 ]
 ```
 
-A field shows the first Zod issue for its value, with its message replaced by
-`errorMessages[issue.code]` when you've set one.
+A field shows the first schema issue for its value, with its message replaced by
+`errorMessages[issue.code]` when you've set one. Issue codes come from the
+validator: Zod and ArkType issues have one, Valibot issues don't, so with
+Valibot put the message in the schema (`v.minLength(3, 'Too short')`).
 
 ### Form-level schema
 
@@ -1076,6 +1128,21 @@ const signup = z
 
 <Form id="signup" schema={signup} fields={fields} submit={createAccount} />
 ```
+
+Each field shows the first issue the schema reports for its path. When the
+form has no field-level rules, `submit` receives the schema's output (trimmed,
+coerced or defaulted values included).
+
+An issue with no path — a whole-object `.refine()` without `path` — blocks the
+submit but belongs to no field, so no field shows it. Give the refinement a
+`path`, as above, or read it from `formState.errors[FORM_ERROR_KEY]`
+(`FORM_ERROR_KEY` is exported; react-hook-form reserves `errors.root`, so it
+isn't used). An issue on an array itself is reported at `items.root`, next to
+the errors of its items.
+
+`<Form>` builds its resolver for you. If you call `useForm` yourself, the same
+resolver is exported: `useForm({ resolver: standardSchemaResolver(signup) })`,
+or `buildFieldsResolver({ schema: signup, fields })` to include field rules.
 
 ### Nested keys
 

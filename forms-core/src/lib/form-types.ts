@@ -2,7 +2,8 @@ import type { DocumentNode } from 'graphql'
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import { JSX, ReactNode } from 'react'
 import { UseFormReturn } from 'react-hook-form'
-import { ZodType } from 'zod'
+import type { ZodType } from 'zod'
+import type { FormSchema } from './utils/standard-schema'
 
 /**
  * Any zod schema, spelled so it resolves under zod 3 and zod 4 alike.
@@ -136,7 +137,8 @@ export interface BaseFieldOptions {
   disabledWhen?: (formValues: any) => boolean
 
   /**
-   * Zod schema for field-level validation.
+   * Schema for field-level validation: Zod, Valibot, ArkType or any
+   * Standard Schema (https://standardschema.dev) validator.
    * This provides type-safe, composable validation with excellent error messages.
    * Can be used alongside or instead of the validate function.
    *
@@ -155,11 +157,14 @@ export interface BaseFieldOptions {
    * })
    * ```
    */
-  schema?: AnyZodSchema
+  schema?: FormSchema
 
   /**
    * Custom error messages for validation.
-   * These override the default messages from Zod schemas or validation functions.
+   * `required` overrides the required message. Any other key is matched
+   * against the schema issue's `code` when the validator provides one: Zod
+   * does (`too_small`, `invalid_string`, …) and so does ArkType (`min`,
+   * `pattern`, …); Valibot doesn't, so set its messages in the schema itself.
    *
    * @example
    * ```tsx

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import type { FieldValues, Resolver } from 'react-hook-form'
 import { createFieldValidation, createFormResolver } from './validation'
+import { validateSchema } from './standard-schema'
 import type { AnyZodSchema, InputFieldOptions } from '../form-types'
 
 type FieldValidator = (value: unknown, formValues?: FieldValues) => Promise<true | string>
@@ -160,5 +161,105 @@ describe('createFormResolver field-level schema validation', () => {
 
   it('returns undefined when nothing declares validation', () => {
     expect(createFormResolver(undefined, field({}))).toBeUndefined()
+  })
+})
+
+
+// Zod's own `~standard.validate` parses synchronously first and starts over
+// asynchronously when it meets an async refinement, which calls the
+// refinement twice. An async refinement is often a request ("is this username
+// taken?"), so every path must call it exactly once per validation.
+describe('async refinements run once per validation', () => {
+  function countingSchema() {
+    const counter = { calls: 0 }
+    const schema = z.string().refine(async (value) => {
+      counter.calls++
+      return value === 'free'
+    }, 'Taken')
+    return { schema, counter }
+  }
+
+  /** Calls the resolver the way react-hook-form does, with the registered fields. */
+  async function resolveRegistered(
+    resolver: Resolver<FieldValues> | undefined,
+    values: FieldValues,
+    fields: Record<string, unknown>,
+  ) {
+    expect(resolver).toBeTypeOf('function')
+    const result = await (resolver as Resolver<FieldValues>)(values, undefined, {
+      fields: fields as never,
+      names: Object.keys(fields) as never,
+      shouldUseNativeValidation: false,
+    })
+    return result.errors as Record<string, { type?: string; message?: string }>
+  }
+
+  it('in validateSchema', async () => {
+    const { schema, counter } = countingSchema()
+
+    for (let i = 1; i <= 3; i++) {
+      await expect(validateSchema(schema, 'taken')).resolves.toEqual({
+        issues: [expect.objectContaining({ message: 'Taken', code: 'custom' })],
+      })
+      expect(counter.calls).toBe(i)
+    }
+    await expect(validateSchema(schema, 'free')).resolves.toEqual({ value: 'free' })
+    expect(counter.calls).toBe(4)
+  })
+
+  it('in a field-level register rule', async () => {
+    const { schema, counter } = countingSchema()
+    const validate = schemaValidator({ schema })
+
+    await expect(validate('taken')).resolves.toBe('Taken')
+    await expect(validate('free')).resolves.toBe(true)
+    expect(counter.calls).toBe(2)
+  })
+
+  it('in a form-level schema', async () => {
+    const { schema, counter } = countingSchema()
+    const errors = await resolve(createFormResolver(z.object({ username: schema })), { username: 'taken' })
+
+    expect(errors.username?.message).toBe('Taken')
+    expect(counter.calls).toBe(1)
+  })
+
+  it.each([
+    ['a top-level key', 'username', undefined],
+    ['a nested key', 'account.username', undefined],
+    ['a field in the active validation group', 'username', 'step-1'],
+  ])('in a resolver pass with the field registered, on %s', async (_label, key, group) => {
+    const { schema, counter } = countingSchema()
+    const options: InputFieldOptions = { schema, ...(group ? { validationGroup: group } : {}) }
+    const rules = createFieldValidation(options, false)
+    const resolver = createFormResolver(undefined, [{ key, options }], group)
+    const registered: Record<string, unknown> = {}
+    const leaf = { name: key, ref: {}, validate: rules.validate }
+    if (key.includes('.')) {
+      const [parent, child] = key.split('.')
+      registered[parent] = { [child]: leaf }
+    } else {
+      registered[key] = leaf
+    }
+    const values = key.includes('.') ? { account: { username: 'free' } } : { username: 'free' }
+
+    await expect(resolveRegistered(resolver, values, registered)).resolves.toEqual({})
+    expect(counter.calls).toBe(1)
+  })
+
+  it('still runs a registered rule that adds more than the schema', async () => {
+    const { schema, counter } = countingSchema()
+    const options: InputFieldOptions = { schema }
+    // What the phone field registers: the schema plus its own format check
+    const rules = createFieldValidation({ ...options, validate: () => 'Bad phone' }, false)
+    const resolver = createFormResolver(undefined, [{ key: 'phone', options }])
+
+    const errors = await resolveRegistered(resolver, { phone: 'free' }, {
+      phone: { name: 'phone', ref: {}, validate: rules.validate },
+    })
+
+    expect(errors.phone?.message).toBe('Bad phone')
+    // Once in the field pass, once inside the combined registered rule
+    expect(counter.calls).toBe(2)
   })
 })
