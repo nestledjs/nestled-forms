@@ -54,3 +54,6 @@ tmp.html
 .claude/**
 
 .nx/migrate-runs
+
+# Scratch output from the Copilot-comment review script
+.temp-review/
